@@ -5,20 +5,19 @@ import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
-import Container from '@mui/material/Container';
 import Divider from '@mui/material/Divider';
 import MenuItem from '@mui/material/MenuItem';
 import Drawer from '@mui/material/Drawer';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import Sitemark from './SitemarkIcon';
+import { Link as RouterLink } from 'react-router-dom';
 
 const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
   flexShrink: 0,
-  borderRadius: `calc(${theme.shape.borderRadius}px + 8px)`,
   backdropFilter: 'blur(24px)',
   border: '1px solid',
   borderColor: theme.palette.divider,
@@ -34,33 +33,60 @@ export default function AppAppBar() {
     setOpen(newOpen);
   };
 
+
   return (
     <AppBar
       position="fixed"
-      sx={{ boxShadow: 0, bgcolor: 'transparent', backgroundImage: 'none', mt: 10 }}
+      sx={{ boxShadow: 0, bgcolor: 'transparent', backgroundImage: 'none', mt: 0 }}
     >
-      <Container maxWidth="lg">
         <StyledToolbar variant="dense" disableGutters>
           <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', px: 0 }}>
             <Sitemark />
             <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
-              <Button variant="text" color="info" size="small">
-                Features
+              <Button
+                component={RouterLink}
+                to="/tests"
+                variant="text"
+                color="info"
+                size="small"
+              >
+                Tests
               </Button>
-              <Button variant="text" color="info" size="small">
-                Testimonials
+              <Button
+                component={RouterLink}
+                to="/default-mock-data"
+                variant="text"
+                color="info"
+                size="small"
+              >
+                Default mock data
               </Button>
-              <Button variant="text" color="info" size="small">
-                Highlights
+              <Button
+                component={RouterLink}
+                to="/mock-server"
+                variant="text"
+                color="info"
+                size="small"
+              >
+                 Mock server
               </Button>
-              <Button variant="text" color="info" size="small">
-                Pricing
+              <Button
+                component={RouterLink}
+                to="/coverage-report"
+                variant="text"
+                color="info"
+                size="small"
+              >
+                Coverage report
               </Button>
-              <Button variant="text" color="info" size="small" sx={{ minWidth: 0 }}>
-                FAQ
-              </Button>
-              <Button variant="text" color="info" size="small" sx={{ minWidth: 0 }}>
-                Blog
+              <Button
+                component={RouterLink}
+                to="/render-map"
+                variant="text"
+                color="info"
+                size="small"
+              >
+                Render map
               </Button>
             </Box>
           </Box>
@@ -96,12 +122,11 @@ export default function AppAppBar() {
                   </IconButton>
                 </Box>
                 <Divider sx={{ my: 3 }} />
-                <MenuItem>Features</MenuItem>
-                <MenuItem>Testimonials</MenuItem>
-                <MenuItem>Highlights</MenuItem>
-                <MenuItem>Pricing</MenuItem>
-                <MenuItem>FAQ</MenuItem>
-                <MenuItem>Blog</MenuItem>
+                <MenuItem component={RouterLink} to="/tests">Tests</MenuItem>
+                <MenuItem component={RouterLink} to="/default-mock-data">Default mock data</MenuItem>
+                <MenuItem component={RouterLink} to="/mock-server">Mock server</MenuItem>
+                <MenuItem component={RouterLink} to="/coverage-report">Coverage report</MenuItem>
+                <MenuItem component={RouterLink} to="/render-map">Render map</MenuItem>
                 <MenuItem>
                   <Button color="primary" variant="contained" fullWidth>
                     Sign up
@@ -116,7 +141,6 @@ export default function AppAppBar() {
             </Drawer>
           </Box>
         </StyledToolbar>
-      </Container>
     </AppBar>
   );
 }
