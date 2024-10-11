@@ -1,24 +1,23 @@
 import * as React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import Divider from '@mui/material/Divider';
 import AppAppBar from './components/AppAppBar';
-import Hero from './components/Hero';
-import LogoCollection from './components/LogoCollection';
-import Highlights from './components/Highlights';
-import Pricing from './components/Pricing';
-import Features from './components/Features';
-import Testimonials from './components/Testimonials';
 import FAQ from './components/FAQ';
 import Footer from './components/Footer';
 import getMPTheme from './theme/getMPTheme';
-import TemplateFrame from './TemplateFrame';
+import Tests from './components/Tests';
+import DefaultMockData from './components/DefaultMockData';
+import MockServer from './components/MockServer';
+import CoverageReport from './components/CoverageReport';
+import RenderMap from './components/RenderMap';
+import { Box } from '@mui/material';
+
 
 export default function MarketingPage() {
-  const [mode, setMode] = React.useState('light');
-  const [showCustomTheme, setShowCustomTheme] = React.useState(true);
+  const [mode, setMode] = React.useState('dark');
   const MPTheme = createTheme(getMPTheme(mode));
-  const defaultTheme = createTheme({ palette: { mode } });
 
   // This code only runs on the client side, to determine the system color preference
   React.useEffect(() => {
@@ -34,43 +33,34 @@ export default function MarketingPage() {
       setMode(systemPrefersDark ? 'dark' : 'light');
     }
   }, []);
-
-  const toggleColorMode = () => {
-    const newMode = mode === 'dark' ? 'light' : 'dark';
+  const handleModeChange = () => {
+    const newMode = mode === 'light' ? 'dark' : 'light';
     setMode(newMode);
-    localStorage.setItem('themeMode', newMode); // Save the selected mode to localStorage
-  };
-
-  const toggleCustomTheme = () => {
-    setShowCustomTheme((prev) => !prev);
+    localStorage.setItem('themeMode', newMode);
   };
 
   return (
-    <TemplateFrame
-      toggleCustomTheme={toggleCustomTheme}
-      showCustomTheme={showCustomTheme}
-      mode={mode}
-      toggleColorMode={toggleColorMode}
-    >
-      <ThemeProvider theme={showCustomTheme ? MPTheme : defaultTheme}>
-        <CssBaseline enableColorScheme />
-        <AppAppBar />
-        <Hero />
-        <div>
-          <LogoCollection />
-          <Features />
-          <Divider />
-          <Testimonials />
-          <Divider />
-          <Highlights />
-          <Divider />
-          <Pricing />
-          <Divider />
-          <FAQ />
-          <Divider />
-          <Footer />
-        </div>
-      </ThemeProvider>
-    </TemplateFrame>
+    <>
+      <CssBaseline enableColorScheme />
+      <BrowserRouter>
+        <AppAppBar onModeChange={handleModeChange} />
+        <Box sx={{mt: 10}}>
+          <Routes>
+            <Route path="/" element={
+              <>
+                <FAQ />
+                <Divider />
+              </>
+            } />
+            <Route path="/tests" element={<Tests />} />
+            <Route path="/default-mock-data" element={<DefaultMockData />} />
+            <Route path="/mock-server" element={<MockServer />} />
+            <Route path="/coverage-report" element={<CoverageReport />} />
+            <Route path="/render-map" element={<RenderMap />} />
+          </Routes>
+        </Box>
+        <Footer />
+      </BrowserRouter>
+    </>
   );
 }
