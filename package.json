@@ -40,6 +40,8 @@
     "@emotion/styled": "^11.13.0",
     "@mui/icons-material": "^6.1.2",
     "@mui/material": "^6.1.2",
+    "http-proxy-middleware": "^3.0.3",
     "react-router-dom": "^6.26.2"
-  }
+  },
+  "proxy": "http://localhost:5000"
 }
