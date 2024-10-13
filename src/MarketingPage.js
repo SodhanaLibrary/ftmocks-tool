@@ -5,20 +5,24 @@ import CssBaseline from '@mui/material/CssBaseline';
 import Divider from '@mui/material/Divider';
 import AppAppBar from './components/AppAppBar';
 import FAQ from './components/FAQ';
-import Footer from './components/Footer';
 import getMPTheme from './theme/getMPTheme';
-import Tests from './components/Tests';
-import DefaultMockData from './components/DefaultMockData';
+import Tests from './components/tests/Tests';
+import DefaultMockData from './components/defaultMocks/DefaultMockData';
 import MockServer from './components/MockServer';
 import CoverageReport from './components/CoverageReport';
 import RenderMap from './components/RenderMap';
 import { Box } from '@mui/material';
 
+const darkTheme = createTheme({
+  palette: {
+    mode: 'dark',
+  },
+});
+
 
 export default function MarketingPage() {
   const [mode, setMode] = React.useState('dark');
-  const MPTheme = createTheme(getMPTheme(mode));
-
+  
   // This code only runs on the client side, to determine the system color preference
   React.useEffect(() => {
     // Check if there is a preferred mode in localStorage
@@ -40,7 +44,7 @@ export default function MarketingPage() {
   };
 
   return (
-    <>
+    <ThemeProvider theme={darkTheme}>
       <CssBaseline enableColorScheme />
       <BrowserRouter>
         <AppAppBar onModeChange={handleModeChange} />
@@ -59,8 +63,7 @@ export default function MarketingPage() {
             <Route path="/render-map" element={<RenderMap />} />
           </Routes>
         </Box>
-        <Footer />
       </BrowserRouter>
-    </>
+    </ThemeProvider>
   );
 }

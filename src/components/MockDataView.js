@@ -1,19 +1,20 @@
 import React from 'react';
 import { Box, Typography, TextField, IconButton, Divider } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import PropTypes from 'prop-types';
 
 const MockDataView = ({ mockItem, onClose }) => {
   if (!mockItem) return null;
 
   return (
-    <Box sx={{ width: 700, p: 2 }}>
+    <Box sx={{ minWidth: 700, p: 2 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2, alignItems: 'center' }}>
         <Typography variant="h5" gutterBottom>
           Mock Item Details
         </Typography>
-        <IconButton onClick={onClose} aria-label="close">
+        {onClose && (<IconButton onClick={onClose} aria-label="close">
           <CloseIcon />
-        </IconButton>
+        </IconButton>)}
       </Box>
       <Divider />
       <TextField
@@ -21,7 +22,7 @@ const MockDataView = ({ mockItem, onClose }) => {
         fullWidth
         margin="normal"
         value={mockItem.url}
-        InputProps={{
+        inputProps={{
           readOnly: true,
         }}
       />
@@ -30,7 +31,7 @@ const MockDataView = ({ mockItem, onClose }) => {
         fullWidth
         margin="normal"
         value={mockItem.method}
-        InputProps={{
+        inputProps={{
           readOnly: true,
         }}
       />
@@ -38,8 +39,8 @@ const MockDataView = ({ mockItem, onClose }) => {
         label="Response Type"
         fullWidth
         margin="normal"
-        value={mockItem.responseType}
-        InputProps={{
+        value={mockItem.response.headers['content-type']}
+        inputProps={{
           readOnly: true,
         }}
       />
@@ -47,9 +48,9 @@ const MockDataView = ({ mockItem, onClose }) => {
         label="Mock Data"
         fullWidth
         multiline
-        rows={4}
+        rows={8}
         margin="normal"
-        value={JSON.stringify(mockItem.mockData, null, 2)}
+        value={JSON.stringify(JSON.parse(mockItem.response.content), null, 2)}
       />
       <TextField
         label="Full Mock Data"
@@ -62,5 +63,36 @@ const MockDataView = ({ mockItem, onClose }) => {
     </Box>
   );
 };
+
+MockDataView.propTypes = {
+  onClose: PropTypes.func,
+  mockItem: PropTypes.shape({
+    url: PropTypes.string.isRequired,
+    method: PropTypes.string.isRequired,
+    response: PropTypes.shape({
+      headers: PropTypes.shape({
+        'content-type': PropTypes.string.isRequired
+      }).isRequired,
+      content: PropTypes.string.isRequired
+    }).isRequired
+  }).isRequired
+};
+
+MockDataView.defaultProps = {
+  onClose: null,
+  mockItem: {
+    url: '',
+    method: '',
+    response: {
+      headers: {
+        'content-type': ''
+      },
+      content: '{}'
+    }
+  }
+};
+
+
+
 
 export default MockDataView;

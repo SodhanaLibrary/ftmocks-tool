@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { useState, useEffect } from 'react';
 import { styled, alpha } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import AppBar from '@mui/material/AppBar';
@@ -28,22 +28,43 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
 
 export default function AppAppBar() {
   const [open, setOpen] = React.useState(false);
+  const [currentPath, setCurrentPath] = React.useState(window.location.pathname);
+  const { useLocation } = require('react-router-dom');
+  const location = useLocation();
+
 
   const toggleDrawer = (newOpen) => () => {
     setOpen(newOpen);
   };
 
+  useEffect(() => {
+      const newPath = window.location.pathname;
+      if (newPath !== currentPath) {
+        setCurrentPath(newPath);
+      }
+  }, [location]);
+
+  const buttonStyle = (path) => ({
+    borderBottom: currentPath === path ? '2px solid' : 'none',
+    borderRadius: 0,
+    '&:hover': {
+      borderBottom: '2px solid',
+    },
+  });
+
+  console.log(currentPath);
 
   return (
     <AppBar
       position="fixed"
-      sx={{ boxShadow: 0, bgcolor: 'transparent', backgroundImage: 'none', mt: 0 }}
+      sx={{ boxShadow: 0, bgcolor: 'transparent', backgroundImage: 'none', mt: 0, p: 3 }}
     >
         <StyledToolbar variant="dense" disableGutters>
-          <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', px: 0 }}>
+          <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', px: 0, gap: 3 }}>
             <Sitemark />
-            <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
+            <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 2 }}>
               <Button
+                sx={buttonStyle('/tests')}
                 component={RouterLink}
                 to="/tests"
                 variant="text"
@@ -53,6 +74,7 @@ export default function AppAppBar() {
                 Tests
               </Button>
               <Button
+                sx={buttonStyle('/default-mock-data')}
                 component={RouterLink}
                 to="/default-mock-data"
                 variant="text"
@@ -62,6 +84,7 @@ export default function AppAppBar() {
                 Default mock data
               </Button>
               <Button
+                sx={buttonStyle('/mock-server')}
                 component={RouterLink}
                 to="/mock-server"
                 variant="text"
@@ -70,7 +93,8 @@ export default function AppAppBar() {
               >
                  Mock server
               </Button>
-              <Button
+              {/* <Button
+                sx={buttonStyle('/coverage-report')}
                 component={RouterLink}
                 to="/coverage-report"
                 variant="text"
@@ -80,6 +104,7 @@ export default function AppAppBar() {
                 Coverage report
               </Button>
               <Button
+                sx={buttonStyle('/render-map')}
                 component={RouterLink}
                 to="/render-map"
                 variant="text"
@@ -87,7 +112,7 @@ export default function AppAppBar() {
                 size="small"
               >
                 Render map
-              </Button>
+              </Button> */}
             </Box>
           </Box>
           <Box
@@ -97,12 +122,12 @@ export default function AppAppBar() {
               alignItems: 'center',
             }}
           >
-            <Button color="primary" variant="text" size="small">
+            {/* <Button color="primary" variant="text" size="small">
               Sign in
             </Button>
             <Button color="primary" variant="contained" size="small">
               Sign up
-            </Button>
+            </Button> */}
           </Box>
           <Box sx={{ display: { sm: 'flex', md: 'none' } }}>
             <IconButton aria-label="Menu button" onClick={toggleDrawer(true)}>
