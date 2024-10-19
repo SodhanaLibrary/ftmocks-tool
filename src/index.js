@@ -1,13 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import MarketingPage from './MarketingPage';
+import FtMocksTool from './FtMocksTool';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <MarketingPage />
+    <FtMocksTool />
   </React.StrictMode>
 );
 

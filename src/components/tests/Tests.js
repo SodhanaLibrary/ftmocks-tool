@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, List, ListItem, ListItemText, Typography, TextField, Drawer } from '@mui/material';
 import MockDataView from '../MockDataView';
 import IconButton from '@mui/material/IconButton';
 import AddIcon from '@mui/icons-material/Add';
 import Tooltip from '@mui/material/Tooltip';
 import TestCaseCreator from './TestCaseCreator';
+import DeleteIcon from '@mui/icons-material/Delete';
+import MockDataCreator from '../MockDataCreator';
+import EditIcon from '@mui/icons-material/Edit';
 
 export default function Tests() {
   const [selectedTest, setSelectedTest] = useState(null);
@@ -15,6 +18,7 @@ export default function Tests() {
   const [selectedMockItem, setSelectedMockItem] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [testCaseCreatorOpen, setTestCaseCreatorOpen] = useState(false);
+  const [mockDataCreatorOpen, setMockDataCreatorOpen] = useState(false);
 
 
   const handleMockItemClick = (item) => {
@@ -61,12 +65,38 @@ export default function Tests() {
     fetchMockData(test.id);
   };
 
-  React.useEffect(() => {
+  const onTestCaseSearch = (searchTerm) => {
+    const filteredTests = testCases.filter(test => 
+      test.name.toLowerCase().includes(searchTerm)
+    );
+    setFilteredTestCases(filteredTests);
+  };
+
+  useEffect(() => {
     fetchTestData();
   }, []);
 
-  const handleDrawerClose = () => {
+  useEffect(() => {
+    if(testCases.length > 0) {
+      onTestCaseSearch(testSearchTerm.toLowerCase());
+    }
+  }, [testSearchTerm])
+
+  useEffect(() => {
+    if(testCases.length > 0) {
+      onTestCaseSearch(testSearchTerm.toLowerCase());
+    }
+    if(selectedTest) {
+      const newSelectedTest = testCases.find(test => test.id === selectedTest.id);
+      handleTestClick(newSelectedTest);
+    }
+  }, [testCases])
+
+  const handleDrawerClose = (refresh) => {
     setDrawerOpen(false);
+    if (refresh) {
+      fetchMockData(selectedTest.id);
+    }
   };
 
   const renderMockDataDrawer = () => {
@@ -79,7 +109,7 @@ export default function Tests() {
         onClose={handleDrawerClose}
         sx={{ width: 300 }}
       >
-        <MockDataView onClose={handleDrawerClose} mockItem={selectedMockItem} />
+        <MockDataView selectedTest={selectedTest} onClose={handleDrawerClose} mockItem={selectedMockItem} />
       </Drawer>
     );
   };
@@ -89,17 +119,62 @@ export default function Tests() {
       <Drawer
         anchor="right"
         open={testCaseCreatorOpen}
-        onClose={() => setTestCaseCreatorOpen(false)}
+        onClose={onCloseTestCaseCreator}
         sx={{ width: 300 }}
       >
-        <TestCaseCreator onClose={() => setTestCaseCreatorOpen(false)}/>
+        <TestCaseCreator onClose={onCloseTestCaseCreator} selectedTest={selectedTest}/>
       </Drawer>
     );
+  };
+
+  const renderMockDataCreator = () => {
+    return (
+      <Drawer
+        anchor="right"
+        open={mockDataCreatorOpen}
+        onClose={onCloseMockDataCreator}
+        sx={{ width: 300 }}
+      >
+        <MockDataCreator selectedTest={selectedTest} onClose={onCloseMockDataCreator}/>
+      </Drawer>
+    );
+  };
+
+  const handleDeleteTest = (testId) => {
+    fetch(`/api/v1/tests/${testId}`, { method: 'DELETE' })
+      .then(response => {
+        if (response.ok) {
+          console.log('Test deleted successfully');
+          fetchTestData();
+        } else {
+          console.error('Failed to delete test');
+        }
+      })
+      .catch(error => {
+        console.error('Error deleting test:', error);
+      });
+  };
+
+  const onCloseMockDataCreator = () => {
+    setMockDataCreatorOpen(false);
+    fetchMockData(selectedTest.id);
+  };
+
+  const onCloseTestCaseCreator = (refresh) => {
+    setTestCaseCreatorOpen(false);
+    if(refresh) {
+      fetchTestData();
+    }
+  };
+
+  const handleEditTestName = () => {
+    setTestCaseCreatorOpen(true);
   };
   
   return (
     <Box sx={{ flexGrow: 1, p: 3, pt: 0, display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 0 }}>
         <Box sx={{ p: 2, border: 1, borderColor: 'divider', boxShadow: 1, width: '300px' }}>
+          
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
             <Typography variant="h6" gutterBottom>
               Test Cases
@@ -119,11 +194,6 @@ export default function Tests() {
             value={testSearchTerm}
             onChange={(e) => {
               setTestSearchTerm(e.target.value);
-              const searchTerm = e.target.value.toLowerCase();
-              const filteredTests = testCases.filter(test => 
-                test.name.toLowerCase().includes(searchTerm)
-              );
-              setFilteredTestCases(filteredTests);
             }}
           />
           <List>
@@ -138,17 +208,46 @@ export default function Tests() {
                   '&:hover': {
                     backgroundColor: (selectedTest && selectedTest.id === test.id) ? 'action.selected' : 'action.hover',
                   },
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  '& .delete-icon': {
+                    display: 'none',
+                  },
+                  '&:hover .delete-icon': {
+                    display: 'block',
+                  },
                 }}
               >
                 <ListItemText primary={test.name} />
+                <IconButton className="delete-icon" onClick={() => handleDeleteTest(test.id)} aria-label="delete">
+                  <DeleteIcon />
+                </IconButton>
               </ListItem>
             ))}
           </List>
         </Box>
         <Box sx={{ p: 2, border: 1, borderColor: 'divider', boxShadow: 1, flexGrow: 1 }}>
-          <Typography variant="h6" gutterBottom>
-            Mock Data
-          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+            
+            <Box sx={{ display: 'flex', alignItems: 'center', '&:hover .edit-icon': { display: 'block' }, '& .edit-icon': { display: 'none' } }}>
+              <Typography variant="h6" gutterBottom>
+                {selectedTest ? selectedTest.name : 'Select a test case'}
+              </Typography>
+              {selectedTest && (
+                <Tooltip title="Edit Test name">
+                  <IconButton className="edit-icon" sx={{ ml: 0.5, cursor: 'pointer' }} size="small" onClick={handleEditTestName} aria-label="edit test">
+                    <EditIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              )}
+            </Box>
+            {selectedTest ? <Tooltip title="Add Mock Data">
+              <IconButton onClick={() => setMockDataCreatorOpen(true)} aria-label="add mock data">
+                <AddIcon />
+              </IconButton>
+            </Tooltip> : null}
+          </Box>
           <TextField
             hiddenLabel
             fullWidth
@@ -192,6 +291,7 @@ export default function Tests() {
         </Box>
         {renderMockDataDrawer()}
         {renderTestCaseCreator()}
+        {renderMockDataCreator()}
     </Box>
   );
 

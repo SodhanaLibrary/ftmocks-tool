@@ -5,7 +5,7 @@ import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import Divider from '@mui/material/Divider';
 
-const MockDataCreator = ({ onClose }) => {
+const MockDataCreator = ({ selectedTest, onClose }) => {
   const [file, setFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState('');
@@ -25,9 +25,10 @@ const MockDataCreator = ({ onClose }) => {
 
     const formData = new FormData();
     formData.append('harFile', file);
+    let endpoint =  selectedTest ? `/api/v1/tests/${selectedTest.id}/harMockdata` : '/api/v1/defaultHarMocks';
 
     try {
-      const response = await fetch('/api/v1/defaultHarMocks', {
+      const response = await fetch(endpoint, {
         method: 'POST',
         body: formData,
       });

@@ -1,9 +1,92 @@
-import React from 'react';
-import { Box, Typography, TextField, IconButton, Divider } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Box, Typography, TextField, IconButton, Divider, Button } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PropTypes from 'prop-types';
+import DeleteIcon from '@mui/icons-material/Delete';
+import Tooltip from '@mui/material/Tooltip';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
 
-const MockDataView = ({ mockItem, onClose }) => {
+const MockDataView = ({ mockItem, onClose, selectedTest }) => {
+  const [mockData, setMockData] = useState(mockItem);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  useEffect(() => {
+    if(mockItem) {
+      mockItem.response.content = JSON.stringify(JSON.parse(mockItem.response.content), null, 2);
+      setMockData(mockItem);
+    }
+  }, [mockItem]);
+
+  const onDelete = async () => {
+    const endpoint = selectedTest ? `/api/v1/tests/${selectedTest.id}/mockdata/${mockItem.id}` : `/api/v1/defaultmocks/${mockItem.id}`;
+    await fetch(endpoint, { 
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    }).then(response => {
+      if (response.ok) {
+        console.log('Mock data deleted successfully');
+      } else {
+        console.error('Failed to delete mock data');
+      }
+    }).catch(error => {
+      console.error('Error deleting mock data:', error);
+    });
+    onClose(true);
+  };
+
+  const onUpdate = async () => {
+    const endpoint = selectedTest ? `/api/v1/tests/${selectedTest.id}/mockdata/${mockItem.id}` : `/api/v1/defaultmocks/${mockItem.id}`;
+    try {
+      const response = await fetch(endpoint, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(mockData)
+      });
+
+      if (response.ok) {
+        console.log('Mock data updated successfully');
+        setSnackbarMessage('Mock data updated successfully');
+        setSnackbarOpen(true);
+      } else {
+        console.error('Failed to update mock data');
+        setSnackbarMessage('Failed to update mock data');
+        setSnackbarOpen(true);
+      }
+    } catch (error) {
+      console.error('Error updating mock data:', error);
+      setSnackbarMessage('Error updating mock data');
+      setSnackbarOpen(true);
+    }
+  };
+
+  const onContentChange = (event) => {
+    try {
+      const parsedContent = event.target.value;
+      setMockData({ ...mockData, response: { ...mockData.response, content: parsedContent } });
+    } catch (error) {
+      console.error('Invalid JSON content:', error);
+    }
+  };  
+
+  const onDataChange = (event) => {
+    try {
+      setMockData(JSON.parse(event.target.value));
+    } catch (error) {
+      console.error('Invalid JSON data:', error);
+    }
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
+
   if (!mockItem) return null;
 
   return (
@@ -12,16 +95,23 @@ const MockDataView = ({ mockItem, onClose }) => {
         <Typography variant="h5" gutterBottom>
           Mock Item Details
         </Typography>
-        {onClose && (<IconButton onClick={onClose} aria-label="close">
+        <Box>
+        {selectedTest && (<IconButton onClick={onClose} aria-label="close">
           <CloseIcon />
         </IconButton>)}
+        <Tooltip title="Delete">
+            <IconButton onClick={onDelete} aria-label="delete">
+              <DeleteIcon color="secondary" />
+            </IconButton>
+          </Tooltip>
+        </Box>
       </Box>
       <Divider />
       <TextField
         label="URL"
         fullWidth
         margin="normal"
-        value={mockItem.url}
+        value={mockData.url}
         inputProps={{
           readOnly: true,
         }}
@@ -30,7 +120,7 @@ const MockDataView = ({ mockItem, onClose }) => {
         label="Method"
         fullWidth
         margin="normal"
-        value={mockItem.method}
+        value={mockData.method}
         inputProps={{
           readOnly: true,
         }}
@@ -39,7 +129,7 @@ const MockDataView = ({ mockItem, onClose }) => {
         label="Response Type"
         fullWidth
         margin="normal"
-        value={mockItem.response.headers['content-type']}
+        value={mockData.response.headers['content-type']}
         inputProps={{
           readOnly: true,
         }}
@@ -50,7 +140,8 @@ const MockDataView = ({ mockItem, onClose }) => {
         multiline
         rows={8}
         margin="normal"
-        value={JSON.stringify(JSON.parse(mockItem.response.content), null, 2)}
+        value={mockData.response.content}
+        onChange={onContentChange}
       />
       <TextField
         label="Full Mock Data"
@@ -58,8 +149,27 @@ const MockDataView = ({ mockItem, onClose }) => {
         multiline
         rows={8}
         margin="normal"
-        value={JSON.stringify(mockItem, null, 2)}
+        value={JSON.stringify(mockData, null, 2)}
+        onChange={onDataChange}
       />
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={onUpdate}
+        style={{ marginTop: '16px' }}
+      >
+        Update Mock Data
+      </Button>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={handleSnackbarClose} severity="success" sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
@@ -75,7 +185,10 @@ MockDataView.propTypes = {
       }).isRequired,
       content: PropTypes.string.isRequired
     }).isRequired
-  }).isRequired
+  }).isRequired,
+  selectedTest: PropTypes.shape({
+    id: PropTypes.string.isRequired
+  })
 };
 
 MockDataView.defaultProps = {
@@ -89,7 +202,8 @@ MockDataView.defaultProps = {
       },
       content: '{}'
     }
-  }
+  },
+  selectedTest: null
 };
 
 
