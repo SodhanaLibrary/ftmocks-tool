@@ -3,14 +3,15 @@ import { Box, TextField, Button, Typography, IconButton, Divider } from '@mui/ma
 import CloseIcon from '@mui/icons-material/Close';
 
 
-const TestCaseCreator = ({ onClose }) => {
-  const [testName, setTestName] = useState('');
+const TestCaseCreator = ({ onClose, selectedTest }) => {
+  const [testName, setTestName] = useState(selectedTest ? selectedTest.name : '');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('/api/v1/tests', {
-        method: 'POST',
+      const endpoint = selectedTest ? `/api/v1/tests/${selectedTest.id}` : '/api/v1/tests';
+      const response = await fetch(endpoint, {
+        method: selectedTest ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -23,7 +24,7 @@ const TestCaseCreator = ({ onClose }) => {
 
       const data = await response.json();
       console.log('Test case created:', data);
-      onClose();
+      onClose(true);
     } catch (error) {
       console.error('Error creating test case:', error);
     }
@@ -33,7 +34,7 @@ const TestCaseCreator = ({ onClose }) => {
     <Box sx={{ p: 2, width: '400px' }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
         <Typography variant="h6" gutterBottom>
-          Create New Test Case
+          {selectedTest ? 'Edit Test Case' : 'Create New Test Case'}
         </Typography>
         <IconButton onClick={onClose} aria-label="close">
           <CloseIcon />
@@ -57,7 +58,7 @@ const TestCaseCreator = ({ onClose }) => {
           fullWidth
           sx={{ mt: 2 }}
         >
-          Create Test Case
+          {selectedTest ? 'Update Test Case' : 'Create Test Case'}
         </Button>
       </form>
     </Box>

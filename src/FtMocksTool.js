@@ -20,7 +20,7 @@ const darkTheme = createTheme({
 });
 
 
-export default function MarketingPage() {
+export default function FtMocksTool() {
   const [mode, setMode] = React.useState('dark');
   
   // This code only runs on the client side, to determine the system color preference

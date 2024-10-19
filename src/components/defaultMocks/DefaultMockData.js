@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, List, ListItem, ListItemText, Typography, TextField, Drawer, Button } from '@mui/material';
 import MockDataView from '../MockDataView';
-import MockDataCreator from './MockDataCreator';
+import MockDataCreator from '../MockDataCreator';
 import IconButton from '@mui/material/IconButton';
 import AddIcon from '@mui/icons-material/Add';
 import Tooltip from '@mui/material/Tooltip';
@@ -44,11 +44,17 @@ export default function DefaultMockData() {
     setSelectedMockItem(item);
   };
 
+  const handleCloseMockDataDrawer = (refresh) => {
+    if (refresh) {
+      fetchDefaultMocks();
+    }
+  };
+
   const renderMockDataDrawer = () => {
     if (!selectedMockItem) return null;
 
     return (
-        <MockDataView mockItem={selectedMockItem.mockData} />
+        <MockDataView mockItem={selectedMockItem.mockData} onClose={handleCloseMockDataDrawer} />
     );
   };
   const handleOpenNewMockDrawer = () => {
@@ -57,6 +63,7 @@ export default function DefaultMockData() {
 
   const handleCloseNewMockDrawer = () => {
     setIsNewMockDrawerOpen(false);
+    fetchDefaultMocks();
   };
   return (
     <Box sx={{ flexGrow: 1, p: 3, pt: 0, display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 0 }}>
