@@ -10,7 +10,7 @@ export default function MockServer() {
   const fetchTests = async () => {
     try {
       const response = await fetch('/api/v1/tests');
-      if (!response.ok) {
+      if (!response?.ok) {
         throw new Error('Failed to fetch tests');
       }
       const data = await response.json();
@@ -23,20 +23,25 @@ export default function MockServer() {
   };
 
   const fetchMockServerStatus = async (testsTemp) => {
-    const response = await fetch('/api/v1/mockServer');
-    if (!response.ok) {
-      throw new Error('Failed to fetch mock server status');
-    }
-    const data = await response.json();
-    if(data.port) {
-      setPort(data.port);
-      setIsRunning(true);
-      setSelectedTest(testsTemp.find(test => test.id === data.testId).id);
-    } else {
-      setIsRunning(false);
-    }
+    try {
+        const response = await fetch('/api/v1/mockServer');
+        if (!response?.ok) {
+          throw new Error('Failed to fetch mock server status');
+        }
+        const data = await response.json();
+        if(data.port) {
+          setPort(data.port);
+          setIsRunning(true);
+          setSelectedTest(testsTemp.find(test => test.id === data.testId).id);
+        } else {
+          setIsRunning(false);
+        }
 
-    return data;
+        return data;
+    } catch (error) {
+      console.error('Error fetching tests:', error);
+      // Handle the error appropriately, e.g., show an error message to the user
+    }
   } 
 
   const loadInitialData = async () => {

@@ -18,6 +18,7 @@ export default function Tests() {
   const [selectedMockItem, setSelectedMockItem] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [testCaseCreatorOpen, setTestCaseCreatorOpen] = useState(false);
+  const [testCaseEditorOpen, setTestCaseEditorOpen] = useState(false);
   const [mockDataCreatorOpen, setMockDataCreatorOpen] = useState(false);
 
 
@@ -48,10 +49,13 @@ export default function Tests() {
         throw new Error('Failed to fetch mock data');
       }
       const data = await response.json();
+      const filteredMockData = data.filter(item =>
+        item.url.toLowerCase().includes(mockSearchTerm)
+      );
       setSelectedTest(prevTest => ({
         ...prevTest,
         mockData: data,
-        filteredMockData: data
+        filteredMockData: filteredMockData
       }));
     } catch (error) {
       console.error('Error fetching mock data:', error);
@@ -88,7 +92,11 @@ export default function Tests() {
     }
     if(selectedTest) {
       const newSelectedTest = testCases.find(test => test.id === selectedTest.id);
-      handleTestClick(newSelectedTest);
+      if(newSelectedTest) {
+        handleTestClick(newSelectedTest);
+      } else {
+        setSelectedTest(null);
+      }
     }
   }, [testCases])
 
@@ -118,11 +126,11 @@ export default function Tests() {
     return (
       <Drawer
         anchor="right"
-        open={testCaseCreatorOpen}
+        open={testCaseCreatorOpen || testCaseEditorOpen}
         onClose={onCloseTestCaseCreator}
         sx={{ width: 300 }}
       >
-        <TestCaseCreator onClose={onCloseTestCaseCreator} selectedTest={selectedTest}/>
+        <TestCaseCreator onClose={onCloseTestCaseCreator} selectedTest={testCaseEditorOpen ? selectedTest : null}/>
       </Drawer>
     );
   };
@@ -161,6 +169,7 @@ export default function Tests() {
   };
 
   const onCloseTestCaseCreator = (refresh) => {
+    setTestCaseEditorOpen(false);
     setTestCaseCreatorOpen(false);
     if(refresh) {
       fetchTestData();
@@ -168,8 +177,15 @@ export default function Tests() {
   };
 
   const handleEditTestName = () => {
-    setTestCaseCreatorOpen(true);
+    setTestCaseEditorOpen(true);
+    setTestCaseCreatorOpen(false);
   };
+
+  const handleCreateTestCase = () => {
+    setTestCaseCreatorOpen(true);
+    setTestCaseEditorOpen(false);
+  };
+
   
   return (
     <Box sx={{ flexGrow: 1, p: 3, pt: 0, display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 0 }}>
@@ -180,7 +196,7 @@ export default function Tests() {
               Test Cases
             </Typography>
             <Tooltip title="Create New Test Case">
-              <IconButton onClick={() => setTestCaseCreatorOpen(true)} aria-label="add">
+              <IconButton onClick={handleCreateTestCase} aria-label="add">
                 <AddIcon />
               </IconButton>
             </Tooltip>

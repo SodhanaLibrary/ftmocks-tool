@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, TextField, IconButton, Divider, Button } from '@mui/material';
+import { Box, Typography, TextField, IconButton, Divider, Button, Chip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PropTypes from 'prop-types';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -11,10 +11,16 @@ const MockDataView = ({ mockItem, onClose, selectedTest }) => {
   const [mockData, setMockData] = useState(mockItem);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [ipInputValue, setIpInputValue] = useState('');
+
   useEffect(() => {
     if(mockItem) {
-      mockItem.response.content = JSON.stringify(JSON.parse(mockItem.response.content), null, 2);
-      setMockData(mockItem);
+      try {
+        mockItem.response.content = JSON.stringify(JSON.parse(mockItem.response.content), null, 2);
+        setMockData({...mockItem});
+      } catch(e) {
+        // 
+      }
     }
   }, [mockItem]);
 
@@ -87,6 +93,25 @@ const MockDataView = ({ mockItem, onClose, selectedTest }) => {
     setSnackbarOpen(false);
   };
 
+  const handleDelete = (chipToDelete) => () => {
+    const newChips = mockData.ignoreParams.filter((chip) => chip !== chipToDelete);
+    setMockData({ ...mockData, ignoreParams: newChips });
+  };
+
+  const addChip = (chip) => {
+    if (chip && !mockData.ignoreParams?.includes(chip)) {
+      setMockData({ ...mockData, ignoreParams: [ ...(mockData.ignoreParams || []), chip ] });
+      setIpInputValue('');
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      addChip(ipInputValue.trim());
+    }
+  };
+
   if (!mockItem) return null;
 
   return (
@@ -134,6 +159,28 @@ const MockDataView = ({ mockItem, onClose, selectedTest }) => {
           readOnly: true,
         }}
       />
+      <Box sx={{width: '100%', display: 'flex', gap: 1, alignItems: 'center'}}>
+        <Box>
+          {mockData.ignoreParams?.map((chip, index) => (
+            <Chip
+              key={index}
+              label={chip}
+              onDelete={handleDelete(chip)}
+              sx={{ margin: '4px' }}
+            />
+          ))}
+        </Box>
+
+        <TextField
+          value={ipInputValue}
+          fullWidth
+          onChange={(e) => setIpInputValue(e.target.value)}
+          onKeyDown={handleKeyPress}
+          placeholder="Type and press Enter or Comma"
+          margin="normal"
+          label="Ignore Parameters"
+        />
+      </Box>
       <TextField
         label="Mock Data"
         fullWidth
