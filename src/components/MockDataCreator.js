@@ -33,6 +33,9 @@ const MockDataCreator = ({ selectedTest, onClose }) => {
     const formData = new FormData();
     formData.append('harFile', file);
     formData.append('avoidDuplicates', avoidDuplicates);
+    if(selectedTest?.name) {
+      formData.append('testName', selectedTest?.name);
+    }
     let endpoint =  selectedTest ? `/api/v1/tests/${selectedTest.id}/harMockdata` : '/api/v1/defaultHarMocks';
 
     try {

@@ -5,6 +5,7 @@ import MockDataCreator from '../MockDataCreator';
 import IconButton from '@mui/material/IconButton';
 import AddIcon from '@mui/icons-material/Add';
 import Tooltip from '@mui/material/Tooltip';
+import { sortUrlsByMatch } from '../utils/SearchUtils';
 
 
 export default function DefaultMockData() {
@@ -27,8 +28,6 @@ export default function DefaultMockData() {
       }
       const data = await response.json();
       setMockData(data);
-      setFilteredMockData(data);
-      setSelectedMockItem(data[0]);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -39,6 +38,25 @@ export default function DefaultMockData() {
   useEffect(() => {
     fetchDefaultMocks();
   }, []);
+
+  useEffect(() => {
+    if(mockData?.length && mockSearchTerm?.length) {
+      let fData = [];
+      try {
+        fData = sortUrlsByMatch(mockSearchTerm, mockData)
+      } catch(error) {
+        console.log(error);
+        fData = mockData.filter(item =>
+          item.url.toLowerCase().includes(mockSearchTerm.toLowerCase())
+        );
+      }
+      setFilteredMockData(fData);
+      setSelectedMockItem(fData[0]);
+    } else {
+      setFilteredMockData(mockData);
+      setSelectedMockItem(mockData[0]);
+    }
+  }, [mockData, mockSearchTerm])
 
   const handleMockItemClick = (item) => {
     setSelectedMockItem(item);
@@ -91,14 +109,9 @@ export default function DefaultMockData() {
             value={mockSearchTerm}
             onChange={(e) => {
               setMockSearchTerm(e.target.value);
-              const searchTerm = e.target.value.toLowerCase();
-                const filteredMockData = mockData.filter(item =>
-                  item.url.toLowerCase().includes(searchTerm)
-                );
-                setFilteredMockData(filteredMockData);
             }}
           />
-            <List>
+            <List sx={{height: 'calc(100vh - 200px)', overflowY: 'scroll'}}>
               {filteredMockData.map((mockItem, index) => (
                 <ListItem
                   button
