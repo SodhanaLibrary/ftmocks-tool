@@ -32,7 +32,7 @@ export default function MockServer() {
         if(data.port) {
           setPort(data.port);
           setIsRunning(true);
-          setSelectedTest(testsTemp.find(test => test.id === data.testId).id);
+          setSelectedTest(data.testName);
         } else {
           setIsRunning(false);
         }
@@ -70,7 +70,7 @@ export default function MockServer() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        testId: selectedTest,
+        testName: selectedTest,
         port: parseInt(port, 10)
       }),
     })
@@ -133,7 +133,7 @@ export default function MockServer() {
             onChange={handleTestChange}
           >
             {tests.map((test) => (
-              <MenuItem key={test.id} value={test.id}>{test.name}</MenuItem>
+              <MenuItem key={test.id} value={test.name}>{test.name}</MenuItem>
             ))}
           </Select>
         </FormControl>

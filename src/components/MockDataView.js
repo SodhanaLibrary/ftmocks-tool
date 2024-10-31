@@ -16,16 +16,16 @@ const MockDataView = ({ mockItem, onClose, selectedTest }) => {
   useEffect(() => {
     if(mockItem) {
       try {
-        mockItem.response.content = JSON.stringify(JSON.parse(mockItem.response.content), null, 2);
+        mockItem.response.content = mockItem.response.content ? JSON.stringify(JSON.parse(mockItem.response.content), null, 2) : '';
         setMockData({...mockItem});
       } catch(e) {
-        // 
+        console.log(e);
       }
     }
   }, [mockItem]);
 
   const onDelete = async () => {
-    const endpoint = selectedTest ? `/api/v1/tests/${selectedTest.id}/mockdata/${mockItem.id}` : `/api/v1/defaultmocks/${mockItem.id}`;
+    const endpoint = selectedTest ? `/api/v1/tests/${selectedTest.id}/mockdata/${mockItem.id}?name=${selectedTest.name}` : `/api/v1/defaultmocks/${mockItem.id}`;
     await fetch(endpoint, { 
       method: 'DELETE',
       headers: {
@@ -45,7 +45,7 @@ const MockDataView = ({ mockItem, onClose, selectedTest }) => {
   };
 
   const onUpdate = async () => {
-    const endpoint = selectedTest ? `/api/v1/tests/${selectedTest.id}/mockdata/${mockItem.id}` : `/api/v1/defaultmocks/${mockItem.id}`;
+    const endpoint = selectedTest ? `/api/v1/tests/${selectedTest.id}/mockdata/${mockItem.id}?name=${selectedTest.name}` : `/api/v1/defaultmocks/${mockItem.id}`;
     try {
       const response = await fetch(endpoint, {
         method: 'PUT',
@@ -115,7 +115,7 @@ const MockDataView = ({ mockItem, onClose, selectedTest }) => {
   if (!mockItem) return null;
 
   return (
-    <Box sx={{ minWidth: 700, p: 2 }}>
+    <Box sx={{ minWidth: 700, p: 2, maxHeight: 'calc(100vh - 80px)', overflowY: 'scroll' }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2, alignItems: 'center' }}>
         <Typography variant="h5" gutterBottom>
           Mock Item Details

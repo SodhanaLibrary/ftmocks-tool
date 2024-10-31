@@ -8,6 +8,7 @@ import TestCaseCreator from './TestCaseCreator';
 import DeleteIcon from '@mui/icons-material/Delete';
 import MockDataCreator from '../MockDataCreator';
 import EditIcon from '@mui/icons-material/Edit';
+import { sortUrlsByMatch } from '../utils/SearchUtils';
 
 export default function Tests() {
   const [selectedTest, setSelectedTest] = useState(null);
@@ -42,20 +43,17 @@ export default function Tests() {
     }
   };
 
-  const fetchMockData = async (testId) => {
+  const fetchMockData = async (test) => {
     try {
-      const response = await fetch(`/api/v1/tests/${testId}/mockdata`);
+      const response = await fetch(`/api/v1/tests/${test.id}/mockdata?name=${test.name}`);
       if (!response.ok) {
         throw new Error('Failed to fetch mock data');
       }
       const data = await response.json();
-      const filteredMockData = data.filter(item =>
-        item.url.toLowerCase().includes(mockSearchTerm)
-      );
       setSelectedTest(prevTest => ({
         ...prevTest,
         mockData: data,
-        filteredMockData: filteredMockData
+        filteredMockData: sortUrlsByMatch(mockSearchTerm, data)
       }));
     } catch (error) {
       console.error('Error fetching mock data:', error);
@@ -66,7 +64,7 @@ export default function Tests() {
   const handleTestClick = (test) => {
     setSelectedTest({...test, filteredMockData: []});
     setMockSearchTerm('');
-    fetchMockData(test.id);
+    fetchMockData(test);
   };
 
   const onTestCaseSearch = (searchTerm) => {
@@ -103,7 +101,7 @@ export default function Tests() {
   const handleDrawerClose = (refresh) => {
     setDrawerOpen(false);
     if (refresh) {
-      fetchMockData(selectedTest.id);
+      fetchMockData(selectedTest);
     }
   };
 
@@ -148,8 +146,8 @@ export default function Tests() {
     );
   };
 
-  const handleDeleteTest = (testId) => {
-    fetch(`/api/v1/tests/${testId}`, { method: 'DELETE' })
+  const handleDeleteTest = (test) => {
+    fetch(`/api/v1/tests/${test.id}?name=${test.name}`, { method: 'DELETE' })
       .then(response => {
         if (response.ok) {
           console.log('Test deleted successfully');
@@ -161,11 +159,12 @@ export default function Tests() {
       .catch(error => {
         console.error('Error deleting test:', error);
       });
+    setSelectedTest(null);
   };
 
   const onCloseMockDataCreator = () => {
     setMockDataCreatorOpen(false);
-    fetchMockData(selectedTest.id);
+    fetchMockData(selectedTest);
   };
 
   const onCloseTestCaseCreator = (refresh) => {
@@ -185,6 +184,21 @@ export default function Tests() {
     setTestCaseCreatorOpen(true);
     setTestCaseEditorOpen(false);
   };
+
+  useEffect(() => {
+    if(selectedTest?.mockData?.length) {
+      let fData = [];
+      try {
+        fData = sortUrlsByMatch(mockSearchTerm, selectedTest?.mockData)
+      } catch(error) {
+        fData = selectedTest?.mockData?.filter(item =>
+          item.url.toLowerCase().includes(mockSearchTerm.toLowerCase())
+        );
+      }
+      selectedTest.filteredMockData = fData;
+      setSelectedTest({...selectedTest});
+    }
+  }, [mockSearchTerm]);
 
   
   return (
@@ -236,7 +250,7 @@ export default function Tests() {
                 }}
               >
                 <ListItemText primary={test.name} />
-                <IconButton className="delete-icon" onClick={() => handleDeleteTest(test.id)} aria-label="delete">
+                <IconButton className="delete-icon" onClick={() => handleDeleteTest(test)} aria-label="delete">
                   <DeleteIcon />
                 </IconButton>
               </ListItem>
@@ -273,16 +287,9 @@ export default function Tests() {
             value={mockSearchTerm}
             onChange={(e) => {
               setMockSearchTerm(e.target.value);
-              const searchTerm = e.target.value.toLowerCase();
-              if (selectedTest) {
-                const filteredMockData = selectedTest.mockData.filter(item =>
-                  item.url.toLowerCase().includes(searchTerm)
-                );
-                setSelectedTest({...selectedTest, filteredMockData});
-              }
             }}
           />
-          {selectedTest ? (
+          {selectedTest?.filteredMockData ? (
             <List>
               {selectedTest.filteredMockData.map((mockItem, index) => (
                 <ListItem
