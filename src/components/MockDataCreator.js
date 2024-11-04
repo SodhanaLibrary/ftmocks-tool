@@ -67,7 +67,7 @@ const MockDataCreator = ({ selectedTest, onClose }) => {
               color="primary"
             />
           }
-          label="Do not create a mock, if it is already in mock data"
+          label="Do not create a mock, if it is already in default mock data"
         />}
         <input
             accept=".har"
