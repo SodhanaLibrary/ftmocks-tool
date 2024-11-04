@@ -5,6 +5,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import Divider from '@mui/material/Divider';
 import AppAppBar from './components/AppAppBar';
 import FAQ from './components/FAQ';
+import TestSummary from './components/TestSummary';
 import getMPTheme from './theme/getMPTheme';
 import Tests from './components/tests/Tests';
 import DefaultMockData from './components/defaultMocks/DefaultMockData';
@@ -52,8 +53,7 @@ export default function FtMocksTool() {
           <Routes>
             <Route path="/" element={
               <>
-                <FAQ />
-                <Divider />
+                <TestSummary />
               </>
             } />
             <Route path="/tests" element={<Tests />} />
