@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, List, ListItem, ListItemText, Typography, TextField, Drawer, Button } from '@mui/material';
+import { Box, List, ListItem, ListItemText, Typography, TextField, Drawer, Chip } from '@mui/material';
 import MockDataView from '../MockDataView';
 import MockDataCreator from '../MockDataCreator';
 import IconButton from '@mui/material/IconButton';
@@ -128,6 +128,7 @@ export default function DefaultMockData() {
                   }}
                 >
                   <ListItemText primary={mockItem.url} />
+                  <Chip label={mockItem.method} />
                 </ListItem>
               ))}
             </List>

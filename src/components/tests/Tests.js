@@ -9,6 +9,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import MockDataCreator from '../MockDataCreator';
 import EditIcon from '@mui/icons-material/Edit';
 import { sortUrlsByMatch } from '../utils/SearchUtils';
+import DraggableMockList from './MockDataList';
 
 export default function Tests() {
   const [selectedTest, setSelectedTest] = useState(null);
@@ -200,6 +201,41 @@ export default function Tests() {
     }
   }, [mockSearchTerm]);
 
+  const setFilteredMockData = (newFiltrdMocks) => {
+    const indexes = [];
+    newFiltrdMocks.forEach(element => {
+      indexes.push(selectedTest.mockData.findIndex(md => md.id === element.id));
+    });
+    indexes.sort();
+    let k = 0;
+    indexes.forEach(i => {
+      selectedTest.mockData[i] = newFiltrdMocks[k];
+      k = k + 1;
+    });
+    selectedTest.filteredMockData = sortUrlsByMatch(mockSearchTerm, selectedTest.mockData)
+    setSelectedTest({...selectedTest});
+
+
+    fetch(`/api/v1/tests/${selectedTest.id}/mockdata?name=${selectedTest.name}`, 
+      { 
+        method: 'PUT', 
+        headers: {
+        'Content-Type': 'application/json',
+        }, 
+        body: JSON.stringify(selectedTest.mockData) 
+      }
+    ).then(response => {
+        if (response.ok) {
+          console.log('Test deleted successfully');
+          fetchTestData();
+        } else {
+          console.error('Failed to delete test');
+        }
+      })
+      .catch(error => {
+        console.error('Error deleting test:', error);
+      });
+  };
   
   return (
     <Box sx={{ flexGrow: 1, p: 3, pt: 0, display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 0 }}>
@@ -290,24 +326,12 @@ export default function Tests() {
             }}
           />
           {selectedTest?.filteredMockData ? (
-            <List>
-              {selectedTest.filteredMockData.map((mockItem, index) => (
-                <ListItem
-                  button
-                  key={index}
-                  onClick={() => handleMockItemClick(mockItem)}
-                  selected={selectedMockItem === mockItem}
-                  sx={{
-                    backgroundColor: selectedMockItem === mockItem ? 'action.selected' : 'inherit',
-                    '&:hover': {
-                      backgroundColor: selectedMockItem === mockItem ? 'action.selected' : 'action.hover',
-                    },
-                  }}
-                >
-                  <ListItemText primary={mockItem.url} />
-                </ListItem>
-              ))}
-            </List>
+            <DraggableMockList 
+               selectedTest={selectedTest}
+               selectedMockItem={selectedMockItem}
+               handleMockItemClick={handleMockItemClick}
+               setFilteredMockData={setFilteredMockData}
+            />
           ) : (
             <Typography>Select a test case to view mock data</Typography>
           )}
