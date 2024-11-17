@@ -4,7 +4,10 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import Divider from '@mui/material/Divider';
+import { useDropzone } from 'react-dropzone';
 import { Checkbox, FormControlLabel } from '@mui/material';
+import DefaultMockDataDuplicate from './tests/DefaultMockDataDuplicate';
+import MockDataByUserInput from './common/MockDataByUserInput';
 
 const MockDataCreator = ({ selectedTest, onClose }) => {
   const [file, setFile] = useState(null);
@@ -13,9 +16,21 @@ const MockDataCreator = ({ selectedTest, onClose }) => {
   const [selectedTab, setSelectedTab] = useState(0);
   const [avoidDuplicates, setAvoidDuplicates] = useState(true);
 
-  const handleFileChange = (event) => {
-    setFile(event.target.files[0]);
+  const onDrop = (acceptedFiles) => {
+    setFile(acceptedFiles[0]);
   };
+
+  const {
+    getRootProps,
+    getInputProps,
+    isDragActive,
+    isDragReject,
+  } = useDropzone({
+    onDrop,
+    accept: { '.har': [] }, // Accept only images
+    multiple: false, // Allow only single file
+  });
+
 
   const handleChange = (event) => {
     setAvoidDuplicates(event.target.checked);
@@ -69,18 +84,32 @@ const MockDataCreator = ({ selectedTest, onClose }) => {
           }
           label="Do not create a mock, if it is already in default mock data"
         />}
-        <input
-            accept=".har"
-            style={{ display: 'none' }}
-            id="raised-button-file"
-            type="file"
-            onChange={handleFileChange}
-        />
-        <label htmlFor="raised-button-file">
-            <Button variant="contained" component="span" startIcon={<CloudUploadIcon />}>
+        <Box
+          {...getRootProps()}
+          sx={{
+            border: '2px dashed',
+            borderColor: isDragReject ? 'error.main' : 'primary.main',
+            borderRadius: 2,
+            padding: 4,
+            textAlign: 'center',
+            backgroundColor: isDragActive ? 'action.hover' : 'background.default',
+            cursor: 'pointer',
+          }}
+        >
+          <input {...getInputProps()} />
+          {isDragActive ? (
+            <Typography variant="h6" color="primary">
+              Drop the HAR file here...
+            </Typography>
+          ) : (
+            <Typography variant="h6">
+              Drag & drop a HAR file here, or click to select one
+            </Typography>
+          )}
+          <Button variant="outlined" sx={{ mt: 2 }}>
             Choose HAR File
-            </Button>
-        </label>
+          </Button>
+        </Box>
         {file && <Typography variant="body2">{file.name}</Typography>}
         <Button
             variant="contained"
@@ -94,9 +123,9 @@ const MockDataCreator = ({ selectedTest, onClose }) => {
         {uploadStatus && <Typography color={uploadStatus.includes('failed') ? 'error' : 'success'}>{uploadStatus}</Typography>}
     </Box>);
 
-  const renderByUserInput = () => (<Box>Users input</Box>);
+  const renderByUserInput = () => (<MockDataByUserInput selectedTest={selectedTest}/>);
 
-  const renderFromDefaultMocks = () => (<Box>Default mocks</Box>);
+  const renderFromDefaultMocks = () => (<DefaultMockDataDuplicate selectedTest={selectedTest}/>);
 
   return (
     <Box sx={{ width: 600, pl: 3, pr: 3, pt: 1 }}>

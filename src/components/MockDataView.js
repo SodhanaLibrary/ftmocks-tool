@@ -6,6 +6,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import Tooltip from '@mui/material/Tooltip';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
 
 const MockDataView = ({ mockItem, onClose, selectedTest }) => {
   const [mockData, setMockData] = useState(mockItem);
@@ -112,6 +114,42 @@ const MockDataView = ({ mockItem, onClose, selectedTest }) => {
     }
   };
 
+  const onInputChange = (e) => {
+    if(e.target.name === 'waitForPrevious') {
+      mockData[e.target.name] =  e.target.checked;
+    } else {
+      mockData[e.target.name] =  e.target.value;
+    }
+    setMockData({...mockData});
+  }
+
+  const duplicateMockData = async () => {
+    const endpoint = selectedTest ? `/api/v1/tests/${selectedTest.id}/mockdata?name=${selectedTest.name}` : `/api/v1/defaultmocks`;
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(mockData, null, 2)
+      });
+
+      if (response.ok) {
+        setSnackbarMessage('Mock data duplicated successfully');
+        setSnackbarOpen(true);
+        onClose();
+      } else {
+        setSnackbarMessage('Failed to duplicate mock data');
+        setSnackbarOpen(true);
+      }
+    } catch (error) {
+      console.error('Error updating mock data:', error);
+      setSnackbarMessage('Error updating mock data');
+      setSnackbarOpen(true);
+    }
+  };
+
   if (!mockItem) return null;
 
   return (
@@ -159,6 +197,17 @@ const MockDataView = ({ mockItem, onClose, selectedTest }) => {
           readOnly: true,
         }}
       />
+      <TextField
+        label="Delay (in milliseconds)"
+        fullWidth
+        margin="normal"
+        value={mockData.delay}
+        type='number'
+        name="delay"
+        onChange={onInputChange}
+      />
+      {selectedTest && <FormControlLabel control={<Checkbox selected={mockItem.waitForPrevious} name="waitForPrevious" onChange={onInputChange}/>} label="Wait for previous mock trigger" />}
+      
       <Box sx={{width: '100%', display: 'flex', gap: 1, alignItems: 'center'}}>
         <Box>
           {mockData.ignoreParams?.map((chip, index) => (
@@ -199,19 +248,29 @@ const MockDataView = ({ mockItem, onClose, selectedTest }) => {
         value={JSON.stringify(mockData, null, 2)}
         onChange={onDataChange}
       />
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={onUpdate}
-        style={{ marginTop: '16px' }}
-      >
-        Update Mock Data
-      </Button>
+      <Box display="flex" gap={1}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={onUpdate}
+          style={{ marginTop: '16px' }}
+        >
+          Update Mock Data
+        </Button>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={duplicateMockData}
+          style={{ marginTop: '16px' }}
+        >
+          Duplicate
+        </Button>
+      </Box>
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}
         onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
         <Alert onClose={handleSnackbarClose} severity="success" sx={{ width: '100%' }}>
           {snackbarMessage}
