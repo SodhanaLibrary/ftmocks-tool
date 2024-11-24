@@ -206,7 +206,7 @@ const MockDataView = ({ mockItem, onClose, selectedTest }) => {
         name="delay"
         onChange={onInputChange}
       />
-      {selectedTest && <FormControlLabel control={<Checkbox selected={mockItem.waitForPrevious} name="waitForPrevious" onChange={onInputChange}/>} label="Wait for previous mock trigger" />}
+      {selectedTest && <FormControlLabel control={<Checkbox checked={mockItem.waitForPrevious} name="waitForPrevious" onChange={onInputChange}/>} label="Wait for previous mock trigger" />}
       
       <Box sx={{width: '100%', display: 'flex', gap: 1, alignItems: 'center'}}>
         <Box>

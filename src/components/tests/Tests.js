@@ -8,6 +8,7 @@ import TestCaseCreator from './TestCaseCreator';
 import DeleteIcon from '@mui/icons-material/Delete';
 import MockDataCreator from '../MockDataCreator';
 import EditIcon from '@mui/icons-material/Edit';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { sortUrlsByMatch } from '../utils/SearchUtils';
 import DraggableMockList from './MockDataList';
 
@@ -236,6 +237,28 @@ export default function Tests() {
         console.error('Error deleting test:', error);
       });
   };
+
+  const resetMockData = () => {
+    fetch(`/api/v1/tests/${selectedTest.id}/reset?name=${selectedTest.name}`, 
+      { 
+        method: 'PUT', 
+        headers: {
+        'Content-Type': 'application/json',
+        }, 
+        body: JSON.stringify(selectedTest) 
+      }
+    ).then(response => {
+        if (response.ok) {
+          console.log('Test reset successfully');
+          fetchTestData();
+        } else {
+          console.error('Failed to reset test');
+        }
+      })
+      .catch(error => {
+        console.error('Error resetting test:', error);
+      });
+  };
   
   return (
     <Box sx={{ flexGrow: 1, p: 3, pt: 0, display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 0 }}>
@@ -308,11 +331,18 @@ export default function Tests() {
                 </Tooltip>
               )}
             </Box>
-            {selectedTest ? <Tooltip title="Add Mock Data">
-              <IconButton onClick={() => setMockDataCreatorOpen(true)} aria-label="add mock data">
-                <AddIcon />
-              </IconButton>
-            </Tooltip> : null}
+            {selectedTest ? <Box>
+              <Tooltip title="Reset Mock Data">
+                <IconButton onClick={resetMockData} aria-label="reset mock data">
+                  <RestartAltIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Add Mock Data">
+                <IconButton onClick={() => setMockDataCreatorOpen(true)} aria-label="add mock data">
+                  <AddIcon />
+                </IconButton>
+              </Tooltip>
+            </Box> : null}
           </Box>
           <TextField
             hiddenLabel
