@@ -9,6 +9,7 @@ import TestSummary from './components/summary/TestSummary';
 import getMPTheme from './theme/getMPTheme';
 import Tests from './components/tests/Tests';
 import DefaultMockData from './components/defaultMocks/DefaultMockData';
+import RecordedMockData from './components/recordedMocks/RecordedMockData';
 import MockServer from './components/MockServer';
 import CoverageReport from './components/CoverageReport';
 import RenderMap from './components/RenderMap';
@@ -20,10 +21,9 @@ const darkTheme = createTheme({
   },
 });
 
-
 export default function FtMocksTool() {
   const [mode, setMode] = React.useState('dark');
-  
+
   // This code only runs on the client side, to determine the system color preference
   React.useEffect(() => {
     // Check if there is a preferred mode in localStorage
@@ -33,7 +33,7 @@ export default function FtMocksTool() {
     } else {
       // If no preference is found, it uses system preference
       const systemPrefersDark = window.matchMedia(
-        '(prefers-color-scheme: dark)',
+        '(prefers-color-scheme: dark)'
       ).matches;
       setMode(systemPrefersDark ? 'dark' : 'light');
     }
@@ -49,15 +49,19 @@ export default function FtMocksTool() {
       <CssBaseline enableColorScheme />
       <BrowserRouter>
         <AppAppBar onModeChange={handleModeChange} />
-        <Box sx={{mt: 10}}>
+        <Box sx={{ mt: 10 }}>
           <Routes>
-            <Route path="/" element={
-              <>
-                <TestSummary />
-              </>
-            } />
+            <Route
+              path="/"
+              element={
+                <>
+                  <TestSummary />
+                </>
+              }
+            />
             <Route path="/tests" element={<Tests />} />
             <Route path="/default-mock-data" element={<DefaultMockData />} />
+            <Route path="/recorded-mock-data" element={<RecordedMockData />} />
             <Route path="/mock-server" element={<MockServer />} />
             <Route path="/coverage-report" element={<CoverageReport />} />
             <Route path="/render-map" element={<RenderMap />} />

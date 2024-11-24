@@ -56,7 +56,11 @@ export default function Footer() {
         >
           <Box sx={{ width: { xs: '100%', sm: '60%' } }}>
             <SitemarkIcon />
-            <Typography variant="body2" gutterBottom sx={{ fontWeight: 600, mt: 2 }}>
+            <Typography
+              variant="body2"
+              gutterBottom
+              sx={{ fontWeight: 600, mt: 2 }}
+            >
               Join the newsletter
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>

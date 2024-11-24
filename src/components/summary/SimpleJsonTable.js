@@ -13,8 +13,12 @@ const SimpleJsonTable = ({ data }) => {
       <Table>
         <TableHead>
           <TableRow>
-            <TableCell><strong>Env Variable</strong></TableCell>
-            <TableCell><strong>Value</strong></TableCell>
+            <TableCell>
+              <strong>Env Variable</strong>
+            </TableCell>
+            <TableCell>
+              <strong>Value</strong>
+            </TableCell>
           </TableRow>
         </TableHead>
         <TableBody>

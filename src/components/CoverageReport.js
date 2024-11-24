@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Box, List, ListItem, ListItemText, Typography, Paper } from '@mui/material';
+import {
+  Box,
+  List,
+  ListItem,
+  ListItemText,
+  Typography,
+  Paper,
+} from '@mui/material';
 
 export default function CoverageReport() {
   const [coverageData, setCoverageData] = useState(null);
@@ -8,9 +15,9 @@ export default function CoverageReport() {
   useEffect(() => {
     // Fetch the coverage report JSON
     fetch('/coverage/coverage-final.json')
-      .then(response => response.json())
-      .then(data => setCoverageData(data))
-      .catch(error => console.error('Error fetching coverage data:', error));
+      .then((response) => response.json())
+      .then((data) => setCoverageData(data))
+      .catch((error) => console.error('Error fetching coverage data:', error));
   }, []);
 
   const handleFileClick = (file) => {
@@ -19,13 +26,23 @@ export default function CoverageReport() {
 
   const calculateFileCoverage = (fileData) => {
     const { statements, branches, functions, lines } = fileData;
-    const total = statements.total + branches.total + functions.total + lines.total;
-    const covered = statements.covered + branches.covered + functions.covered + lines.covered;
+    const total =
+      statements.total + branches.total + functions.total + lines.total;
+    const covered =
+      statements.covered + branches.covered + functions.covered + lines.covered;
     return ((covered / total) * 100).toFixed(2);
   };
 
   return (
-    <Box sx={{ flexGrow: 1, p: 3, display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
+    <Box
+      sx={{
+        flexGrow: 1,
+        p: 3,
+        display: 'flex',
+        flexDirection: { xs: 'column', md: 'row' },
+        gap: 2,
+      }}
+    >
       <Box sx={{ flex: 1 }}>
         <Paper elevation={3} sx={{ p: 2 }}>
           <Typography variant="h6" gutterBottom>
@@ -56,7 +73,8 @@ export default function CoverageReport() {
             <Box>
               <Typography variant="h6">{selectedFile}</Typography>
               <Typography>
-                Total Coverage: {calculateFileCoverage(coverageData[selectedFile])}%
+                Total Coverage:{' '}
+                {calculateFileCoverage(coverageData[selectedFile])}%
               </Typography>
               <Typography>
                 Statements: {coverageData[selectedFile].statements.pct}%

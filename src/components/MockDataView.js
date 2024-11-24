@@ -1,61 +1,84 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, TextField, IconButton, Divider, Button, Chip } from '@mui/material';
+import {
+  Box,
+  Typography,
+  TextField,
+  IconButton,
+  Divider,
+  Button,
+  Chip,
+} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PropTypes from 'prop-types';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Tooltip from '@mui/material/Tooltip';
 import Snackbar from '@mui/material/Snackbar';
+import UploadIcon from '@mui/icons-material/Upload';
 import Alert from '@mui/material/Alert';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 
-const MockDataView = ({ mockItem, onClose, selectedTest }) => {
+const MockDataView = ({
+  mockItem,
+  onClose,
+  selectedTest,
+  recordedMock,
+  onClickUpload,
+}) => {
   const [mockData, setMockData] = useState(mockItem);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [ipInputValue, setIpInputValue] = useState('');
 
   useEffect(() => {
-    if(mockItem) {
+    if (mockItem) {
       try {
-        mockItem.response.content = mockItem.response.content ? JSON.stringify(JSON.parse(mockItem.response.content), null, 2) : '';
-        setMockData({...mockItem});
-      } catch(e) {
+        mockItem.response.content = mockItem.response.content
+          ? JSON.stringify(JSON.parse(mockItem.response.content), null, 2)
+          : '';
+        setMockData({ ...mockItem });
+      } catch (e) {
         console.log(e);
       }
     }
   }, [mockItem]);
 
   const onDelete = async () => {
-    const endpoint = selectedTest ? `/api/v1/tests/${selectedTest.id}/mockdata/${mockItem.id}?name=${selectedTest.name}` : `/api/v1/defaultmocks/${mockItem.id}`;
-    await fetch(endpoint, { 
+    const endpoint = selectedTest
+      ? `/api/v1/tests/${selectedTest.id}/mockdata/${mockItem.id}?name=${selectedTest.name}`
+      : `/api/v1/${!recordedMock ? 'defaultmocks' : 'recordedMocks'}/${mockItem.id}`;
+    await fetch(endpoint, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    }).then(response => {
-      if (response.ok) {
-        console.log('Mock data deleted successfully');
-      } else {
-        console.error('Failed to delete mock data');
-      }
-    }).catch(error => {
-      console.error('Error deleting mock data:', error);
-    });
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    })
+      .then((response) => {
+        if (response.ok) {
+          console.log('Mock data deleted successfully');
+        } else {
+          console.error('Failed to delete mock data');
+        }
+      })
+      .catch((error) => {
+        console.error('Error deleting mock data:', error);
+      });
     onClose(true);
   };
 
   const onUpdate = async () => {
-    const endpoint = selectedTest ? `/api/v1/tests/${selectedTest.id}/mockdata/${mockItem.id}?name=${selectedTest.name}` : `/api/v1/defaultmocks/${mockItem.id}`;
+    const endpoint = selectedTest
+      ? `/api/v1/tests/${selectedTest.id}/mockdata/${mockItem.id}?name=${selectedTest.name}`
+      : `/api/v1/${!recordedMock ? 'defaultmocks' : 'recordedMocks'}/${mockItem.id}`;
     try {
       const response = await fetch(endpoint, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify(mockData)
+        body: JSON.stringify(mockData),
       });
 
       if (response.ok) {
@@ -77,11 +100,14 @@ const MockDataView = ({ mockItem, onClose, selectedTest }) => {
   const onContentChange = (event) => {
     try {
       const parsedContent = event.target.value;
-      setMockData({ ...mockData, response: { ...mockData.response, content: parsedContent } });
+      setMockData({
+        ...mockData,
+        response: { ...mockData.response, content: parsedContent },
+      });
     } catch (error) {
       console.error('Invalid JSON content:', error);
     }
-  };  
+  };
 
   const onDataChange = (event) => {
     try {
@@ -96,13 +122,18 @@ const MockDataView = ({ mockItem, onClose, selectedTest }) => {
   };
 
   const handleDelete = (chipToDelete) => () => {
-    const newChips = mockData.ignoreParams.filter((chip) => chip !== chipToDelete);
+    const newChips = mockData.ignoreParams.filter(
+      (chip) => chip !== chipToDelete
+    );
     setMockData({ ...mockData, ignoreParams: newChips });
   };
 
   const addChip = (chip) => {
     if (chip && !mockData.ignoreParams?.includes(chip)) {
-      setMockData({ ...mockData, ignoreParams: [ ...(mockData.ignoreParams || []), chip ] });
+      setMockData({
+        ...mockData,
+        ignoreParams: [...(mockData.ignoreParams || []), chip],
+      });
       setIpInputValue('');
     }
   };
@@ -115,24 +146,26 @@ const MockDataView = ({ mockItem, onClose, selectedTest }) => {
   };
 
   const onInputChange = (e) => {
-    if(e.target.name === 'waitForPrevious') {
-      mockData[e.target.name] =  e.target.checked;
+    if (e.target.name === 'waitForPrevious') {
+      mockData[e.target.name] = e.target.checked;
     } else {
-      mockData[e.target.name] =  e.target.value;
+      mockData[e.target.name] = e.target.value;
     }
-    setMockData({...mockData});
-  }
+    setMockData({ ...mockData });
+  };
 
   const duplicateMockData = async () => {
-    const endpoint = selectedTest ? `/api/v1/tests/${selectedTest.id}/mockdata?name=${selectedTest.name}` : `/api/v1/defaultmocks`;
+    const endpoint = selectedTest
+      ? `/api/v1/tests/${selectedTest.id}/mockdata?name=${selectedTest.name}`
+      : `/api/v1/${!recordedMock ? 'defaultmocks' : 'recordedMocks'}`;
     try {
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify(mockData, null, 2)
+        body: JSON.stringify(mockData, null, 2),
       });
 
       if (response.ok) {
@@ -153,16 +186,39 @@ const MockDataView = ({ mockItem, onClose, selectedTest }) => {
   if (!mockItem) return null;
 
   return (
-    <Box sx={{ minWidth: 700, p: 2, maxHeight: 'calc(100vh - 80px)', overflowY: 'scroll' }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2, alignItems: 'center' }}>
+    <Box
+      sx={{
+        minWidth: 700,
+        p: 2,
+        maxHeight: 'calc(100vh - 80px)',
+        overflowY: 'scroll',
+      }}
+    >
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          mb: 2,
+          alignItems: 'center',
+        }}
+      >
         <Typography variant="h5" gutterBottom>
           Mock Item Details
         </Typography>
         <Box>
-        {selectedTest && (<IconButton onClick={onClose} aria-label="close">
-          <CloseIcon />
-        </IconButton>)}
-        <Tooltip title="Delete">
+          {selectedTest && (
+            <IconButton onClick={onClose} aria-label="close">
+              <CloseIcon />
+            </IconButton>
+          )}
+          {recordedMock && (
+            <Tooltip title="Move this mock to Test or Default mock data">
+              <IconButton onClick={onClickUpload} aria-label="delete">
+                <UploadIcon color="secondary" />
+              </IconButton>
+            </Tooltip>
+          )}
+          <Tooltip title="Delete">
             <IconButton onClick={onDelete} aria-label="delete">
               <DeleteIcon color="secondary" />
             </IconButton>
@@ -202,13 +258,26 @@ const MockDataView = ({ mockItem, onClose, selectedTest }) => {
         fullWidth
         margin="normal"
         value={mockData.delay}
-        type='number'
+        type="number"
         name="delay"
         onChange={onInputChange}
       />
-      {selectedTest && <FormControlLabel control={<Checkbox checked={mockItem.waitForPrevious} name="waitForPrevious" onChange={onInputChange}/>} label="Wait for previous mock trigger" />}
-      
-      <Box sx={{width: '100%', display: 'flex', gap: 1, alignItems: 'center'}}>
+      {selectedTest && (
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={mockItem.waitForPrevious}
+              name="waitForPrevious"
+              onChange={onInputChange}
+            />
+          }
+          label="Wait for previous mock trigger"
+        />
+      )}
+
+      <Box
+        sx={{ width: '100%', display: 'flex', gap: 1, alignItems: 'center' }}
+      >
         <Box>
           {mockData.ignoreParams?.map((chip, index) => (
             <Chip
@@ -272,7 +341,11 @@ const MockDataView = ({ mockItem, onClose, selectedTest }) => {
         onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        <Alert onClose={handleSnackbarClose} severity="success" sx={{ width: '100%' }}>
+        <Alert
+          onClose={handleSnackbarClose}
+          severity="success"
+          sx={{ width: '100%' }}
+        >
           {snackbarMessage}
         </Alert>
       </Snackbar>
@@ -287,14 +360,14 @@ MockDataView.propTypes = {
     method: PropTypes.string.isRequired,
     response: PropTypes.shape({
       headers: PropTypes.shape({
-        'content-type': PropTypes.string.isRequired
+        'content-type': PropTypes.string.isRequired,
       }).isRequired,
-      content: PropTypes.string.isRequired
-    }).isRequired
+      content: PropTypes.string.isRequired,
+    }).isRequired,
   }).isRequired,
   selectedTest: PropTypes.shape({
-    id: PropTypes.string.isRequired
-  })
+    id: PropTypes.string.isRequired,
+  }),
 };
 
 MockDataView.defaultProps = {
@@ -304,15 +377,13 @@ MockDataView.defaultProps = {
     method: '',
     response: {
       headers: {
-        'content-type': ''
+        'content-type': '',
       },
-      content: '{}'
-    }
+      content: '{}',
+    },
   },
-  selectedTest: null
+  selectedTest: null,
+  recordedMock: false,
 };
-
-
-
 
 export default MockDataView;

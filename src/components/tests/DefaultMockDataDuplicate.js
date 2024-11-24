@@ -1,15 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { Autocomplete, Button, CircularProgress, TextField, Typography, Box, Alert } from '@mui/material';
+import {
+  Autocomplete,
+  Button,
+  CircularProgress,
+  TextField,
+  Typography,
+  Box,
+  Alert,
+} from '@mui/material';
 import Snackbar from '@mui/material/Snackbar';
 
-const DefaultMockDataDuplicate = ({selectedTest}) => {
+const DefaultMockDataDuplicate = ({ selectedTest }) => {
   const [mockData, setMockData] = useState([]);
   const [selectedMock, setSelectedMock] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
-  
+
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
   };
@@ -39,15 +47,17 @@ const DefaultMockDataDuplicate = ({selectedTest}) => {
   // Handle duplicate action
   const handleDuplicate = async () => {
     if (selectedMock) {
-      const endpoint = selectedTest ? `/api/v1/tests/${selectedTest.id}/mockdata?name=${selectedTest.name}` : `/api/v1/defaultmocks`;
+      const endpoint = selectedTest
+        ? `/api/v1/tests/${selectedTest.id}/mockdata?name=${selectedTest.name}`
+        : `/api/v1/defaultmocks`;
       try {
         const response = await fetch(endpoint, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
-          body: JSON.stringify(selectedMock.mockData)
+          body: JSON.stringify(selectedMock.mockData),
         });
 
         if (response.ok) {
@@ -105,7 +115,11 @@ const DefaultMockDataDuplicate = ({selectedTest}) => {
         onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        <Alert onClose={handleSnackbarClose} severity="success" sx={{ width: '100%' }}>
+        <Alert
+          onClose={handleSnackbarClose}
+          severity="success"
+          sx={{ width: '100%' }}
+        >
           {snackbarMessage}
         </Alert>
       </Snackbar>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box,  Typography, Container } from '@mui/material';
+import { Box, Typography, Container } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import SimpleJsonTable from './SimpleJsonTable';
 import ServerStatus from './ServerStatus';
@@ -12,27 +12,27 @@ export default function Tests() {
 
   const fetchMockServerStatus = async (testsTemp) => {
     try {
-        const response = await fetch('/api/v1/mockServer');
-        if (!response?.ok) {
-          throw new Error('Failed to fetch mock server status');
-        }
-        const data = await response.json();
-        if(data.port) {
-          setServerStatus(data);
-        } else {
-          setServerStatus({
-            port: null,
-            testName: null,
-          });
-        }
+      const response = await fetch('/api/v1/mockServer');
+      if (!response?.ok) {
+        throw new Error('Failed to fetch mock server status');
+      }
+      const data = await response.json();
+      if (data.port) {
+        setServerStatus(data);
+      } else {
+        setServerStatus({
+          port: null,
+          testName: null,
+        });
+      }
 
-        return data;
+      return data;
     } catch (error) {
       console.error('Error fetching tests:', error);
       // Handle the error appropriately, e.g., show an error message to the user
     }
-  }
-  
+  };
+
   const fetchTestData = async () => {
     try {
       const response = await fetch('/api/v1/tests');
@@ -82,42 +82,91 @@ export default function Tests() {
     fetchMockServerStatus();
   }, []);
 
-  
   return (
     <Container>
-      <Box sx={{ flexGrow: 1, p: 3, pt: 0, display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 5, margin: 'auto', mt: 15, justifyContent: 'center' }}>
-          <Box component={RouterLink} to="/tests" sx={{ p: 3, cursor: 'pointer', border: "1px solid #ccc", borderRadius: 2, width: '30%' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-              <Typography variant="h5" gutterBottom>
-                Test Cases
-              </Typography>
-              <Typography variant="h5" gutterBottom>
-                {testCases.length}
-              </Typography>
-            </Box>
+      <Box
+        sx={{
+          flexGrow: 1,
+          p: 3,
+          pt: 0,
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          gap: 5,
+          margin: 'auto',
+          mt: 15,
+          justifyContent: 'center',
+        }}
+      >
+        <Box
+          component={RouterLink}
+          to="/tests"
+          sx={{
+            p: 3,
+            cursor: 'pointer',
+            border: '1px solid #ccc',
+            borderRadius: 2,
+            width: '30%',
+          }}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              width: '100%',
+            }}
+          >
+            <Typography variant="h5" gutterBottom>
+              Test Cases
+            </Typography>
+            <Typography variant="h5" gutterBottom>
+              {testCases.length}
+            </Typography>
           </Box>
-          <Box component={RouterLink} to="/default-mock-data" sx={{ p: 3, cursor: 'pointer', border: "1px solid #ccc", borderRadius: 2,  width: '30%' }}>
-            <Box  sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-              <Typography variant="h5" gutterBottom>
-                Default Mock Data
-              </Typography>
-              <Typography variant="h5" gutterBottom>
-                {defaultMocks.length}
-              </Typography>
-            </Box>
+        </Box>
+        <Box
+          component={RouterLink}
+          to="/default-mock-data"
+          sx={{
+            p: 3,
+            cursor: 'pointer',
+            border: '1px solid #ccc',
+            borderRadius: 2,
+            width: '30%',
+          }}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              width: '100%',
+            }}
+          >
+            <Typography variant="h5" gutterBottom>
+              Default Mock Data
+            </Typography>
+            <Typography variant="h5" gutterBottom>
+              {defaultMocks.length}
+            </Typography>
           </Box>
+        </Box>
       </Box>
 
-      {serverStatus.testName && <Box sx={{mb: 4}}>
-        <ServerStatus testName={serverStatus.testName} port={serverStatus.port}/>
-      </Box>}
+      {serverStatus.testName && (
+        <Box sx={{ mb: 4 }}>
+          <ServerStatus
+            testName={serverStatus.testName}
+            port={serverStatus.port}
+          />
+        </Box>
+      )}
 
       <Box>
-        <Box sx={{margin: 'auto'}}>
+        <Box sx={{ margin: 'auto' }}>
           <SimpleJsonTable data={envDetails} />
         </Box>
       </Box>
     </Container>
   );
-
 }
