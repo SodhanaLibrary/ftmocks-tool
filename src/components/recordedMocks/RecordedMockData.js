@@ -10,18 +10,16 @@ import {
   Chip,
 } from '@mui/material';
 import MockDataView from '../MockDataView';
-import MockDataCreator from '../MockDataCreator';
-import IconButton from '@mui/material/IconButton';
-import AddIcon from '@mui/icons-material/Add';
-import Tooltip from '@mui/material/Tooltip';
 import { sortUrlsByMatch } from '../utils/SearchUtils';
+import MockMover from './MockMover';
 
-export default function DefaultMockData() {
+export default function RecordedMockData() {
   const [mockSearchTerm, setMockSearchTerm] = React.useState('');
   const [selectedMockItem, setSelectedMockItem] = useState(null);
   const [filteredMockData, setFilteredMockData] = useState([]);
+  const [isRecordedMockDrawerOpen, setIsRecordedMockDrawerOpen] =
+    useState(false);
   const [mockData, setMockData] = useState([]);
-  const [isNewMockDrawerOpen, setIsNewMockDrawerOpen] = useState(false);
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -29,7 +27,7 @@ export default function DefaultMockData() {
   const fetchDefaultMocks = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/v1/defaultmocks');
+      const response = await fetch('/api/v1/recordedMocks');
       if (!response.ok) {
         throw new Error('Failed to fetch default mocks');
       }
@@ -75,24 +73,27 @@ export default function DefaultMockData() {
     }
   };
 
+  const onClickUpload = () => {
+    setIsRecordedMockDrawerOpen(true);
+  };
+
   const renderMockDataDrawer = () => {
     if (!selectedMockItem) return null;
 
     return (
       <MockDataView
+        onClickUpload={onClickUpload}
+        recordedMock={true}
         mockItem={selectedMockItem.mockData}
         onClose={handleCloseMockDataDrawer}
       />
     );
   };
-  const handleOpenNewMockDrawer = () => {
-    setIsNewMockDrawerOpen(true);
+
+  const handleCloseRecordedMockDrawer = () => {
+    setIsRecordedMockDrawerOpen(false);
   };
 
-  const handleCloseNewMockDrawer = () => {
-    setIsNewMockDrawerOpen(false);
-    fetchDefaultMocks();
-  };
   return (
     <Box
       sx={{
@@ -118,15 +119,6 @@ export default function DefaultMockData() {
           <Typography variant="h6" gutterBottom>
             Mock Data
           </Typography>
-          <Tooltip title="Add Mock Data">
-            <IconButton
-              color="primary"
-              aria-label="add mock data"
-              onClick={handleOpenNewMockDrawer}
-            >
-              <AddIcon />
-            </IconButton>
-          </Tooltip>
         </Box>
         <TextField
           hiddenLabel
@@ -178,10 +170,10 @@ export default function DefaultMockData() {
       </Box>
       <Drawer
         anchor="right"
-        open={isNewMockDrawerOpen}
-        onClose={handleCloseNewMockDrawer}
+        open={isRecordedMockDrawerOpen}
+        onClose={handleCloseRecordedMockDrawer}
       >
-        <MockDataCreator onClose={handleCloseNewMockDrawer} />
+        <MockMover mockItem={true} onClose={handleCloseRecordedMockDrawer} />
       </Drawer>
     </Box>
   );

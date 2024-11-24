@@ -139,7 +139,10 @@ export const getDesignTokens = (mode) => {
       background: {
         default: 'hsl(0, 0%, 99%)',
         paper: 'hsl(220, 35%, 97%)',
-        ...(mode === 'dark' && { default: gray[900], paper: 'hsl(220, 30%, 7%)' }),
+        ...(mode === 'dark' && {
+          default: gray[900],
+          paper: 'hsl(220, 30%, 7%)',
+        }),
       },
       text: {
         primary: gray[800],

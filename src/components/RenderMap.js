@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { Box, List, ListItem, ListItemText, Typography, Paper } from '@mui/material';
+import {
+  Box,
+  List,
+  ListItem,
+  ListItemText,
+  Typography,
+  Paper,
+} from '@mui/material';
 
 const mockRoutes = [
   { path: '/users', testIds: ['test1', 'test2', 'test3'] },
@@ -15,7 +22,15 @@ export default function RenderMap() {
   };
 
   return (
-    <Box sx={{ flexGrow: 1, p: 3, display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
+    <Box
+      sx={{
+        flexGrow: 1,
+        p: 3,
+        display: 'flex',
+        flexDirection: { xs: 'column', md: 'row' },
+        gap: 2,
+      }}
+    >
       <Box sx={{ flex: 1 }}>
         <Paper elevation={3} sx={{ p: 2 }}>
           <Typography variant="h6" gutterBottom>

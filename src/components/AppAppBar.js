@@ -28,20 +28,21 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
 
 export default function AppAppBar() {
   const [open, setOpen] = React.useState(false);
-  const [currentPath, setCurrentPath] = React.useState(window.location.pathname);
+  const [currentPath, setCurrentPath] = React.useState(
+    window.location.pathname
+  );
   const { useLocation } = require('react-router-dom');
   const location = useLocation();
-
 
   const toggleDrawer = (newOpen) => () => {
     setOpen(newOpen);
   };
 
   useEffect(() => {
-      const newPath = window.location.pathname;
-      if (newPath !== currentPath) {
-        setCurrentPath(newPath);
-      }
+    const newPath = window.location.pathname;
+    if (newPath !== currentPath) {
+      setCurrentPath(newPath);
+    }
   }, [location]);
 
   const buttonStyle = (path) => ({
@@ -57,43 +58,67 @@ export default function AppAppBar() {
   return (
     <AppBar
       position="fixed"
-      sx={{ boxShadow: 0, bgcolor: 'transparent', backgroundImage: 'none', mt: 0, p: 3 }}
+      sx={{
+        boxShadow: 0,
+        bgcolor: 'transparent',
+        backgroundImage: 'none',
+        mt: 0,
+        p: 3,
+      }}
     >
-        <StyledToolbar variant="dense" disableGutters>
-          <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', px: 0, gap: 3 }}>
-            <Sitemark />
-            <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 2 }}>
-              <Button
-                sx={buttonStyle('/tests')}
-                component={RouterLink}
-                to="/tests"
-                variant="text"
-                color="info"
-                size="small"
-              >
-                Tests
-              </Button>
-              <Button
-                sx={buttonStyle('/default-mock-data')}
-                component={RouterLink}
-                to="/default-mock-data"
-                variant="text"
-                color="info"
-                size="small"
-              >
-                Default mock data
-              </Button>
-              <Button
-                sx={buttonStyle('/mock-server')}
-                component={RouterLink}
-                to="/mock-server"
-                variant="text"
-                color="info"
-                size="small"
-              >
-                 Mock server
-              </Button>
-              {/* <Button
+      <StyledToolbar variant="dense" disableGutters>
+        <Box
+          sx={{
+            flexGrow: 1,
+            display: 'flex',
+            alignItems: 'center',
+            px: 0,
+            gap: 3,
+          }}
+        >
+          <Sitemark />
+          <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 2 }}>
+            <Button
+              sx={buttonStyle('/tests')}
+              component={RouterLink}
+              to="/tests"
+              variant="text"
+              color="info"
+              size="small"
+            >
+              Tests
+            </Button>
+            <Button
+              sx={buttonStyle('/default-mock-data')}
+              component={RouterLink}
+              to="/default-mock-data"
+              variant="text"
+              color="info"
+              size="small"
+            >
+              Default Mock Data
+            </Button>
+            <Button
+              sx={buttonStyle('/mock-server')}
+              component={RouterLink}
+              to="/mock-server"
+              variant="text"
+              color="info"
+              size="small"
+            >
+              Mock Server
+            </Button>
+            <Button
+              sx={buttonStyle('/recorded-mock-data')}
+              component={RouterLink}
+              to="/recorded-mock-data"
+              variant="text"
+              color="info"
+              size="small"
+            >
+              Recorded Mock Data
+            </Button>
+            {/* <Button
                 sx={buttonStyle('/coverage-report')}
                 component={RouterLink}
                 to="/coverage-report"
@@ -113,59 +138,69 @@ export default function AppAppBar() {
               >
                 Render map
               </Button> */}
-            </Box>
           </Box>
-          <Box
-            sx={{
-              display: { xs: 'none', md: 'flex' },
-              gap: 1,
-              alignItems: 'center',
-            }}
-          >
-            {/* <Button color="primary" variant="text" size="small">
+        </Box>
+        <Box
+          sx={{
+            display: { xs: 'none', md: 'flex' },
+            gap: 1,
+            alignItems: 'center',
+          }}
+        >
+          {/* <Button color="primary" variant="text" size="small">
               Sign in
             </Button>
             <Button color="primary" variant="contained" size="small">
               Sign up
             </Button> */}
-          </Box>
-          <Box sx={{ display: { sm: 'flex', md: 'none' } }}>
-            <IconButton aria-label="Menu button" onClick={toggleDrawer(true)}>
-              <MenuIcon />
-            </IconButton>
-            <Drawer anchor="top" open={open} onClose={toggleDrawer(false)}>
-              <Box sx={{ p: 2, backgroundColor: 'background.default' }}>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <IconButton onClick={toggleDrawer(false)}>
-                    <CloseRoundedIcon />
-                  </IconButton>
-                </Box>
-                <Divider sx={{ my: 3 }} />
-                <MenuItem component={RouterLink} to="/tests">Tests</MenuItem>
-                <MenuItem component={RouterLink} to="/default-mock-data">Default mock data</MenuItem>
-                <MenuItem component={RouterLink} to="/mock-server">Mock server</MenuItem>
-                <MenuItem component={RouterLink} to="/coverage-report">Coverage report</MenuItem>
-                <MenuItem component={RouterLink} to="/render-map">Render map</MenuItem>
-                <MenuItem>
-                  <Button color="primary" variant="contained" fullWidth>
-                    Sign up
-                  </Button>
-                </MenuItem>
-                <MenuItem>
-                  <Button color="primary" variant="outlined" fullWidth>
-                    Sign in
-                  </Button>
-                </MenuItem>
+        </Box>
+        <Box sx={{ display: { sm: 'flex', md: 'none' } }}>
+          <IconButton aria-label="Menu button" onClick={toggleDrawer(true)}>
+            <MenuIcon />
+          </IconButton>
+          <Drawer anchor="top" open={open} onClose={toggleDrawer(false)}>
+            <Box sx={{ p: 2, backgroundColor: 'background.default' }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <IconButton onClick={toggleDrawer(false)}>
+                  <CloseRoundedIcon />
+                </IconButton>
               </Box>
-            </Drawer>
-          </Box>
-        </StyledToolbar>
+              <Divider sx={{ my: 3 }} />
+              <MenuItem component={RouterLink} to="/tests">
+                Tests
+              </MenuItem>
+              <MenuItem component={RouterLink} to="/default-mock-data">
+                Default mock data
+              </MenuItem>
+              <MenuItem component={RouterLink} to="/mock-server">
+                Mock server
+              </MenuItem>
+              <MenuItem component={RouterLink} to="/coverage-report">
+                Coverage report
+              </MenuItem>
+              <MenuItem component={RouterLink} to="/render-map">
+                Render map
+              </MenuItem>
+              <MenuItem>
+                <Button color="primary" variant="contained" fullWidth>
+                  Sign up
+                </Button>
+              </MenuItem>
+              <MenuItem>
+                <Button color="primary" variant="outlined" fullWidth>
+                  Sign in
+                </Button>
+              </MenuItem>
+            </Box>
+          </Drawer>
+        </Box>
+      </StyledToolbar>
     </AppBar>
   );
 }

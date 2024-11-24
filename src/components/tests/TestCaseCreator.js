@@ -1,15 +1,25 @@
 import React, { useState } from 'react';
-import { Box, TextField, Button, Typography, IconButton, Divider } from '@mui/material';
+import {
+  Box,
+  TextField,
+  Button,
+  Typography,
+  IconButton,
+  Divider,
+} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 
-
 const TestCaseCreator = ({ onClose, selectedTest }) => {
-  const [testName, setTestName] = useState(selectedTest ? selectedTest.name : '');
+  const [testName, setTestName] = useState(
+    selectedTest ? selectedTest.name : ''
+  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const endpoint = selectedTest ? `/api/v1/tests/${selectedTest.id}` : '/api/v1/tests';
+      const endpoint = selectedTest
+        ? `/api/v1/tests/${selectedTest.id}`
+        : '/api/v1/tests';
       const response = await fetch(endpoint, {
         method: selectedTest ? 'PUT' : 'POST',
         headers: {
@@ -32,7 +42,14 @@ const TestCaseCreator = ({ onClose, selectedTest }) => {
 
   return (
     <Box sx={{ p: 2, width: '400px' }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          width: '100%',
+        }}
+      >
         <Typography variant="h6" gutterBottom>
           {selectedTest ? 'Edit Test Case' : 'Create New Test Case'}
         </Typography>

@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { Button, Typography, Box, CircularProgress, Tabs, Tab } from '@mui/material';
+import {
+  Button,
+  Typography,
+  Box,
+  CircularProgress,
+  Tabs,
+  Tab,
+} from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
@@ -20,17 +27,12 @@ const MockDataCreator = ({ selectedTest, onClose }) => {
     setFile(acceptedFiles[0]);
   };
 
-  const {
-    getRootProps,
-    getInputProps,
-    isDragActive,
-    isDragReject,
-  } = useDropzone({
-    onDrop,
-    accept: { '.har': [] }, // Accept only images
-    multiple: false, // Allow only single file
-  });
-
+  const { getRootProps, getInputProps, isDragActive, isDragReject } =
+    useDropzone({
+      onDrop,
+      accept: { '.har': [] }, // Accept only images
+      multiple: false, // Allow only single file
+    });
 
   const handleChange = (event) => {
     setAvoidDuplicates(event.target.checked);
@@ -48,10 +50,12 @@ const MockDataCreator = ({ selectedTest, onClose }) => {
     const formData = new FormData();
     formData.append('harFile', file);
     formData.append('avoidDuplicates', avoidDuplicates);
-    if(selectedTest?.name) {
+    if (selectedTest?.name) {
       formData.append('testName', selectedTest?.name);
     }
-    let endpoint =  selectedTest ? `/api/v1/tests/${selectedTest.id}/harMockdata` : '/api/v1/defaultHarMocks';
+    let endpoint = selectedTest
+      ? `/api/v1/tests/${selectedTest.id}/harMockdata`
+      : '/api/v1/defaultHarMocks';
 
     try {
       const response = await fetch(endpoint, {
@@ -72,9 +76,19 @@ const MockDataCreator = ({ selectedTest, onClose }) => {
     }
   };
 
-  const renderHARfileSection = () => (<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2, pt: 6 }}>
-        <Typography variant="h6">Upload HAR File</Typography>
-        {selectedTest && <FormControlLabel
+  const renderHARfileSection = () => (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+        gap: 2,
+        pt: 6,
+      }}
+    >
+      <Typography variant="h6">Upload HAR File</Typography>
+      {selectedTest && (
+        <FormControlLabel
           control={
             <Checkbox
               checked={avoidDuplicates}
@@ -83,69 +97,92 @@ const MockDataCreator = ({ selectedTest, onClose }) => {
             />
           }
           label="Do not create a mock, if it is already in default mock data"
-        />}
-        <Box
-          {...getRootProps()}
-          sx={{
-            border: '2px dashed',
-            borderColor: isDragReject ? 'error.main' : 'primary.main',
-            borderRadius: 2,
-            padding: 4,
-            textAlign: 'center',
-            backgroundColor: isDragActive ? 'action.hover' : 'background.default',
-            cursor: 'pointer',
-          }}
-        >
-          <input {...getInputProps()} />
-          {isDragActive ? (
-            <Typography variant="h6" color="primary">
-              Drop the HAR file here...
-            </Typography>
-          ) : (
-            <Typography variant="h6">
-              Drag & drop a HAR file here, or click to select one
-            </Typography>
-          )}
-          <Button variant="outlined" sx={{ mt: 2 }}>
-            Choose HAR File
-          </Button>
-        </Box>
-        {file && <Typography variant="body2">{file.name}</Typography>}
-        <Button
-            variant="contained"
-            color="primary"
-            onClick={handleUpload}
-            disabled={!file || isUploading}
-        >
-            Upload and Process
+        />
+      )}
+      <Box
+        {...getRootProps()}
+        sx={{
+          border: '2px dashed',
+          borderColor: isDragReject ? 'error.main' : 'primary.main',
+          borderRadius: 2,
+          padding: 4,
+          textAlign: 'center',
+          backgroundColor: isDragActive ? 'action.hover' : 'background.default',
+          cursor: 'pointer',
+        }}
+      >
+        <input {...getInputProps()} />
+        {isDragActive ? (
+          <Typography variant="h6" color="primary">
+            Drop the HAR file here...
+          </Typography>
+        ) : (
+          <Typography variant="h6">
+            Drag & drop a HAR file here, or click to select one
+          </Typography>
+        )}
+        <Button variant="outlined" sx={{ mt: 2 }}>
+          Choose HAR File
         </Button>
-        {isUploading && <CircularProgress />}
-        {uploadStatus && <Typography color={uploadStatus.includes('failed') ? 'error' : 'success'}>{uploadStatus}</Typography>}
-    </Box>);
+      </Box>
+      {file && <Typography variant="body2">{file.name}</Typography>}
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleUpload}
+        disabled={!file || isUploading}
+      >
+        Upload and Process
+      </Button>
+      {isUploading && <CircularProgress />}
+      {uploadStatus && (
+        <Typography
+          color={uploadStatus.includes('failed') ? 'error' : 'success'}
+        >
+          {uploadStatus}
+        </Typography>
+      )}
+    </Box>
+  );
 
-  const renderByUserInput = () => (<MockDataByUserInput selectedTest={selectedTest}/>);
+  const renderByUserInput = () => (
+    <MockDataByUserInput selectedTest={selectedTest} />
+  );
 
-  const renderFromDefaultMocks = () => (<DefaultMockDataDuplicate selectedTest={selectedTest}/>);
+  const renderFromDefaultMocks = () => (
+    <DefaultMockDataDuplicate selectedTest={selectedTest} />
+  );
 
   return (
     <Box sx={{ width: 600, pl: 3, pr: 3, pt: 1 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-            <Typography variant="h6" gutterBottom>
-                Create New Mock Data
-            </Typography>
-            <IconButton onClick={onClose} aria-label="close">
-                <CloseIcon />
-            </IconButton>
-        </Box>
-        <Divider />
-        <Tabs value={selectedTab} onChange={(e, val) => setSelectedTab(val)} aria-label="basic tabs example">
-          <Tab label="HAR Uploader" />
-          <Tab label="By User Input"/>
-          {selectedTest && <Tab label="From Default Mocks"/>}
-        </Tabs>
-        {selectedTab === 0 && renderHARfileSection()}
-        {selectedTab === 1 && renderByUserInput()}
-        {selectedTab === 2 && selectedTest && renderFromDefaultMocks()}
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          width: '100%',
+        }}
+      >
+        <Typography variant="h6" gutterBottom>
+          Create New Mock Data
+        </Typography>
+        <IconButton onClick={onClose} aria-label="close">
+          <CloseIcon />
+        </IconButton>
+      </Box>
+      <Divider />
+      <Tabs
+        value={selectedTab}
+        onChange={(e, val) => setSelectedTab(val)}
+        aria-label="basic tabs example"
+      >
+        <Tab label="HAR Uploader" />
+        <Tab label="By User Input" />
+        {selectedTest && <Tab label="From Default Mocks" />}
+      </Tabs>
+      {selectedTab === 0 && renderHARfileSection()}
+      {selectedTab === 1 && renderByUserInput()}
+      {selectedTab === 2 && selectedTest && renderFromDefaultMocks()}
     </Box>
   );
 };
