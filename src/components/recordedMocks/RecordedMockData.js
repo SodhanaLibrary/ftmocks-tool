@@ -93,6 +93,7 @@ export default function RecordedMockData() {
   const handleCloseRecordedMockDrawer = () => {
     setIsRecordedMockDrawerOpen(false);
   };
+  
 
   return (
     <Box
@@ -173,7 +174,7 @@ export default function RecordedMockData() {
         open={isRecordedMockDrawerOpen}
         onClose={handleCloseRecordedMockDrawer}
       >
-        <MockMover mockItem={true} onClose={handleCloseRecordedMockDrawer} />
+        <MockMover mockItem={selectedMockItem} onClose={handleCloseRecordedMockDrawer} />
       </Drawer>
     </Box>
   );
