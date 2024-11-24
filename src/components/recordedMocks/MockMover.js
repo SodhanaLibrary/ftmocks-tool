@@ -10,10 +10,19 @@ import {
 } from '@mui/material';
 
 import Divider from '@mui/material/Divider';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
+
 
 const MockMover = ({ mockItem, onClose }) => {
   const [tests, setTests] = useState([]);
   const [selectedTest, setSelectedTest] = useState(null);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
 
   const fetchTests = async () => {
     try {
@@ -30,6 +39,64 @@ const MockMover = ({ mockItem, onClose }) => {
     }
   };
 
+
+  const moveItDefaultMocks = async () => {
+    const endpoint = `/api/v1/defaultmocks`;
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify(mockItem.mockData),
+      });
+
+      if (response.ok) {
+        console.log('Mock data updated successfully');
+        setSnackbarMessage('Mock data updated successfully');
+        setSnackbarOpen(true);
+      } else {
+        console.error('Failed to update mock data');
+        setSnackbarMessage('Failed to update mock data');
+        setSnackbarOpen(true);
+      }
+    } catch (error) {
+      console.error('Error updating mock data:', error);
+      setSnackbarMessage('Error updating mock data');
+      setSnackbarOpen(true);
+    }
+  };
+
+  const initiateRecordedMocks = async () => {
+    const endpoint = `/api/v1/initiateRecordedMocks`;
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify(mockItem.mockData),
+      });
+
+      if (response.ok) {
+        console.log('Mock data updated successfully');
+        setSnackbarMessage('Mock data updated successfully');
+        setSnackbarOpen(true);
+      } else {
+        console.error('Failed to update mock data');
+        setSnackbarMessage('Failed to update mock data');
+        setSnackbarOpen(true);
+      }
+    } catch (error) {
+      console.error('Error updating mock data:', error);
+      setSnackbarMessage('Error updating mock data');
+      setSnackbarOpen(true);
+    }
+  };
+
+
   useEffect(() => {
     fetchTests();
   }, []);
@@ -44,7 +111,7 @@ const MockMover = ({ mockItem, onClose }) => {
         p: 3,
       }}
     >
-      <Button variant="contained" color="primary" fullWidth>
+      <Button onClick={moveItDefaultMocks} variant="contained" color="primary" fullWidth>
         Move It To Default Mock Data
       </Button>
 
@@ -56,49 +123,64 @@ const MockMover = ({ mockItem, onClose }) => {
 
       <Divider sx={{ my: 2 }} />
 
-      <Typography variant="h6" sx={{ mb: 2 }}>
-        Move it to Test
-      </Typography>
+      {tests.length !== 0 && (<Box>
+        <Typography variant="h6" sx={{ mb: 2 }}>
+            Move it to Test
+        </Typography>
 
-      <FormControl fullWidth>
-        <InputLabel id="test-select-label">Test</InputLabel>
-        <Select
-          labelId="test-select-label"
-          id="test-select"
-          value={selectedTest}
-          label="Test"
-          onChange={(e) => setSelectedTest(e.target.value)}
+        <FormControl fullWidth>
+            <InputLabel id="test-select-label">Test</InputLabel>
+            <Select
+            labelId="test-select-label"
+            id="test-select"
+            value={selectedTest}
+            label="Test"
+            onChange={(e) => setSelectedTest(e.target.value)}
+            >
+            {tests.map((test) => (
+                <MenuItem key={test.id} value={test.name}>
+                {test.name}
+                </MenuItem>
+            ))}
+            </Select>
+        </FormControl>
+
+        <Button sx={{ mt: 1 }} variant="contained" color="secondary">
+            Move it
+        </Button>
+
+        <Divider sx={{ my: 3 }} />
+      </Box>)}
+
+      {tests.length === 0 && (<Box>
+        <Typography
+            variant="body2"
+            color="textSecondary"
+            align="center"
+            sx={{ mb: 2 }}
         >
-          {tests.map((test) => (
-            <MenuItem key={test.id} value={test.name}>
-              {test.name}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+            Tests are empty. You can create test mock data and default mock data with a
+            single click.
+        </Typography>
+        <Button onClick={initiateRecordedMocks} variant="outlined" color="success" fullWidth>
+            Initiate
+        </Button>
+      </Box>)}
 
-      <Button sx={{ mt: 1 }} variant="contained" color="secondary">
-        Move it
-      </Button>
-
-      {/* Divider */}
-      <Divider sx={{ my: 3 }} />
-
-      {/* Info Text */}
-      <Typography
-        variant="body2"
-        color="textSecondary"
-        align="center"
-        sx={{ mb: 2 }}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        Default mock data and tests are empty. Now you can create them with a
-        single click.
-      </Typography>
-
-      {/* Initiate Button */}
-      <Button variant="outlined" color="success" fullWidth>
-        Initiate
-      </Button>
+        <Alert
+          onClose={handleSnackbarClose}
+          severity="success"
+          sx={{ width: '100%' }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
