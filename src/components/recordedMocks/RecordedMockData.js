@@ -8,7 +8,10 @@ import {
   TextField,
   Drawer,
   Chip,
+  Tooltip,
+  IconButton
 } from '@mui/material';
+import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import MockDataView from '../MockDataView';
 import { sortUrlsByMatch } from '../utils/SearchUtils';
 import MockMover from './MockMover';
@@ -93,6 +96,24 @@ export default function RecordedMockData() {
   const handleCloseRecordedMockDrawer = () => {
     setIsRecordedMockDrawerOpen(false);
   };
+
+  const deleteAllRecorded = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/v1/recordedMocks', {
+        method: 'DELETE'
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch default mocks');
+      }
+      const data = await response.json();
+      setMockData(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
 
   return (
@@ -120,6 +141,15 @@ export default function RecordedMockData() {
           <Typography variant="h6" gutterBottom>
             Mock Data
           </Typography>
+          <Tooltip title="Delete all recorded data">
+            <IconButton
+              color="primary"
+              aria-label="Delete all recorded data"
+              onClick={deleteAllRecorded}
+            >
+              <DeleteSweepIcon />
+            </IconButton>
+          </Tooltip>
         </Box>
         <TextField
           hiddenLabel
