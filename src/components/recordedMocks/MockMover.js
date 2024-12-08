@@ -77,7 +77,7 @@ const MockMover = ({ mockItem, onClose }) => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify(mockItem.mockData),
+        body: JSON.stringify({}),
       });
 
       if (response.ok) {
