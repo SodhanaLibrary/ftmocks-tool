@@ -9,7 +9,7 @@ import {
   Drawer,
   Chip,
   Tooltip,
-  IconButton
+  IconButton,
 } from '@mui/material';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import MockDataView from '../MockDataView';
@@ -101,7 +101,7 @@ export default function RecordedMockData() {
     try {
       setIsLoading(true);
       const response = await fetch('/api/v1/recordedMocks', {
-        method: 'DELETE'
+        method: 'DELETE',
       });
       if (!response.ok) {
         throw new Error('Failed to fetch default mocks');
@@ -114,7 +114,6 @@ export default function RecordedMockData() {
       setIsLoading(false);
     }
   };
-  
 
   return (
     <Box
@@ -204,7 +203,10 @@ export default function RecordedMockData() {
         open={isRecordedMockDrawerOpen}
         onClose={handleCloseRecordedMockDrawer}
       >
-        <MockMover mockItem={selectedMockItem} onClose={handleCloseRecordedMockDrawer} />
+        <MockMover
+          mockItem={selectedMockItem}
+          onClose={handleCloseRecordedMockDrawer}
+        />
       </Drawer>
     </Box>
   );
