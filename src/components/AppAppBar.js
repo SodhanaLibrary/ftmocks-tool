@@ -118,6 +118,16 @@ export default function AppAppBar() {
             >
               Recorded Mock Data
             </Button>
+            <Button
+              sx={buttonStyle('/recorded-events-data')}
+              component={RouterLink}
+              to="/recorded-events-data"
+              variant="text"
+              color="info"
+              size="small"
+            >
+              Recorded Events
+            </Button>
             {/* <Button
                 sx={buttonStyle('/coverage-report')}
                 component={RouterLink}

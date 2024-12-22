@@ -176,7 +176,12 @@ const MockMover = ({ mockItem, onClose }) => {
             </Select>
           </FormControl>
 
-          <Button onClick={moveItToTest} sx={{ mt: 1 }} variant="contained" color="secondary">
+          <Button
+            onClick={moveItToTest}
+            sx={{ mt: 1 }}
+            variant="contained"
+            color="secondary"
+          >
             Move it
           </Button>
 
