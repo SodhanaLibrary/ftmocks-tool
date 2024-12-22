@@ -10,6 +10,7 @@ import getMPTheme from './theme/getMPTheme';
 import Tests from './components/tests/Tests';
 import DefaultMockData from './components/defaultMocks/DefaultMockData';
 import RecordedMockData from './components/recordedMocks/RecordedMockData';
+import RecordedEventsData from './components/recordedEvents/RecordedEventsData';
 import MockServer from './components/MockServer';
 import CoverageReport from './components/CoverageReport';
 import RenderMap from './components/RenderMap';
@@ -63,6 +64,10 @@ export default function FtMocksTool() {
             <Route path="/default-mock-data" element={<DefaultMockData />} />
             <Route path="/recorded-mock-data" element={<RecordedMockData />} />
             <Route path="/mock-server" element={<MockServer />} />
+            <Route
+              path="/recorded-events-data"
+              element={<RecordedEventsData />}
+            />
             <Route path="/coverage-report" element={<CoverageReport />} />
             <Route path="/render-map" element={<RenderMap />} />
           </Routes>
