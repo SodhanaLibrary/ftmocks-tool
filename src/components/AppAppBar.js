@@ -126,7 +126,7 @@ export default function AppAppBar() {
               color="info"
               size="small"
             >
-              Recorded Events
+              Code Generator
             </Button>
             {/* <Button
                 sx={buttonStyle('/coverage-report')}
