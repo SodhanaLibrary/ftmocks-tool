@@ -14,6 +14,7 @@ import {
   Button,
 } from '@mui/material';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { sortUrlsByMatch } from '../utils/SearchUtils';
 import Timeline from '@mui/lab/Timeline';
 import TimelineItem from '@mui/lab/TimelineItem';
@@ -22,11 +23,14 @@ import TimelineConnector from '@mui/lab/TimelineConnector';
 import TimelineContent from '@mui/lab/TimelineContent';
 import TimelineDot from '@mui/lab/TimelineDot';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
+import {generatePlaywrightCode, generateRTLCode} from './CodeUtils';
 
 export default function RecordedEventsData() {
   const [isLoading, setIsLoading] = useState(true);
   const [erroe, setError] = useState(null);
   const [recordedEvents, setRecordedEvents] = useState([]);
+  const [testsSummary, setTestsSummary] = useState([]);
+  const [genCode, setGenCode] = useState('');
 
   const fetchRecordedEvents = async () => {
     try {
@@ -37,6 +41,13 @@ export default function RecordedEventsData() {
       }
       const data = await response.json();
       setRecordedEvents(data);
+
+      const resp = await fetch('/api/v1/testsSummary');
+      if (!resp.ok) {
+        throw new Error('Failed to fetch tests summary');
+      }
+      const dataTestsSummary = await resp.json();
+      setTestsSummary(dataTestsSummary);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -46,11 +57,13 @@ export default function RecordedEventsData() {
 
   const downloadTextAsFile = () => {
     // Create a Blob object with the text
-    const blob = new Blob([JSON.stringify(recordedEvents, null, 2)], { type: 'text/plain' });
-  
+    const blob = new Blob([JSON.stringify(recordedEvents, null, 2)], {
+      type: 'text/plain',
+    });
+
     // Create a URL for the Blob object
     const url = URL.createObjectURL(blob);
-  
+
     // Create a temporary <a> element
     const a = document.createElement('a');
     a.href = url;
@@ -58,11 +71,10 @@ export default function RecordedEventsData() {
     document.body.appendChild(a); // Append the <a> to the DOM
     a.click(); // Trigger the download
     document.body.removeChild(a); // Remove the <a> from the DOM
-  
+
     // Revoke the Blob URL to free up memory
     URL.revokeObjectURL(url);
-  }
-  
+  };
 
   const deleteAll = async () => {
     try {
@@ -81,6 +93,24 @@ export default function RecordedEventsData() {
       setIsLoading(false);
     }
   };
+
+  function copyToClipboard() {
+    navigator.clipboard.writeText(genCode)
+      .then(() => {
+        console.log('Text copied to clipboard!');
+      })
+      .catch(err => {
+        console.error('Failed to copy text: ', err);
+      });
+  }
+
+  const genRTLCode = () => {
+    setGenCode(generateRTLCode(recordedEvents, testsSummary));
+  };
+
+  const genPlayWriteCode = () => {
+    setGenCode(generatePlaywrightCode(recordedEvents));
+  }
 
   useEffect(() => {
     fetchRecordedEvents();
@@ -126,7 +156,11 @@ export default function RecordedEventsData() {
           {!recordedEvents.length ? 'No events recorded' : null}
         </Box>
       </Box>
-      <Box p={2} pt={10} style={{borderLeft: '1px solid #333', borderRight: '1px solid #333'}}>
+      <Box
+        p={2}
+        pt={10}
+        style={{ borderLeft: '1px solid #333', borderRight: '1px solid #333' }}
+      >
         <Box
           sx={{
             textAlign: 'center',
@@ -134,17 +168,38 @@ export default function RecordedEventsData() {
             pb: 2,
           }}
         >
-          <Button variant="outlined">Generate RTL Code</Button>
+          <Button onClick={genRTLCode} variant="outlined">Generate RTL Code</Button>
         </Box>
-        <Box sx={{
+        <Box
+          sx={{
             textAlign: 'center',
             width: '100%',
             pb: 2,
-          }}>
-          <Button variant="outlined">Generate Play Write Code</Button>
+          }}
+        >
+          <Button onClick={genPlayWriteCode} variant="outlined">Generate Play Write Code</Button>
         </Box>
       </Box>
-      <Box width="40%"></Box>
+      <Box width="40%" p={2}>
+        <Box
+          p={1}
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Typography variant="h5">Generated Code</Typography>
+          <Box>
+            <IconButton onClick={copyToClipboard}>
+              <ContentCopyIcon />
+            </IconButton>
+          </Box>
+        </Box>
+        <Divider />
+        <Box p={2} sx={{textAlign: 'left', width: '100%', overflowX: 'scroll'}}>
+          {genCode?.length === 0 && '-----'}
+          <pre>{genCode}</pre>
+        </Box>
+      </Box>
     </Box>
   );
 }
