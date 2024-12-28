@@ -89,6 +89,13 @@ export function makeSubsetActions(actions, tests) {
       currentActions = [];
     }
   });
+  if(currentActions.length > 0) {
+    if (!testActions[`ftmocks basic render`]?.actions) {
+      testActions[`ftmocks basic render`] = {
+        actions: currentActions
+      };
+    }
+  }
   return testActions;
 }
 
@@ -127,7 +134,7 @@ export function generateRTLCode(actions, tests = []) {
       testCode = [
         `// ${testName} test case`,
         `it('${testName}', async () => {`,
-        `  await initiateFetch(jest, ftmocksConifg, '${testName}');`,
+        `  await initiateJestFetch(jest, ftmocksConifg, '${testName}');`,
         `  const dom = render(<App />);`,
         testCode,
         `});`,
