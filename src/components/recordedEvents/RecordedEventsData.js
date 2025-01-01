@@ -23,7 +23,7 @@ import TimelineConnector from '@mui/lab/TimelineConnector';
 import TimelineContent from '@mui/lab/TimelineContent';
 import TimelineDot from '@mui/lab/TimelineDot';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
-import {generatePlaywrightCode, generateRTLCode} from './CodeUtils';
+import { generatePlaywrightCode, generateRTLCode } from './CodeUtils';
 
 export default function RecordedEventsData() {
   const [isLoading, setIsLoading] = useState(true);
@@ -95,11 +95,12 @@ export default function RecordedEventsData() {
   };
 
   function copyToClipboard() {
-    navigator.clipboard.writeText(genCode)
+    navigator.clipboard
+      .writeText(genCode)
       .then(() => {
         console.log('Text copied to clipboard!');
       })
-      .catch(err => {
+      .catch((err) => {
         console.error('Failed to copy text: ', err);
       });
   }
@@ -110,7 +111,7 @@ export default function RecordedEventsData() {
 
   const genPlayWriteCode = () => {
     setGenCode(generatePlaywrightCode(recordedEvents));
-  }
+  };
 
   useEffect(() => {
     fetchRecordedEvents();
@@ -168,7 +169,9 @@ export default function RecordedEventsData() {
             pb: 2,
           }}
         >
-          <Button onClick={genRTLCode} variant="outlined">Generate RTL Code</Button>
+          <Button onClick={genRTLCode} variant="outlined">
+            Generate RTL Code
+          </Button>
         </Box>
         <Box
           sx={{
@@ -177,7 +180,9 @@ export default function RecordedEventsData() {
             pb: 2,
           }}
         >
-          <Button onClick={genPlayWriteCode} variant="outlined">Generate Play Write Code</Button>
+          <Button onClick={genPlayWriteCode} variant="outlined">
+            Generate Play Write Code
+          </Button>
         </Box>
       </Box>
       <Box width="40%" p={2}>
@@ -195,7 +200,10 @@ export default function RecordedEventsData() {
           </Box>
         </Box>
         <Divider />
-        <Box p={2} sx={{textAlign: 'left', width: '100%', overflowX: 'scroll'}}>
+        <Box
+          p={2}
+          sx={{ textAlign: 'left', width: '100%', overflowX: 'scroll' }}
+        >
           {genCode?.length === 0 && '-----'}
           <pre>{genCode}</pre>
         </Box>

@@ -12,6 +12,9 @@ import MockDataView from '../MockDataView';
 import IconButton from '@mui/material/IconButton';
 import AddIcon from '@mui/icons-material/Add';
 import Tooltip from '@mui/material/Tooltip';
+import Tabs from '@mui/material/Tabs';
+import Button from '@mui/material/Button';
+import Tab from '@mui/material/Tab';
 import TestCaseCreator from './TestCaseCreator';
 import DeleteIcon from '@mui/icons-material/Delete';
 import MockDataCreator from '../MockDataCreator';
@@ -19,9 +22,11 @@ import EditIcon from '@mui/icons-material/Edit';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { sortUrlsByMatch } from '../utils/SearchUtils';
 import DraggableMockList from './MockDataList';
+import Snaps from './Snaps';
 
 export default function Tests() {
   const [selectedTest, setSelectedTest] = useState(null);
+  const [selectedTab, setSelectedTab] = useState(0);
   const [filteredTestCases, setFilteredTestCases] = useState([]);
   const [testCases, setTestCases] = useState([]);
   const [mockSearchTerm, setMockSearchTerm] = React.useState('');
@@ -286,6 +291,14 @@ export default function Tests() {
       });
   };
 
+  const buttonStyle = (path) => ({
+    borderBottom: selectedTab === path ? '2px solid' : 'none',
+    borderRadius: 0,
+    '&:hover': {
+      borderBottom: '2px solid',
+    },
+  });
+
   return (
     <Box
       sx={{
@@ -438,24 +451,49 @@ export default function Tests() {
             </Box>
           ) : null}
         </Box>
-        <TextField
-          hiddenLabel
-          fullWidth
-          variant="outlined"
-          placeholder="Search mock data"
-          margin="normal"
-          value={mockSearchTerm}
-          onChange={(e) => {
-            setMockSearchTerm(e.target.value);
-          }}
-        />
         {selectedTest?.filteredMockData ? (
-          <DraggableMockList
-            selectedTest={selectedTest}
-            selectedMockItem={selectedMockItem}
-            handleMockItemClick={handleMockItemClick}
-            setFilteredMockData={setFilteredMockData}
-          />
+          <Box>
+            <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 2 }}>
+              <Button
+                sx={buttonStyle(0)}
+                variant="text"
+                color="info"
+                size="small"
+                onClick={() => setSelectedTab(0)}
+              >
+                Mocks
+              </Button>
+              <Button
+                sx={buttonStyle(1)}
+                variant="text"
+                color="info"
+                size="small"
+                onClick={() => setSelectedTab(1)}
+              >
+                Snaps
+              </Button>
+            </Box>
+            {selectedTab === 0 && (<Box>
+              <TextField
+                hiddenLabel
+                fullWidth
+                variant="outlined"
+                placeholder="Search mock data"
+                margin="normal"
+                value={mockSearchTerm}
+                onChange={(e) => {
+                  setMockSearchTerm(e.target.value);
+                }}
+              />
+              <DraggableMockList
+                selectedTest={selectedTest}
+                selectedMockItem={selectedMockItem}
+                handleMockItemClick={handleMockItemClick}
+                setFilteredMockData={setFilteredMockData}
+              />
+            </Box>)}
+            {selectedTab === 1 && (<Snaps selectedTest={selectedTest} />)}
+          </Box>
         ) : (
           <Typography>Select a test case to view mock data</Typography>
         )}
