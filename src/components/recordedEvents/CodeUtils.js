@@ -162,37 +162,184 @@ export function generateRTLCode(actions, tests = []) {
   return testCodes.join('\n');
 }
 
-export function generatePlaywrightCode(actions) {
-  return actions
-    .map((action) => {
-      switch (action.type) {
-        case 'click':
-          return [
-            ``,
-            `await expect(page.locator('${action.target}')).toBeVisible();`,
-            `await page.click('${action.target}');`,
-          ].join('\n');
-        case 'type':
-          return `await page.fill('${action.target}', '${action.value}');`;
-        case 'change':
-          // Assuming change event can be simulated via filling or selecting a value
-          return `await page.fill('${action.target}', '${action.value}');`;
-        case 'dblclick':
-          return `await page.dblclick('${action.target}');`;
-        case 'contextmenu':
-          return `await page.click('${action.target}', { button: 'right' });`;
-        case 'POST':
-          return `-------------------------------------------------------------`;
-        case 'PUT':
-          return `-------------------------------------------------------------`;
-        case 'PATCH':
-          return `-------------------------------------------------------------`;
-        case 'DELETE':
-          return `-------------------------------------------------------------`;
-        default:
-          return null;
-      }
-    })
-    .filter((cd) => !!cd)
-    .join('\n');
+export function generatePlaywrightCode(actions, tests = []) {
+  const testActions = makeSubsetActions(actions, tests);
+  const testCodes = [];
+  
+  Object.keys(testActions).forEach((testName) => {
+    let testCode = testActions[testName].actions
+      .map((action) => {
+        switch (action.type) {
+          case 'click':
+            return `  await page.locator('${action.target}').click();`;
+          case 'type':
+            return `  await page.locator('${action.target}').fill('${action.value}');`;
+          case 'change':
+            return `  await page.locator('${action.target}').evaluate(el => el.value = '${action.value}');`;
+          case 'dblclick':
+            return `  await page.locator('${action.target}').dblclick();`;
+          case 'contextmenu':
+            return `  await page.locator('${action.target}').click({ button: 'right' });`;
+          case 'POST':
+            return `//-------------------------------------------------------------`;
+          case 'PUT':
+            return `//-------------------------------------------------------------`;
+          case 'PATCH':
+            return `//-------------------------------------------------------------`;
+          case 'DELETE':
+            return `//-------------------------------------------------------------`;
+          default:
+            return null;
+        }
+      })
+      .filter((cd) => !!cd)
+      .join('\n');
+      
+    testCode = [
+      `// ${testName} test case`,
+      `test('${testName}', async ({ page }) => {`,
+      `  await page.goto('http://your-app-url');`,
+      testCode,
+      `});`,
+      ``,
+    ].join('\n');
+    testCodes.push(testCode);
+  });
+
+  return testCodes.join('\n');
 }
+
+export function generateCypressCode(actions, tests = []) {
+  const testActions = makeSubsetActions(actions, tests);
+  const testCodes = [];
+  Object.keys(testActions).forEach((testName) => {
+    let testCode = testActions[testName].actions
+      .map((action) => {
+        switch (action.type) {
+          case 'click':
+            return `cy.xpath("${action.target}").should('exist').click();`;
+          case 'type':
+            return `cy.xpath("${action.target}").type("${action.value}");`;
+          case 'change':
+            return `cy.xpath("${action.target}").clear().type("${action.value}");`;
+          case 'dblclick':
+            return `cy.xpath("${action.target}").dblclick();`;
+          case 'contextmenu':
+            return `cy.xpath("${action.target}").rightclick();`;
+          case 'POST':
+            return `cy.request('POST', '${action.target}', { body: ${action.value} });`;
+          case 'PUT':
+            return `cy.request('PUT', '${action.target}', { body: ${action.value} });`;
+          case 'PATCH':
+            return `cy.request('PATCH', '${action.target}', { body: ${action.value} });`;
+          case 'DELETE':
+            return `cy.request('DELETE', '${action.target}');`;
+          default:
+            return null;
+        }
+      })
+      .filter((cd) => !!cd)
+      .join('\n');
+    testCode = [
+      `// ${testName} test case`,
+      `it('${testName}', () => {`,
+      `  cy.visit('/');`,
+      testCode,
+      `});`,
+    ].join('\n');
+    testCodes.push(testCode);
+  });
+  return testCodes.join('\n');
+}
+
+export function generateTestCafeCode(actions, tests = []) {
+  const testActions = makeSubsetActions(actions, tests);
+  const testCodes = [];
+  Object.keys(testActions).forEach((testName) => {
+    let testCode = testActions[testName].actions
+      .map((action) => {
+        switch (action.type) {
+          case 'click':
+            return `await t.click(Selector('${action.target}'));`;
+          case 'type':
+            return `await t.typeText(Selector('${action.target}'), '${action.value}');`;
+          case 'change':
+            return `await t.typeText(Selector('${action.target}'), '${action.value}', { replace: true });`;
+          case 'dblclick':
+            return `await t.doubleClick(Selector('${action.target}'));`;
+          case 'contextmenu':
+            return `await t.rightClick(Selector('${action.target}'));`;
+          case 'POST':
+            return `// Custom POST request logic here if needed.`;
+          case 'PUT':
+            return `// Custom PUT request logic here if needed.`;
+          case 'PATCH':
+            return `// Custom PATCH request logic here if needed.`;
+          case 'DELETE':
+            return `// Custom DELETE request logic here if needed.`;
+          default:
+            return null;
+        }
+      })
+      .filter((code) => !!code)
+      .join('\n');
+    testCode = [
+      `// ${testName} test case`,
+      `test('${testName}', async t => {`,
+      `    // Add any setup code or mocks here`,
+      `    ${testCode}`,
+      `});`,
+      ``,
+    ].join('\n');
+    testCodes.push(testCode);
+  });
+  return testCodes.join('\n');
+}
+
+export function generateRobotFrameworkCode(actions, tests = []) {
+  const testActions = makeSubsetActions(actions, tests);
+  const testCodes = [];
+
+  Object.keys(testActions).forEach((testName) => {
+    const testSteps = testActions[testName].actions
+      .map((action) => {
+        switch (action.type) {
+          case 'click':
+            return `Click Element    ${action.target}`;
+          case 'type':
+            return `Input Text    ${action.target}    ${action.value}`;
+          case 'change':
+            return `Input Text    ${action.target}    ${action.value}    replace=True`;
+          case 'dblclick':
+            return `Double Click Element    ${action.target}`;
+          case 'contextmenu':
+            return `Right Click Element    ${action.target}`;
+          case 'POST':
+            return `# Custom logic for POST requests`;
+          case 'PUT':
+            return `# Custom logic for PUT requests`;
+          case 'PATCH':
+            return `# Custom logic for PATCH requests`;
+          case 'DELETE':
+            return `# Custom logic for DELETE requests`;
+          default:
+            return `# Unsupported action type: ${action.type}`;
+        }
+      })
+      .filter((code) => code)
+      .join('\n');
+
+    const testCase = `
+*** Test Cases ***
+${testName}
+    [Setup]    Log    Setting up test: ${testName}
+${testSteps}
+    [Teardown]    Log    Cleaning up test: ${testName}
+    `;
+    testCodes.push(testCase);
+  });
+
+  return testCodes.join('\n');
+}
+
+
