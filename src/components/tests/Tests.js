@@ -23,6 +23,7 @@ import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { sortUrlsByMatch } from '../utils/SearchUtils';
 import DraggableMockList from './MockDataList';
 import Snaps from './Snaps';
+import LogViewer from './LogViewer';
 
 export default function Tests() {
   const [selectedTest, setSelectedTest] = useState(null);
@@ -472,6 +473,15 @@ export default function Tests() {
               >
                 Snaps
               </Button>
+              <Button
+                sx={buttonStyle(2)}
+                variant="text"
+                color="info"
+                size="small"
+                onClick={() => setSelectedTab(2)}
+              >
+                Logs
+              </Button>
             </Box>
             {selectedTab === 0 && (<Box>
               <TextField
@@ -493,6 +503,7 @@ export default function Tests() {
               />
             </Box>)}
             {selectedTab === 1 && (<Snaps selectedTest={selectedTest} />)}
+            {selectedTab === 2 && (<LogViewer selectedTest={selectedTest} />)}
           </Box>
         ) : (
           <Typography>Select a test case to view mock data</Typography>
