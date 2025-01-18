@@ -7,25 +7,21 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 
-const SimpleJsonTable = ({ data }) => {
+const ProjectTable = ({ data, onClickProject }) => {
   return (
     <TableContainer component={Paper}>
       <Table>
         <TableHead>
           <TableRow>
             <TableCell>
-              <strong>Env Variable</strong>
-            </TableCell>
-            <TableCell>
-              <strong>Value</strong>
+              <strong>Project</strong>
             </TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
-          {Object.entries(data).map(([key, value]) => (
-            <TableRow key={key}>
-              <TableCell>{key}</TableCell>
-              <TableCell>{String(value)}</TableCell>
+          {data.map((key) => (
+            <TableRow onClick={() => onClickProject(key)} sx={{cursor: 'pointer'}} key={key}>
+              <TableCell>{String(key)}</TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -34,4 +30,4 @@ const SimpleJsonTable = ({ data }) => {
   );
 };
 
-export default SimpleJsonTable;
+export default ProjectTable;

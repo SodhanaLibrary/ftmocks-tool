@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Container } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
-import SimpleJsonTable from './SimpleJsonTable';
+import SimpleJsonTable from './EnvTable';
 import ServerStatus from './ServerStatus';
+import EnvTable from './EnvTable';
+import ProjectTable from './ProjectTable';
 
 export default function Tests() {
   const [testCases, setTestCases] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [defaultMocks, setDefaultMocks] = useState([]);
   const [envDetails, setEnvDetails] = useState({});
   const [serverStatus, setServerStatus] = useState({});
@@ -47,6 +50,20 @@ export default function Tests() {
     }
   };
 
+  const fetchProjects = async () => {
+    try {
+      const response = await fetch('/api/v1/projects');
+      if (!response.ok) {
+        throw new Error('Failed to fetch projects');
+      }
+      const data = await response.json();
+      setProjects(data);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      // Handle the error appropriately, e.g., show an error message to the user
+    }
+  };
+
   const fetchDefaultMocks = async () => {
     try {
       const response = await fetch('/api/v1/defaultmocks');
@@ -75,11 +92,36 @@ export default function Tests() {
     }
   };
 
-  useEffect(() => {
+  const loadAllData = () => {
     fetchTestData();
     fetchDefaultMocks();
     fetchEnvDetails();
     fetchMockServerStatus();
+    fetchProjects();
+  };
+
+  const onClickProject = async envFile => {
+    try {
+      const response = await fetch('/api/v1/projects', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({env_file: envFile}),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch projects');
+      }
+      loadAllData();
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      // Handle the error appropriately, e.g., show an error message to the user
+    }
+  };
+
+  useEffect(() => {
+    loadAllData();
   }, []);
 
   return (
@@ -164,7 +206,12 @@ export default function Tests() {
 
       <Box>
         <Box sx={{ margin: 'auto' }}>
-          <SimpleJsonTable data={envDetails} />
+          <EnvTable data={envDetails} />
+        </Box>
+      </Box>
+      <Box mt={2}>
+        <Box sx={{ margin: 'auto' }}>
+          <ProjectTable data={projects} onClickProject={onClickProject} />
         </Box>
       </Box>
     </Container>
