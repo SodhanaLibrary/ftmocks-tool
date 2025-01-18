@@ -11,10 +11,14 @@ import {
   Typography,
   Box
 } from "@mui/material";
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
 
 const LogViewer = ({ selectedTest }) => {
 
   const [logs, setLogs] = useState([]);
+  const [allLogs, setAllLogs] = useState([]);
+  const [type, setType] = useState('all');
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -23,6 +27,14 @@ const LogViewer = ({ selectedTest }) => {
     const date = new Date(timestamp);
     return date.toLocaleString();
   };
+
+  useEffect(() => {
+    if(type === 'all') {
+      setLogs(allLogs);
+    } else {
+      setLogs(allLogs.filter(log => log.type === type));
+    }
+  }, [allLogs, type]);
 
   // Fetch mock data
   const fetchLogs = async () => {
@@ -33,7 +45,7 @@ const LogViewer = ({ selectedTest }) => {
         throw new Error('Failed to fetch logs');
       }
       const data = await response.json();
-      setLogs(data);
+      setAllLogs(data);
       setIsLoading(false);  
     } catch (err) {
       setLogs([]);
@@ -47,16 +59,41 @@ const LogViewer = ({ selectedTest }) => {
     fetchLogs();
   }, []);
 
+  const handleChange = (event) => {
+    setType(event.target.value);
+  };
+
   return (
     <TableContainer component={Paper}>
-      <Typography
-        variant="h6"
-        component="div"
-        sx={{ padding: "16px", textAlign: "center" }}
-      >
-        Logs
-      </Typography>
-      <Table>
+      <Box display="flex" justifyContent="space-between">
+        <Typography
+          variant="h6"
+          component="div"
+          sx={{ padding: "16px" }}
+          justifyContent="space-between"
+        >
+          Logs
+        </Typography>
+        <Select
+          labelId="demo-simple-select-label"
+          id="demo-simple-select"
+          value={type}
+          label="Age"
+          onChange={handleChange}
+          variant="outlined"
+        >
+          <MenuItem value="all">All</MenuItem>
+          <MenuItem value="log">Log</MenuItem>
+          <MenuItem value="debug">Debug</MenuItem>
+          <MenuItem value="info">Info</MenuItem>
+          <MenuItem value="warn">Warning</MenuItem>
+          <MenuItem value="error">Error</MenuItem>
+        </Select>
+      </Box>
+      {!isLoading && logs.length === 0 && <Box p={4} textAlign="center">
+          Logs not found
+      </Box>}  
+      {(isLoading || logs.length > 0) && <Table>
         <TableHead>
           <TableRow>
             <TableCell><strong>Type</strong></TableCell>
@@ -64,6 +101,9 @@ const LogViewer = ({ selectedTest }) => {
             <TableCell><strong>Time</strong></TableCell>
           </TableRow>
         </TableHead>
+        {isLoading && <Box p={4} textAlign="center">
+          Loading...
+        </Box>} 
         <TableBody>
           {logs.map((log, index) => (
             <TableRow key={index}>
@@ -79,7 +119,7 @@ const LogViewer = ({ selectedTest }) => {
             </TableRow>
           ))}
         </TableBody>
-      </Table>
+      </Table>}
     </TableContainer>
   );
 };
