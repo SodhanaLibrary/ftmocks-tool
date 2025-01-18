@@ -38,6 +38,7 @@ const MockDataView = ({
           : '';
         setMockData({ ...mockItem });
       } catch (e) {
+        setMockData({ ...mockItem });
         console.log(e);
       }
     }
