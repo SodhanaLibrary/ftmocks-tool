@@ -51,10 +51,19 @@ export function compareMockToRequest(mock, req) {
   );
 }
 
+function getPreviousURLaction(actions, index) {
+  for(let i=index; i>=0; i--) {
+    if(actions[i].type === 'url') {
+      return actions[i];
+    }
+  }
+  return null;
+}
+
 export function makeSubsetActions(actions, tests) {
   let currentActions = [];
   const testActions = {};
-  actions.forEach((action) => {
+  actions.forEach((action, cindex) => {
     if (
       ['click', 'type', 'change', 'dblclick', 'contextmenu'].includes(
         action.type
@@ -62,6 +71,10 @@ export function makeSubsetActions(actions, tests) {
     ) {
       currentActions.push(action);
     } else if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(action.type)) {
+      const urlAction = getPreviousURLaction(actions, cindex);
+      if(urlAction) {
+        currentActions = [urlAction, ...currentActions];
+      }
       const test = tests.find((test) =>
         test.mocks.find((mock) =>
           compareMockToRequest(mock, {
@@ -171,15 +184,15 @@ export function generatePlaywrightCode(actions, tests = []) {
       .map((action) => {
         switch (action.type) {
           case 'click':
-            return `  await page.locator('${action.target}').click();`;
+            return `  await page.locator("${action.target}").click();`;
           case 'type':
-            return `  await page.locator('${action.target}').fill('${action.value}');`;
+            return `  await page.locator("${action.target}").fill('${action.value}');`;
           case 'change':
-            return `  await page.locator('${action.target}').evaluate(el => el.value = '${action.value}');`;
+            return `  await page.locator("${action.target}").evaluate(el => el.value = '${action.value}');`;
           case 'dblclick':
-            return `  await page.locator('${action.target}').dblclick();`;
+            return `  await page.locator("${action.target}").dblclick();`;
           case 'contextmenu':
-            return `  await page.locator('${action.target}').click({ button: 'right' });`;
+            return `  await page.locator("${action.target}").click({ button: 'right' });`;
           case 'POST':
             return `//-------------------------------------------------------------`;
           case 'PUT':
@@ -194,11 +207,12 @@ export function generatePlaywrightCode(actions, tests = []) {
       })
       .filter((cd) => !!cd)
       .join('\n');
-      
+    const url = testActions[testName].actions[0]?.type === 'url' ? testActions[testName].actions[0].value : 'http://your-app-url';
     testCode = [
       `// ${testName} test case`,
       `test('${testName}', async ({ page }) => {`,
-      `  await page.goto('http://your-app-url');`,
+      `  await initiatePlaywrightRoutes(page, ftmocksConifg, '${testName}');`
+      `  await page.goto('${url}');`,
       testCode,
       `});`,
       ``,
