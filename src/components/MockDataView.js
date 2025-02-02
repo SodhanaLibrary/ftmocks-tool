@@ -17,6 +17,7 @@ import UploadIcon from '@mui/icons-material/Upload';
 import Alert from '@mui/material/Alert';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
+import Popover from '@mui/material/Popover'
 
 const MockDataView = ({
   mockItem,
@@ -155,6 +156,27 @@ const MockDataView = ({
     setMockData({ ...mockData });
   };
 
+  const ignoreForAll = async chip => {
+    const response = await fetch('/api/v1/ignoreForAll', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+      body: JSON.stringify({
+        param: chip,
+      }, null, 2),
+    });
+    if (response.ok) {
+      setSnackbarMessage('Mock data updated successfully');
+      setSnackbarOpen(true);
+      onClose(true);
+    } else {
+      setSnackbarMessage('Failed to update mock data');
+      setSnackbarOpen(true);
+    }
+  };
+
   const duplicateMockData = async () => {
     const endpoint = selectedTest
       ? `/api/v1/tests/${selectedTest.id}/mockdata?name=${selectedTest.name}`
@@ -281,12 +303,21 @@ const MockDataView = ({
       >
         <Box>
           {mockData.ignoreParams?.map((chip, index) => (
-            <Chip
-              key={index}
-              label={chip}
-              onDelete={handleDelete(chip)}
-              sx={{ margin: '4px' }}
-            />
+            <Tooltip placement="right-start" title={
+                <Box style={{width: 200}}> 
+                   Click below for to make {chip} as Ignore Parameter for all API requests
+                   <Box p={2}>
+                     <Button variant='contained' onClick={() => ignoreForAll(chip)} size='small' color='primary'>Ignore for all</Button>
+                   </Box>
+                </Box>
+              } arrow>
+              <Chip
+                key={index}
+                label={chip}
+                onDelete={handleDelete(chip)}
+                sx={{ margin: '4px' }}
+              />
+            </Tooltip>
           ))}
         </Box>
 
