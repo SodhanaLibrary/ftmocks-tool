@@ -14,6 +14,7 @@ export default function MockServer() {
   const [port, setPort] = useState('');
   const [isRunning, setIsRunning] = useState(false);
   const [tests, setTests] = useState([]);
+  const [prefferedPorts, setPrefferedPorts] = useState([]);
 
   const fetchTests = async () => {
     try {
@@ -52,9 +53,30 @@ export default function MockServer() {
     }
   };
 
+  const fetchPreferredPorts = async (testsTemp) => {
+    try {
+      const response = await fetch('/api/v1/env/project');
+      if (!response?.ok) {
+        throw new Error('Failed to fetch preffered ports');
+      }
+      const data = await response.json();
+      if (data.PREFERRED_SERVER_PORTS) {
+        setPrefferedPorts(JSON.parse(data.PREFERRED_SERVER_PORTS));
+      } else {
+        setPrefferedPorts([]);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error fetching tests:', error);
+      // Handle the error appropriately, e.g., show an error message to the user
+    }
+  };
+
   const loadInitialData = async () => {
     const testsTemp = await fetchTests();
     await fetchMockServerStatus(testsTemp);
+    fetchPreferredPorts();
   };
 
   useEffect(() => {
@@ -74,6 +96,36 @@ export default function MockServer() {
     // Create a POST request to /api/v1/mockServer
     fetch('/api/v1/mockServer', {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        testName: selectedTest,
+        port: parseInt(port, 10),
+      }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Failed to start mock server');
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log('Mock server started:', data);
+        // You can add additional logic here, such as showing a success message
+      })
+      .catch((error) => {
+        console.error('Error starting mock server:', error);
+        setIsRunning(false);
+        // You can add additional error handling here, such as showing an error message
+      });
+  };
+
+  const handleUpdate = () => {
+    setIsRunning(true);
+    // Create a POST request to /api/v1/mockServer
+    fetch('/api/v1/mockServer', {
+      method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -177,15 +229,24 @@ export default function MockServer() {
             onChange={handlePortChange}
             type="number"
           />
+          <Box>
+            Preferred Ports: {prefferedPorts.join(', ')}
+          </Box>
           <Box sx={{ display: 'flex', gap: 2 }}>
-            <Button
+            {!isRunning && <Button
               variant="contained"
               color="primary"
               onClick={handleRun}
-              disabled={isRunning}
             >
               Run
-            </Button>
+            </Button>}
+            {isRunning && <Button
+              variant="contained"
+              color="primary"
+              onClick={handleUpdate}
+            >
+              Update
+            </Button>}
             <Button
               variant="contained"
               color="secondary"

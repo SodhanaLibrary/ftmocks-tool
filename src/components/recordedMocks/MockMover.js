@@ -66,6 +66,34 @@ const MockMover = ({ mockItem, onClose }) => {
     }
   };
 
+  const moveAllToDefaultMocks = async () => {
+    const endpoint = `/api/v1/defaultmocks`;
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify(mockItem.mockData),
+      });
+
+      if (response.ok) {
+        console.log('Mock data updated successfully');
+        setSnackbarMessage('Mock data updated successfully');
+        setSnackbarOpen(true);
+      } else {
+        console.error('Failed to update mock data');
+        setSnackbarMessage('Failed to update mock data');
+        setSnackbarOpen(true);
+      }
+    } catch (error) {
+      console.error('Error updating mock data:', error);
+      setSnackbarMessage('Error updating mock data');
+      setSnackbarOpen(true);
+    }
+  };
+
   const initiateRecordedMocks = async () => {
     const endpoint = `/api/v1/initiateRecordedMocks`;
     try {
@@ -143,6 +171,17 @@ const MockMover = ({ mockItem, onClose }) => {
         fullWidth
       >
         Move It To Default Mock Data
+      </Button>
+
+      <Divider sx={{ my: 2 }} />
+
+      <Button
+        onClick={moveAllToDefaultMocks}
+        variant="contained"
+        color="primary"
+        fullWidth
+      >
+        Move all GET requests To Default Mock Data
       </Button>
 
       <Divider sx={{ my: 2 }} />
