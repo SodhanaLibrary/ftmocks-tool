@@ -24,6 +24,7 @@ import { sortUrlsByMatch } from '../utils/SearchUtils';
 import DraggableMockList from './MockDataList';
 import Snaps from './Snaps';
 import LogViewer from './LogViewer';
+import RecordMockOrTest from './RecordMockOrTest';
 
 export default function Tests() {
   const [selectedTest, setSelectedTest] = useState(null);
@@ -456,6 +457,15 @@ export default function Tests() {
           <Box>
             <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 2 }}>
               <Button
+                sx={buttonStyle(3)}
+                variant="text"
+                color="info"
+                size="small"
+                onClick={() => setSelectedTab(3)}
+              >
+                Record
+              </Button>
+              <Button
                 sx={buttonStyle(0)}
                 variant="text"
                 color="info"
@@ -504,6 +514,7 @@ export default function Tests() {
             </Box>)}
             {selectedTab === 1 && (<Snaps selectedTest={selectedTest} />)}
             {selectedTab === 2 && (<LogViewer selectedTest={selectedTest} />)}
+            {selectedTab === 3 && (<RecordMockOrTest selectedTest={selectedTest} fetchMockData={fetchMockData}/>)}
           </Box>
         ) : (
           <Typography>Select a test case to view mock data</Typography>

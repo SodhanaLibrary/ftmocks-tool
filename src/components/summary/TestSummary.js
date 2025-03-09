@@ -5,6 +5,7 @@ import SimpleJsonTable from './EnvTable';
 import ServerStatus from './ServerStatus';
 import EnvTable from './EnvTable';
 import ProjectTable from './ProjectTable';
+import UpdateChecker from './UpdateChecker';
 
 export default function Tests() {
   const [testCases, setTestCases] = useState([]);
@@ -204,7 +205,8 @@ export default function Tests() {
         </Box>
       )}
 
-      <Box>
+     <UpdateChecker />
+     <Box>
         <Box sx={{ margin: 'auto' }}>
           <EnvTable data={envDetails} />
         </Box>
