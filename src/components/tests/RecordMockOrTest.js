@@ -9,12 +9,13 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import Typography from '@mui/material/Typography';
 import Snackbar from '@mui/material/Snackbar';
+import RecordedEventsData from '../recordedEvents/RecordedEventsData';
 
-const RecordMockOrTest = ({ selectedTest, fetchMockData }) => {
+const RecordMockOrTest = ({ selectedTest, fetchMockData, envDetails }) => {
   const [recordedEvents, setRecordedEvents] = useState([]);
-  const [error, setError] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [isRecordingMockData, setIsRecordingMockData] = useState(false);
+  const [isRecordingTest, setIsRecordingTest] = useState(false);
+  const [error, setError] = useState(null);
   const [config, setConfig] = useState({
     url: '',
     avoidDuplicatesWithDefaultMocks: true,
@@ -24,9 +25,23 @@ const RecordMockOrTest = ({ selectedTest, fetchMockData }) => {
     avoidDuplicatesInTheTest: true,
   });
 
+    // Fetch mock data
+    const fetchRecordedEvents = async () => {
+      try {
+        const response = await fetch(`/api/v1/recordedEvents?name=${selectedTest.name}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch default mocks');
+        }
+        const data = await response.json();
+        setRecordedEvents(data);
+      } catch (err) {
+        setError(err.message);
+      } 
+    };
+  
+
   const recordMockData = async () => {
     try {
-      setIsLoading(true);
       const response = await fetch(`/api/v1/record/mocks`, {
         method: 'POST',
         headers: {
@@ -40,8 +55,24 @@ const RecordMockOrTest = ({ selectedTest, fetchMockData }) => {
       setIsRecordingMockData(true);
     } catch (err) {
       setError(err.message);
-    } finally {
-      setIsLoading(false);
+    } 
+  }
+
+  const recordTest = async () => {
+    try {
+      const response = await fetch(`/api/v1/record/test`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(config),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to record test');
+      }
+      setIsRecordingTest(true);
+    } catch (err) {
+      setError(err.message);
     }
   }
 
@@ -59,23 +90,6 @@ const RecordMockOrTest = ({ selectedTest, fetchMockData }) => {
     });
   };
   
-  // Fetch mock data
-  const fetchRecordedEvents = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch(`/api/v1/recordedEvents?name=${selectedTest.name}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch default mocks');
-      }
-      const data = await response.json();
-      setRecordedEvents(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const stopRecordingMockData = async () => {
     try {
       setIsRecordingMockData(false);
@@ -96,13 +110,10 @@ const RecordMockOrTest = ({ selectedTest, fetchMockData }) => {
     fetchRecordedEvents();
   }, [selectedTest]);
 
-  if(isLoading) {
-    return (<Box p={5} width="100%" textAlign="center">Loading....</Box>)
-  }
   return (
-    <Box gap={1}  display="flex" sx={{ width: '100%', margin: '0 auto', textAlign: 'left', mt: 4 }}>
-        <Box p={3} width="50%" sx={{textAlign: 'center', border: '1px solid #333'}} display="flex" flexDirection="column" gap={1}>
-          {!isRecordingMockData && <Box display="flex" flexDirection="column" gap={1}>
+    <Box gap={1}  display="flex" flexDirection="column" sx={{ width: '100%', margin: '0 auto', textAlign: 'left', mt: 4 }}>
+        <Box width="100%" display="flex" flexDirection="row" gap={1}>
+          {!isRecordingMockData && !isRecordingTest && <Box p={3} sx={{textAlign: 'center', border: '1px solid #333'}} width="50%" display="flex" flexDirection="column" gap={1}>
               <TextField
                   label="URL"
                   fullWidth
@@ -146,17 +157,13 @@ const RecordMockOrTest = ({ selectedTest, fetchMockData }) => {
             <Typography>Recording mock data...</Typography>
             <Button color='primary' onClick={stopRecordingMockData} variant='contained'>Stop recording</Button>
           </Box>}
-        </Box>
-        {!isRecordingMockData && <Box p={3} width="50%" sx={{textAlign: 'center', border: '1px solid #333'}} display="flex" flexDirection="column" gap={1}>
+          {!isRecordingMockData && <Box p={3} width="50%" sx={{textAlign: 'center', border: '1px solid #333'}} display="flex" flexDirection="column" gap={1}>
             <TextField
                 label="URL"
                 fullWidth
                 margin="normal"
                 value={config.url}
                 onChange={onUrlChange}
-                inputProps={{
-                readOnly: true,
-                }}
             />
             <FormControlLabel
                 control={
@@ -168,8 +175,12 @@ const RecordMockOrTest = ({ selectedTest, fetchMockData }) => {
                 }
                 label="Start mock server"
             />
-            <Button color='primary' variant='contained'>Record Test</Button>
-        </Box>}
+            <Button color='primary' onClick={recordTest} variant='contained'>Record Test</Button>
+          </Box>}
+        </Box>
+        <Box width="100%" display="flex" flexDirection="row" gap={1} sx={{textAlign: 'center', border: '1px solid #333'}}>
+          <RecordedEventsData selectedTest={selectedTest} />
+        </Box>
     </Box>
   );
 };
