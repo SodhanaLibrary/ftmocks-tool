@@ -25,7 +25,7 @@ import TimelineDot from '@mui/lab/TimelineDot';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import { generatePlaywrightCode, generateRTLCode } from './CodeUtils';
 
-export default function RecordedEventsData() {
+export default function RecordedEventsData({selectedTest}) {
   const [isLoading, setIsLoading] = useState(true);
   const [erroe, setError] = useState(null);
   const [recordedEvents, setRecordedEvents] = useState([]);
@@ -35,7 +35,7 @@ export default function RecordedEventsData() {
   const fetchRecordedEvents = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/v1/recordedEvents');
+      const response = await fetch(`/api/v1/recordedEvents?${selectedTest?.name ? `name=${selectedTest.name}` : ''}`);
       if (!response.ok) {
         throw new Error('Failed to fetch default mocks');
       }
@@ -79,7 +79,7 @@ export default function RecordedEventsData() {
   const deleteAll = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/v1/deleteAllEvents', {
+      const response = await fetch(`/api/v1/deleteAllEvents?${selectedTest?.name ? `name=${selectedTest.name}` : ''}`, {
         method: 'DELETE',
       });
       if (!response.ok) {
