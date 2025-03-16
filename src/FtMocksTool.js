@@ -24,6 +24,7 @@ const darkTheme = createTheme({
 
 export default function FtMocksTool() {
   const [mode, setMode] = React.useState('dark');
+  const [envDetails, setEnvDetails] = React.useState(null);
 
   // This code only runs on the client side, to determine the system color preference
   React.useEffect(() => {
@@ -45,6 +46,24 @@ export default function FtMocksTool() {
     localStorage.setItem('themeMode', newMode);
   };
 
+  const fetchEnvDetails = async () => {
+    try {
+      const response = await fetch('/api/v1/env/project');
+      if (!response.ok) {
+        throw new Error('Failed to fetch test data');
+      }
+      const data = await response.json();
+      setEnvDetails(data);
+    } catch (error) {
+      console.error('Error fetching test data:', error);
+      // Handle the error appropriately, e.g., show an error message to the user
+    }
+  };
+
+  React.useEffect(() => {
+    fetchEnvDetails();
+  }, []);
+
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline enableColorScheme />
@@ -56,11 +75,11 @@ export default function FtMocksTool() {
               path="/"
               element={
                 <>
-                  <TestSummary />
+                  <TestSummary envDetails={envDetails} />
                 </>
               }
             />
-            <Route path="/tests" element={<Tests />} />
+            <Route path="/tests" element={<Tests envDetails={envDetails} />} />
             <Route path="/default-mock-data" element={<DefaultMockData />} />
             <Route path="/recorded-mock-data" element={<RecordedMockData />} />
             <Route path="/mock-server" element={<MockServer />} />

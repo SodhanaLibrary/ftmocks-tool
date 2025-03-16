@@ -26,7 +26,7 @@ import Snaps from './Snaps';
 import LogViewer from './LogViewer';
 import RecordMockOrTest from './RecordMockOrTest';
 
-export default function Tests() {
+export default function Tests({ envDetails }) {
   const [selectedTest, setSelectedTest] = useState(null);
   const [selectedTab, setSelectedTab] = useState(0);
   const [filteredTestCases, setFilteredTestCases] = useState([]);
@@ -514,7 +514,7 @@ export default function Tests() {
             </Box>)}
             {selectedTab === 1 && (<Snaps selectedTest={selectedTest} />)}
             {selectedTab === 2 && (<LogViewer selectedTest={selectedTest} />)}
-            {selectedTab === 3 && (<RecordMockOrTest selectedTest={selectedTest} fetchMockData={fetchMockData}/>)}
+            {selectedTab === 3 && (<RecordMockOrTest selectedTest={selectedTest} fetchMockData={fetchMockData} envDetails={envDetails} />)}
           </Box>
         ) : (
           <Typography>Select a test case to view mock data</Typography>

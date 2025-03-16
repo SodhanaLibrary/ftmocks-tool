@@ -7,11 +7,10 @@ import EnvTable from './EnvTable';
 import ProjectTable from './ProjectTable';
 import UpdateChecker from './UpdateChecker';
 
-export default function Tests() {
+export default function Tests({ envDetails }) {
   const [testCases, setTestCases] = useState([]);
   const [projects, setProjects] = useState([]);
   const [defaultMocks, setDefaultMocks] = useState([]);
-  const [envDetails, setEnvDetails] = useState({});
   const [serverStatus, setServerStatus] = useState({});
 
   const fetchMockServerStatus = async (testsTemp) => {
@@ -79,24 +78,9 @@ export default function Tests() {
     }
   };
 
-  const fetchEnvDetails = async () => {
-    try {
-      const response = await fetch('/api/v1/env/project');
-      if (!response.ok) {
-        throw new Error('Failed to fetch test data');
-      }
-      const data = await response.json();
-      setEnvDetails(data);
-    } catch (error) {
-      console.error('Error fetching test data:', error);
-      // Handle the error appropriately, e.g., show an error message to the user
-    }
-  };
-
   const loadAllData = () => {
     fetchTestData();
     fetchDefaultMocks();
-    fetchEnvDetails();
     fetchMockServerStatus();
     fetchProjects();
   };
