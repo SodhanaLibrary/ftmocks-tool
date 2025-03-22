@@ -126,7 +126,7 @@ export function makeSubsetActions(actions, tests) {
   return testActions;
 }
 
-export function generateRTLCode(actions, tests = []) {
+export function generateRTLCode(actions, tests = [], selectedTest) {
   const testActions = makeSubsetActions(actions, tests);
   const testCodes = [];
   Object.keys(testActions).forEach((testName) => {
@@ -162,9 +162,9 @@ export function generateRTLCode(actions, tests = []) {
       .filter((cd) => !!cd)
       .join('\n');
     testCode = [
-      `// ${testName} test case`,
-      `it('${testName}', async () => {`,
-      `  await initiateJestFetch(jest, ftmocksConifg, '${testName}');`,
+      `// ${selectedTest?.name || testName} test case`,
+      `it('${selectedTest?.name || testName}', async () => {`,
+      `  await initiateJestFetch(jest, ftmocksConifg, '${selectedTest?.name || testName}');`,
       `  const dom = render(<App />);`,
       testCode,
       `});`,
@@ -175,7 +175,7 @@ export function generateRTLCode(actions, tests = []) {
   return testCodes.join('\n');
 }
 
-export function generatePlaywrightCode(actions, tests = []) {
+export function generatePlaywrightCode(actions, tests = [], selectedTest) {
   const testActions = makeSubsetActions(actions, tests);
   const testCodes = [];
   
@@ -208,10 +208,11 @@ export function generatePlaywrightCode(actions, tests = []) {
       .filter((cd) => !!cd)
       .join('\n');
     const url = testActions[testName].actions[0]?.type === 'url' ? testActions[testName].actions[0].value : 'http://your-app-url';
+    
     testCode = [
-      `// ${testName} test case`,
-      `test('${testName}', async ({ page }) => {`,
-      `  await initiatePlaywrightRoutes(page, ftmocksConifg, '${testName}');`
+      `// ${selectedTest?.name || testName} test case`,
+      `test('${selectedTest?.name || testName}', async ({ page }) => {`,
+      `  await initiatePlaywrightRoutes(page, ftmocksConifg, '${selectedTest?.name || testName}');`,
       `  await page.goto('${url}');`,
       testCode,
       `});`,

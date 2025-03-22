@@ -7,7 +7,7 @@ import EnvTable from './EnvTable';
 import ProjectTable from './ProjectTable';
 import UpdateChecker from './UpdateChecker';
 
-export default function Tests({ envDetails }) {
+export default function TestSummary({ envDetails }) {
   const [testCases, setTestCases] = useState([]);
   const [projects, setProjects] = useState([]);
   const [defaultMocks, setDefaultMocks] = useState([]);
