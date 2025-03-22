@@ -106,11 +106,11 @@ export default function RecordedEventsData({selectedTest}) {
   }
 
   const genRTLCode = () => {
-    setGenCode(generateRTLCode(recordedEvents, testsSummary));
+    setGenCode(generateRTLCode(recordedEvents, testsSummary, selectedTest));
   };
 
   const genPlayWriteCode = () => {
-    setGenCode(generatePlaywrightCode(recordedEvents));
+    setGenCode(generatePlaywrightCode(recordedEvents, testsSummary, selectedTest));
   };
 
   useEffect(() => {

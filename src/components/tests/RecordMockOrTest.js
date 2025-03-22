@@ -18,6 +18,7 @@ const RecordMockOrTest = ({ selectedTest, fetchMockData, envDetails }) => {
   const [error, setError] = useState(null);
   const [config, setConfig] = useState({
     url: '',
+    pattern: '^/api/.*',
     avoidDuplicatesWithDefaultMocks: true,
     stopMockServer: true,
     startMockServer: true,
@@ -89,6 +90,13 @@ const RecordMockOrTest = ({ selectedTest, fetchMockData, envDetails }) => {
       url: event.target.value,
     });
   };
+
+  const onPatternChange = (event) => {
+    setConfig({
+      ...config,
+      pattern: event.target.value,
+    });
+  };
   
   const stopRecordingMockData = async () => {
     try {
@@ -120,6 +128,13 @@ const RecordMockOrTest = ({ selectedTest, fetchMockData, envDetails }) => {
                   margin="normal"
                   value={config.url}
                   onChange={onUrlChange}
+              />
+              <TextField
+                  label="Pattern"
+                  fullWidth
+                  margin="normal"
+                  value={config.pattern}
+                  onChange={onPatternChange}
               />
               <FormControlLabel
                   control={
