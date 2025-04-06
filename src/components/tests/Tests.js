@@ -176,6 +176,20 @@ export default function Tests({ envDetails }) {
     );
   };
 
+  const deleteAllMockData = () => {
+    fetch(
+      `/api/v1/tests/${selectedTest.id}/mockdata?name=${selectedTest.name}`,
+      {
+        method: 'DELETE',
+      }
+    ).then((response) => {
+      if (response.ok) {
+        console.log('Mock data deleted successfully');
+        fetchMockData(selectedTest);
+      }
+    });
+  };
+
   const handleDeleteTest = (test) => {
     fetch(`/api/v1/tests/${test.id}?name=${test.name}`, { method: 'DELETE' })
       .then((response) => {
@@ -261,14 +275,14 @@ export default function Tests({ envDetails }) {
     )
       .then((response) => {
         if (response.ok) {
-          console.log('Test deleted successfully');
-          fetchTestData();
+          console.log('Mock data updated successfully');
+          fetchMockData(selectedTest);
         } else {
-          console.error('Failed to delete test');
+          console.error('Failed to update mock data');
         }
       })
       .catch((error) => {
-        console.error('Error deleting test:', error);
+        console.error('Error updating mock data:', error);
       });
   };
 
@@ -318,7 +332,7 @@ export default function Tests({ envDetails }) {
           border: 1,
           borderColor: 'divider',
           boxShadow: 1,
-          width: '300px',
+          minWidth: '300px',
         }}
       >
         <Box
@@ -493,28 +507,37 @@ export default function Tests({ envDetails }) {
                 Logs
               </Button>
             </Box>
-            {selectedTab === 0 && (<Box>
-              <TextField
-                hiddenLabel
-                fullWidth
-                variant="outlined"
-                placeholder="Search mock data"
-                margin="normal"
-                value={mockSearchTerm}
-                onChange={(e) => {
-                  setMockSearchTerm(e.target.value);
-                }}
-              />
-              <DraggableMockList
+            {selectedTab === 0 && (
+              <Box>
+                <TextField
+                  hiddenLabel
+                  fullWidth
+                  variant="outlined"
+                  placeholder="Search mock data"
+                  margin="normal"
+                  value={mockSearchTerm}
+                  onChange={(e) => {
+                    setMockSearchTerm(e.target.value);
+                  }}
+                />
+                <DraggableMockList
+                  selectedTest={selectedTest}
+                  selectedMockItem={selectedMockItem}
+                  handleMockItemClick={handleMockItemClick}
+                  setFilteredMockData={setFilteredMockData}
+                  deleteAllMockData={deleteAllMockData}
+                />
+              </Box>
+            )}
+            {selectedTab === 1 && <Snaps selectedTest={selectedTest} />}
+            {selectedTab === 2 && <LogViewer selectedTest={selectedTest} />}
+            {selectedTab === 3 && (
+              <RecordMockOrTest
                 selectedTest={selectedTest}
-                selectedMockItem={selectedMockItem}
-                handleMockItemClick={handleMockItemClick}
-                setFilteredMockData={setFilteredMockData}
+                fetchMockData={fetchMockData}
+                envDetails={envDetails}
               />
-            </Box>)}
-            {selectedTab === 1 && (<Snaps selectedTest={selectedTest} />)}
-            {selectedTab === 2 && (<LogViewer selectedTest={selectedTest} />)}
-            {selectedTab === 3 && (<RecordMockOrTest selectedTest={selectedTest} fetchMockData={fetchMockData} envDetails={envDetails} />)}
+            )}
           </Box>
         ) : (
           <Typography>Select a test case to view mock data</Typography>
