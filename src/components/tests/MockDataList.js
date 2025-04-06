@@ -3,6 +3,8 @@ import { List, ListItem, ListItemText, Box, Button } from '@mui/material';
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import ListItemIcon from '@mui/material/ListItemIcon';
 
 const DraggableMockList = ({
   selectedTest,
@@ -67,6 +69,11 @@ const DraggableMockList = ({
                         },
                       }}
                     >
+                      {mockItem.isDuplicate && (
+                        <ListItemIcon>
+                          <ContentCopyIcon color="secondary" />
+                        </ListItemIcon>
+                      )}
                       <ListItemText
                         sx={{
                           '& .MuiTypography-root': {
@@ -85,7 +92,7 @@ const DraggableMockList = ({
           )}
         </Droppable>
       </DragDropContext>
-      {selectedTest.filteredMockData.length > 10 && (
+      {selectedTest.filteredMockData.length > 5 && (
         <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: 2 }}>
           <Button
             variant="contained"

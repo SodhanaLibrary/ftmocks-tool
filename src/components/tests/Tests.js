@@ -25,6 +25,7 @@ import DraggableMockList from './MockDataList';
 import Snaps from './Snaps';
 import LogViewer from './LogViewer';
 import RecordMockOrTest from './RecordMockOrTest';
+import { markDuplicateMocks } from '../utils/CommonUtils';
 
 export default function Tests({ envDetails }) {
   const [selectedTest, setSelectedTest] = useState(null);
@@ -38,10 +39,25 @@ export default function Tests({ envDetails }) {
   const [testCaseCreatorOpen, setTestCaseCreatorOpen] = useState(false);
   const [testCaseEditorOpen, setTestCaseEditorOpen] = useState(false);
   const [mockDataCreatorOpen, setMockDataCreatorOpen] = useState(false);
+  const [defaultMocks, setDefaultMocks] = useState([]);
 
   const handleMockItemClick = (item) => {
     setSelectedMockItem(item);
     setDrawerOpen(true);
+  };
+
+  const fetchDefaultMocks = async () => {
+    try {
+      const response = await fetch('/api/v1/defaultmocks');
+      if (!response.ok) {
+        throw new Error('Failed to fetch default mocks');
+      }
+      const data = await response.json();
+      setDefaultMocks(data);
+    } catch (error) {
+      setDefaultMocks([]);
+      console.error('Error fetching default mocks:', error);
+    }
   };
 
   const fetchTestData = async () => {
@@ -68,10 +84,11 @@ export default function Tests({ envDetails }) {
         throw new Error('Failed to fetch mock data');
       }
       const data = await response.json();
+      const markedData = markDuplicateMocks(data);
       setSelectedTest((prevTest) => ({
         ...prevTest,
-        mockData: data,
-        filteredMockData: sortUrlsByMatch(mockSearchTerm, data),
+        mockData: markedData,
+        filteredMockData: sortUrlsByMatch(mockSearchTerm, markedData),
       }));
     } catch (error) {
       console.error('Error fetching mock data:', error);
@@ -94,6 +111,7 @@ export default function Tests({ envDetails }) {
 
   useEffect(() => {
     fetchTestData();
+    fetchDefaultMocks();
   }, []);
 
   useEffect(() => {
@@ -114,6 +132,7 @@ export default function Tests({ envDetails }) {
         handleTestClick(newSelectedTest);
       } else {
         setSelectedTest(null);
+        setSelectedMockItem(null);
       }
     }
   }, [testCases]);
@@ -139,6 +158,7 @@ export default function Tests({ envDetails }) {
           selectedTest={selectedTest}
           onClose={handleDrawerClose}
           mockItem={selectedMockItem}
+          defaultMocks={defaultMocks}
         />
       </Drawer>
     );

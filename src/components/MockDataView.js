@@ -17,7 +17,8 @@ import UploadIcon from '@mui/icons-material/Upload';
 import Alert from '@mui/material/Alert';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
-import Popover from '@mui/material/Popover'
+import Popover from '@mui/material/Popover';
+import { getDuplicateMocks, isMockInDefaultMocks } from './utils/CommonUtils';
 
 const MockDataView = ({
   mockItem,
@@ -25,6 +26,7 @@ const MockDataView = ({
   selectedTest,
   recordedMock,
   onClickUpload,
+  defaultMocks,
 }) => {
   const [mockData, setMockData] = useState(mockItem);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -66,6 +68,40 @@ const MockDataView = ({
       .catch((error) => {
         console.error('Error deleting mock data:', error);
       });
+    onClose(true);
+  };
+
+  const deleteDuplicate = async (mock) => {
+    const endpoint = selectedTest
+      ? `/api/v1/tests/${selectedTest.id}/mockdata/${mock.id}?name=${selectedTest.name}`
+      : `/api/v1/${!recordedMock ? 'defaultmocks' : 'recordedMocks'}/${mock.id}`;
+    await fetch(endpoint, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    })
+      .then((response) => {
+        if (response.ok) {
+          console.log('Mock data deleted successfully');
+        } else {
+          console.error('Failed to delete mock data');
+        }
+      })
+      .catch((error) => {
+        console.error('Error deleting mock data:', error);
+      });
+    onClose(true);
+  };
+
+  const deleteAllDuplicates = async () => {
+    const duplicates = getDuplicateMocks(selectedTest.mockData, mockItem);
+    duplicates.forEach(async (mock) => {
+      await deleteDuplicate(mock);
+    });
+    setSnackbarMessage('All duplicates deleted successfully');
+    setSnackbarOpen(true);
     onClose(true);
   };
 
@@ -156,17 +192,21 @@ const MockDataView = ({
     setMockData({ ...mockData });
   };
 
-  const ignoreForAll = async chip => {
+  const ignoreForAll = async (chip) => {
     const response = await fetch('/api/v1/ignoreForAll', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${localStorage.getItem('token')}`,
       },
-      body: JSON.stringify({
-        param: chip,
-        testName: selectedTest.name,
-      }, null, 2),
+      body: JSON.stringify(
+        {
+          param: chip,
+          testName: selectedTest.name,
+        },
+        null,
+        2
+      ),
     });
     if (response.ok) {
       setSnackbarMessage('Mock data updated successfully');
@@ -207,8 +247,42 @@ const MockDataView = ({
     }
   };
 
+  const copyToDefaultMockData = async () => {
+    const endpoint = `/api/v1/defaultmocks`;
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify(mockData, null, 2),
+      });
+      if (response.ok) {
+        setSnackbarMessage('Mock data sent to default mock data successfully');
+        setSnackbarOpen(true);
+      } else {
+        setSnackbarMessage('Failed to send mock data to default mock data');
+      }
+    } catch (error) {
+      console.error('Error sending mock data to default mock data:', error);
+      setSnackbarMessage('Error sending mock data to default mock data');
+      setSnackbarOpen(true);
+    }
+  };
+
+  const sendToDefaultMockData = async () => {
+    await copyToDefaultMockData();
+    await onDelete();
+    onClose(true);
+  };
+
   if (!mockItem) return null;
 
+  const enableSendToDefaultMockData =
+    !mockItem.isDuplicate &&
+    selectedTest &&
+    !isMockInDefaultMocks(defaultMocks, mockItem);
   return (
     <Box
       sx={{
@@ -304,14 +378,26 @@ const MockDataView = ({
       >
         <Box>
           {mockData.ignoreParams?.map((chip, index) => (
-            <Tooltip placement="right-start" title={
-                <Box style={{width: 200}}> 
-                   Click below for to make {chip} as Ignore Parameter for all API requests
-                   <Box p={2}>
-                     <Button variant='contained' onClick={() => ignoreForAll(chip)} size='small' color='primary'>Ignore for all</Button>
-                   </Box>
+            <Tooltip
+              placement="right-start"
+              title={
+                <Box style={{ width: 200 }}>
+                  Click below for to make {chip} as Ignore Parameter for all API
+                  requests
+                  <Box p={2}>
+                    <Button
+                      variant="contained"
+                      onClick={() => ignoreForAll(chip)}
+                      size="small"
+                      color="primary"
+                    >
+                      Ignore for all
+                    </Button>
+                  </Box>
                 </Box>
-              } arrow>
+              }
+              arrow
+            >
               <Chip
                 key={index}
                 label={chip}
@@ -350,23 +436,57 @@ const MockDataView = ({
         value={JSON.stringify(mockData, null, 2)}
         onChange={onDataChange}
       />
-      <Box display="flex" gap={1}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={onUpdate}
-          style={{ marginTop: '16px' }}
-        >
-          Update Mock Data
-        </Button>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={duplicateMockData}
-          style={{ marginTop: '16px' }}
-        >
-          Duplicate
-        </Button>
+      <Box display="flex" gap={1} justifyContent="space-between">
+        <Box display="flex" gap={1}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={onUpdate}
+            style={{ marginTop: '16px' }}
+          >
+            Update Mock Data
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={duplicateMockData}
+            style={{ marginTop: '16px' }}
+          >
+            Duplicate
+          </Button>
+        </Box>
+        <Box display="flex" gap={1}>
+          {mockItem.isDuplicate && (
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={deleteAllDuplicates}
+              style={{ marginTop: '16px' }}
+            >
+              Delete All Duplicates
+            </Button>
+          )}
+          {enableSendToDefaultMockData && (
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={sendToDefaultMockData}
+              style={{ marginTop: '16px' }}
+            >
+              Send it to Default Mock Data
+            </Button>
+          )}
+          {enableSendToDefaultMockData && (
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={copyToDefaultMockData}
+              style={{ marginTop: '16px' }}
+            >
+              Copy it to Default Mock Data
+            </Button>
+          )}
+        </Box>
       </Box>
       <Snackbar
         open={snackbarOpen}
@@ -401,6 +521,7 @@ MockDataView.propTypes = {
   selectedTest: PropTypes.shape({
     id: PropTypes.string.isRequired,
   }),
+  defaultMocks: PropTypes.array.isRequired,
 };
 
 MockDataView.defaultProps = {
@@ -417,6 +538,7 @@ MockDataView.defaultProps = {
   },
   selectedTest: null,
   recordedMock: false,
+  defaultMocks: [],
 };
 
 export default MockDataView;
