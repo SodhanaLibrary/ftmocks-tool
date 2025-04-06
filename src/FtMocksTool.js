@@ -75,7 +75,7 @@ export default function FtMocksTool() {
               path="/"
               element={
                 <>
-                  <TestSummary envDetails={envDetails} />
+                  <TestSummary envDetails={envDetails} fetchEnvDetails={fetchEnvDetails}/>
                 </>
               }
             />

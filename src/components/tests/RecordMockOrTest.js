@@ -1,8 +1,6 @@
 /* eslint-disable jsx-a11y/iframe-has-title */
 import React, { useEffect, useState } from 'react';
-import {
-  Box,
-} from '@mui/material';
+import { Box } from '@mui/material';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import FormControlLabel from '@mui/material/FormControlLabel';
@@ -22,24 +20,26 @@ const RecordMockOrTest = ({ selectedTest, fetchMockData, envDetails }) => {
     avoidDuplicatesWithDefaultMocks: true,
     stopMockServer: true,
     startMockServer: true,
+    recordEvents: true,
     testName: selectedTest.name,
     avoidDuplicatesInTheTest: true,
   });
 
-    // Fetch mock data
-    const fetchRecordedEvents = async () => {
-      try {
-        const response = await fetch(`/api/v1/recordedEvents?name=${selectedTest.name}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch default mocks');
-        }
-        const data = await response.json();
-        setRecordedEvents(data);
-      } catch (err) {
-        setError(err.message);
-      } 
-    };
-  
+  // Fetch mock data
+  const fetchRecordedEvents = async () => {
+    try {
+      const response = await fetch(
+        `/api/v1/recordedEvents?name=${selectedTest.name}`
+      );
+      if (!response.ok) {
+        throw new Error('Failed to fetch default mocks');
+      }
+      const data = await response.json();
+      setRecordedEvents(data);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   const recordMockData = async () => {
     try {
@@ -56,8 +56,8 @@ const RecordMockOrTest = ({ selectedTest, fetchMockData, envDetails }) => {
       setIsRecordingMockData(true);
     } catch (err) {
       setError(err.message);
-    } 
-  }
+    }
+  };
 
   const recordTest = async () => {
     try {
@@ -75,7 +75,7 @@ const RecordMockOrTest = ({ selectedTest, fetchMockData, envDetails }) => {
     } catch (err) {
       setError(err.message);
     }
-  }
+  };
 
   const onCheckboxChange = (event) => {
     setConfig({
@@ -97,7 +97,7 @@ const RecordMockOrTest = ({ selectedTest, fetchMockData, envDetails }) => {
       pattern: event.target.value,
     });
   };
-  
+
   const stopRecordingMockData = async () => {
     try {
       setIsRecordingMockData(false);
@@ -111,7 +111,7 @@ const RecordMockOrTest = ({ selectedTest, fetchMockData, envDetails }) => {
     } catch (err) {
       setError(err.message);
     }
-  }
+  };
 
   // Fetch data on component mount
   useEffect(() => {
@@ -119,83 +119,145 @@ const RecordMockOrTest = ({ selectedTest, fetchMockData, envDetails }) => {
   }, [selectedTest]);
 
   return (
-    <Box gap={1}  display="flex" flexDirection="column" sx={{ width: '100%', margin: '0 auto', textAlign: 'left', mt: 4 }}>
-        <Box width="100%" display="flex" flexDirection="row" gap={1}>
-          {!isRecordingMockData && !isRecordingTest && <Box p={3} sx={{textAlign: 'center', border: '1px solid #333'}} width="50%" display="flex" flexDirection="column" gap={1}>
-              <TextField
-                  label="URL"
-                  fullWidth
-                  margin="normal"
-                  value={config.url}
-                  onChange={onUrlChange}
-              />
-              <TextField
-                  label="Pattern"
-                  fullWidth
-                  margin="normal"
-                  value={config.pattern}
-                  onChange={onPatternChange}
-              />
-              <FormControlLabel
-                  control={
-                      <Checkbox
-                      checked={config.avoidDuplicatesWithDefaultMocks}
-                      name="avoidDuplicatesWithDefaultMocks"
-                      onChange={onCheckboxChange}
-                      />
-                  }
-                  label="Avoid duplicates with default mocks"
-              />
-              <FormControlLabel
-                  control={
-                      <Checkbox
-                      checked={config.avoidDuplicatesInTheTest}
-                      name="avoidDuplicatesInTheTest"
-                      onChange={onCheckboxChange}
-                      />
-                  }
-                  label="Avoid duplicates in the test"
-              />
-              <FormControlLabel
-                  control={
-                      <Checkbox
-                      checked={config.stopMockServer}
-                      name="stopMockServer"
-                      onChange={onCheckboxChange}
-                      />
-                  }
-                  label="Stop mock server"
-              />
-              <Button color='primary' onClick={recordMockData} variant='contained'>Record Mock Data</Button>
-          </Box>}
-          {isRecordingMockData && <Box p={3} width="50%" sx={{textAlign: 'center', border: '1px solid #333'}} display="flex" flexDirection="column" gap={1}>
-            <Typography>Recording mock data...</Typography>
-            <Button color='primary' onClick={stopRecordingMockData} variant='contained'>Stop recording</Button>
-          </Box>}
-          {!isRecordingMockData && <Box p={3} width="50%" sx={{textAlign: 'center', border: '1px solid #333'}} display="flex" flexDirection="column" gap={1}>
+    <Box
+      gap={1}
+      display="flex"
+      flexDirection="column"
+      sx={{ width: '100%', margin: '0 auto', textAlign: 'left', mt: 4 }}
+    >
+      <Box width="100%" display="flex" flexDirection="row" gap={1}>
+        {!isRecordingMockData && !isRecordingTest && (
+          <Box
+            p={3}
+            sx={{ textAlign: 'center', border: '1px solid #333' }}
+            width="50%"
+            display="flex"
+            flexDirection="column"
+            gap={1}
+          >
             <TextField
-                label="URL"
-                fullWidth
-                margin="normal"
-                value={config.url}
-                onChange={onUrlChange}
+              label="URL"
+              fullWidth
+              margin="normal"
+              value={config.url}
+              onChange={onUrlChange}
+            />
+            <TextField
+              label="Pattern"
+              fullWidth
+              margin="normal"
+              value={config.pattern}
+              onChange={onPatternChange}
             />
             <FormControlLabel
-                control={
-                    <Checkbox
-                    checked={config.startMockServer}
-                    name="startMockServer"
-                    onChange={onCheckboxChange}
-                    />
-                }
-                label="Start mock server"
+              control={
+                <Checkbox
+                  checked={config.avoidDuplicatesWithDefaultMocks}
+                  name="avoidDuplicatesWithDefaultMocks"
+                  onChange={onCheckboxChange}
+                />
+              }
+              label="Avoid duplicates with default mocks"
             />
-            <Button color='primary' onClick={recordTest} variant='contained'>Record Test</Button>
-          </Box>}
-        </Box>
-        <Box width="100%" display="flex" flexDirection="row" gap={1} sx={{textAlign: 'center', border: '1px solid #333'}}>
-          <RecordedEventsData selectedTest={selectedTest} />
-        </Box>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={config.avoidDuplicatesInTheTest}
+                  name="avoidDuplicatesInTheTest"
+                  onChange={onCheckboxChange}
+                />
+              }
+              label="Avoid duplicates in the test"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={config.stopMockServer}
+                  name="stopMockServer"
+                  onChange={onCheckboxChange}
+                />
+              }
+              label="Stop mock server"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={config.recordEvents}
+                  name="recordEvents"
+                  onChange={onCheckboxChange}
+                />
+              }
+              label="Record events"
+            />
+            <Button
+              color="primary"
+              onClick={recordMockData}
+              variant="contained"
+            >
+              Record Mock Data
+            </Button>
+          </Box>
+        )}
+        {isRecordingMockData && (
+          <Box
+            p={3}
+            width="50%"
+            sx={{ textAlign: 'center', border: '1px solid #333' }}
+            display="flex"
+            flexDirection="column"
+            gap={1}
+          >
+            <Typography>Recording mock data...</Typography>
+            <Button
+              color="primary"
+              onClick={stopRecordingMockData}
+              variant="contained"
+            >
+              Stop recording
+            </Button>
+          </Box>
+        )}
+        {!isRecordingMockData && (
+          <Box
+            p={3}
+            width="50%"
+            sx={{ textAlign: 'center', border: '1px solid #333' }}
+            display="flex"
+            flexDirection="column"
+            gap={1}
+          >
+            <TextField
+              label="URL"
+              fullWidth
+              margin="normal"
+              value={config.url}
+              onChange={onUrlChange}
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={config.startMockServer}
+                  name="startMockServer"
+                  onChange={onCheckboxChange}
+                />
+              }
+              label="Start mock server"
+            />
+            <Button color="primary" onClick={recordTest} variant="contained">
+              Record Test
+            </Button>
+          </Box>
+        )}
+      </Box>
+      <Box
+        width="100%"
+        display="flex"
+        flexDirection="row"
+        gap={1}
+        sx={{ textAlign: 'center', border: '1px solid #333' }}
+      >
+        <RecordedEventsData selectedTest={selectedTest} />
+      </Box>
     </Box>
   );
 };

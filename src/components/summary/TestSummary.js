@@ -7,7 +7,7 @@ import EnvTable from './EnvTable';
 import ProjectTable from './ProjectTable';
 import UpdateChecker from './UpdateChecker';
 
-export default function TestSummary({ envDetails }) {
+export default function TestSummary({ envDetails, fetchEnvDetails }) {
   const [testCases, setTestCases] = useState([]);
   const [projects, setProjects] = useState([]);
   const [defaultMocks, setDefaultMocks] = useState([]);
@@ -99,6 +99,7 @@ export default function TestSummary({ envDetails }) {
         throw new Error('Failed to fetch projects');
       }
       loadAllData();
+      fetchEnvDetails();
     } catch (error) {
       console.error('Error fetching projects:', error);
       // Handle the error appropriately, e.g., show an error message to the user
@@ -190,11 +191,11 @@ export default function TestSummary({ envDetails }) {
       )}
 
      <UpdateChecker />
-     <Box>
+     {envDetails && <Box>
         <Box sx={{ margin: 'auto' }}>
           <EnvTable data={envDetails} />
         </Box>
-      </Box>
+      </Box>}
       <Box mt={2}>
         <Box sx={{ margin: 'auto' }}>
           <ProjectTable data={projects} onClickProject={onClickProject} />
