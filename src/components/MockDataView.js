@@ -165,6 +165,7 @@ const MockDataView = ({
       },
       body: JSON.stringify({
         param: chip,
+        testName: selectedTest.name,
       }, null, 2),
     });
     if (response.ok) {
