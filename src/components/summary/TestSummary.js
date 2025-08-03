@@ -85,7 +85,7 @@ export default function TestSummary({ envDetails, fetchEnvDetails }) {
     fetchProjects();
   };
 
-  const onClickProject = async envFile => {
+  const onClickProject = async (envFile) => {
     try {
       const response = await fetch('/api/v1/projects', {
         method: 'PUT',
@@ -93,7 +93,7 @@ export default function TestSummary({ envDetails, fetchEnvDetails }) {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify({env_file: envFile}),
+        body: JSON.stringify({ env_file: envFile }),
       });
       if (!response.ok) {
         throw new Error('Failed to fetch projects');
@@ -190,15 +190,21 @@ export default function TestSummary({ envDetails, fetchEnvDetails }) {
         </Box>
       )}
 
-     <UpdateChecker />
-     {envDetails && <Box>
-        <Box sx={{ margin: 'auto' }}>
-          <EnvTable data={envDetails} />
+      <UpdateChecker />
+      {envDetails && (
+        <Box>
+          <Box sx={{ margin: 'auto' }}>
+            <EnvTable data={envDetails} />
+          </Box>
         </Box>
-      </Box>}
+      )}
       <Box mt={2}>
         <Box sx={{ margin: 'auto' }}>
-          <ProjectTable data={projects} onClickProject={onClickProject} />
+          <ProjectTable
+            data={projects}
+            onClickProject={onClickProject}
+            refetchProjects={fetchProjects}
+          />
         </Box>
       </Box>
     </Container>
