@@ -75,18 +75,21 @@ export default function FtMocksTool() {
               path="/"
               element={
                 <>
-                  <TestSummary envDetails={envDetails} fetchEnvDetails={fetchEnvDetails}/>
+                  <TestSummary
+                    envDetails={envDetails}
+                    fetchEnvDetails={fetchEnvDetails}
+                  />
                 </>
               }
             />
             <Route path="/tests" element={<Tests envDetails={envDetails} />} />
             <Route path="/default-mock-data" element={<DefaultMockData />} />
-            <Route path="/recorded-mock-data" element={<RecordedMockData />} />
+            {/* <Route path="/recorded-mock-data" element={<RecordedMockData />} /> */}
             <Route path="/mock-server" element={<MockServer />} />
-            <Route
+            {/* <Route
               path="/recorded-events-data"
               element={<RecordedEventsData />}
-            />
+            /> */}
             <Route path="/coverage-report" element={<CoverageReport />} />
             <Route path="/render-map" element={<RenderMap />} />
           </Routes>

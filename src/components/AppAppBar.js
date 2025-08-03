@@ -108,7 +108,7 @@ export default function AppAppBar() {
             >
               Mock Server
             </Button>
-            <Button
+            {/* <Button
               sx={buttonStyle('/recorded-mock-data')}
               component={RouterLink}
               to="/recorded-mock-data"
@@ -127,7 +127,7 @@ export default function AppAppBar() {
               size="small"
             >
               Code Generator
-            </Button>
+            </Button> */}
             {/* <Button
                 sx={buttonStyle('/coverage-report')}
                 component={RouterLink}
@@ -188,7 +188,7 @@ export default function AppAppBar() {
               <MenuItem component={RouterLink} to="/default-mock-data">
                 Default mock data
               </MenuItem>
-              <MenuItem component={RouterLink} to="/mock-server">
+              {/* <MenuItem component={RouterLink} to="/mock-server">
                 Mock server
               </MenuItem>
               <MenuItem component={RouterLink} to="/coverage-report">
@@ -196,8 +196,8 @@ export default function AppAppBar() {
               </MenuItem>
               <MenuItem component={RouterLink} to="/render-map">
                 Render map
-              </MenuItem>
-              <MenuItem>
+              </MenuItem> */}
+              {/* <MenuItem>
                 <Button color="primary" variant="contained" fullWidth>
                   Sign up
                 </Button>
@@ -206,7 +206,7 @@ export default function AppAppBar() {
                 <Button color="primary" variant="outlined" fullWidth>
                   Sign in
                 </Button>
-              </MenuItem>
+              </MenuItem> */}
             </Box>
           </Drawer>
         </Box>
