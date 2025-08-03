@@ -20,6 +20,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import MockDataCreator from '../MockDataCreator';
 import EditIcon from '@mui/icons-material/Edit';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { sortUrlsByMatch } from '../utils/SearchUtils';
 import DraggableMockList from './MockDataList';
 import Snaps from './Snaps';
@@ -327,6 +328,30 @@ export default function Tests({ envDetails }) {
       });
   };
 
+  const duplicateTest = () => {
+    fetch(
+      `/api/v1/tests/${selectedTest.id}/duplicate?name=${selectedTest.name}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(selectedTest),
+      }
+    )
+      .then((response) => {
+        if (response.ok) {
+          console.log('Test duplicated successfully');
+          fetchTestData();
+        } else {
+          console.error('Failed to duplicate test');
+        }
+      })
+      .catch((error) => {
+        console.error('Error duplicating test:', error);
+      });
+  };
+
   const buttonStyle = (path) => ({
     borderBottom: selectedTab === path ? '2px solid' : 'none',
     borderRadius: 0,
@@ -468,6 +493,11 @@ export default function Tests({ envDetails }) {
           </Box>
           {selectedTest ? (
             <Box>
+              <Tooltip title="Duplicate Test">
+                <IconButton onClick={duplicateTest} aria-label="duplicate test">
+                  <ContentCopyIcon />
+                </IconButton>
+              </Tooltip>
               <Tooltip title="Reset Mock Data">
                 <IconButton
                   onClick={resetMockData}

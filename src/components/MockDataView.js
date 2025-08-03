@@ -147,6 +147,18 @@ const MockDataView = ({
     }
   };
 
+  const onPostDataChange = (event) => {
+    try {
+      const parsedContent = event.target.value;
+      setMockData({
+        ...mockData,
+        request: { ...mockData.request, postData: { text: parsedContent } },
+      });
+    } catch (error) {
+      console.error('Invalid JSON content:', error);
+    }
+  };
+
   const onDataChange = (event) => {
     try {
       setMockData(JSON.parse(event.target.value));
@@ -427,6 +439,25 @@ const MockDataView = ({
         value={mockData.response.content}
         onChange={onContentChange}
       />
+      {mockData?.request?.postData?.text && (
+        <TextField
+          label="Post Data"
+          fullWidth
+          multiline
+          rows={8}
+          margin="normal"
+          value={
+            mockData?.request?.postData?.mimeType === 'application/json'
+              ? JSON.stringify(
+                  JSON.parse(mockData?.request?.postData?.text),
+                  null,
+                  2
+                )
+              : mockData?.request?.postData?.text
+          }
+          onChange={onPostDataChange}
+        />
+      )}
       <TextField
         label="Full Mock Data"
         fullWidth
