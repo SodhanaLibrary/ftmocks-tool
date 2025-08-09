@@ -187,3 +187,25 @@ export const getDuplicateMocks = (mocks, mockItem) => {
 export const isMockInDefaultMocks = (defaultMocks, mockItem) => {
   return defaultMocks.find((mock) => compareMockToMock(mock, mockItem));
 };
+
+export const isValidJSON = (json) => {
+  try {
+    JSON.parse(json);
+    return true;
+  } catch (error) {
+    return false;
+  }
+};
+
+export const convertToValidJSON = (json) => {
+  if (isValidJSON(json)) {
+    return json;
+  } else {
+    try {
+      const obj = Function('"use strict"; return (' + json + ')')();
+      return JSON.stringify(obj, null, 2);
+    } catch (error) {
+      return json;
+    }
+  }
+};

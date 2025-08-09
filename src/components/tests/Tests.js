@@ -586,6 +586,7 @@ export default function Tests({ envDetails }) {
                 selectedTest={selectedTest}
                 fetchMockData={fetchMockData}
                 envDetails={envDetails}
+                resetMockData={resetMockData}
               />
             )}
           </Box>

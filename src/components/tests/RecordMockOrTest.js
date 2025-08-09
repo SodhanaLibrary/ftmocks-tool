@@ -9,10 +9,13 @@ import Typography from '@mui/material/Typography';
 import Snackbar from '@mui/material/Snackbar';
 import RecordedEventsData from '../recordedEvents/RecordedEventsData';
 
-const RecordMockOrTest = ({ selectedTest, fetchMockData, envDetails }) => {
-  const [recordedEvents, setRecordedEvents] = useState([]);
+const RecordMockOrTest = ({
+  selectedTest,
+  fetchMockData,
+  envDetails,
+  resetMockData,
+}) => {
   const [isRecordingMockData, setIsRecordingMockData] = useState(false);
-  const [isRecordingTest, setIsRecordingTest] = useState(false);
   const [error, setError] = useState(null);
   const [config, setConfig] = useState({
     url: '',
@@ -25,24 +28,10 @@ const RecordMockOrTest = ({ selectedTest, fetchMockData, envDetails }) => {
     avoidDuplicatesInTheTest: true,
   });
 
-  // Fetch mock data
-  const fetchRecordedEvents = async () => {
-    try {
-      const response = await fetch(
-        `/api/v1/recordedEvents?name=${selectedTest.name}`
-      );
-      if (!response.ok) {
-        throw new Error('Failed to fetch default mocks');
-      }
-      const data = await response.json();
-      setRecordedEvents(data);
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
   const recordMockData = async () => {
     try {
+      setIsRecordingMockData(true);
+      await resetMockData();
       const response = await fetch(`/api/v1/record/mocks`, {
         method: 'POST',
         headers: {
@@ -53,14 +42,16 @@ const RecordMockOrTest = ({ selectedTest, fetchMockData, envDetails }) => {
       if (!response.ok) {
         throw new Error('Failed to record mock data');
       }
-      setIsRecordingMockData(true);
     } catch (err) {
       setError(err.message);
+      setIsRecordingMockData(false);
     }
   };
 
   const recordTest = async () => {
     try {
+      setIsRecordingMockData(true);
+      await resetMockData();
       const response = await fetch(`/api/v1/record/test`, {
         method: 'POST',
         headers: {
@@ -71,9 +62,9 @@ const RecordMockOrTest = ({ selectedTest, fetchMockData, envDetails }) => {
       if (!response.ok) {
         throw new Error('Failed to record test');
       }
-      setIsRecordingTest(true);
     } catch (err) {
       setError(err.message);
+      setIsRecordingMockData(false);
     }
   };
 
@@ -113,10 +104,14 @@ const RecordMockOrTest = ({ selectedTest, fetchMockData, envDetails }) => {
     }
   };
 
-  // Fetch data on component mount
   useEffect(() => {
-    fetchRecordedEvents();
-  }, [selectedTest]);
+    const fetchRecordingStatus = async () => {
+      const response = await fetch(`/api/v1/record/status`);
+      const data = await response.json();
+      setIsRecordingMockData(data.status === 'running');
+    };
+    fetchRecordingStatus();
+  }, []);
 
   return (
     <Box
@@ -126,7 +121,7 @@ const RecordMockOrTest = ({ selectedTest, fetchMockData, envDetails }) => {
       sx={{ width: '100%', margin: '0 auto', textAlign: 'left', mt: 4 }}
     >
       <Box width="100%" display="flex" flexDirection="row" gap={1}>
-        {!isRecordingMockData && !isRecordingTest && (
+        {!isRecordingMockData && (
           <Box
             p={3}
             sx={{ textAlign: 'center', border: '1px solid #333' }}
@@ -201,13 +196,13 @@ const RecordMockOrTest = ({ selectedTest, fetchMockData, envDetails }) => {
         {isRecordingMockData && (
           <Box
             p={3}
-            width="50%"
+            minWidth="100%"
             sx={{ textAlign: 'center', border: '1px solid #333' }}
             display="flex"
             flexDirection="column"
             gap={1}
           >
-            <Typography>Recording mock data...</Typography>
+            <Typography>Recording in progress...</Typography>
             <Button
               color="primary"
               onClick={stopRecordingMockData}
@@ -220,7 +215,7 @@ const RecordMockOrTest = ({ selectedTest, fetchMockData, envDetails }) => {
         {!isRecordingMockData && (
           <Box
             p={3}
-            width="50%"
+            minWidth="50%"
             sx={{ textAlign: 'center', border: '1px solid #333' }}
             display="flex"
             flexDirection="column"
@@ -249,6 +244,7 @@ const RecordMockOrTest = ({ selectedTest, fetchMockData, envDetails }) => {
           </Box>
         )}
       </Box>
+      {error && <Typography color="error">{error}</Typography>}
       <Box
         width="100%"
         display="flex"
@@ -256,7 +252,10 @@ const RecordMockOrTest = ({ selectedTest, fetchMockData, envDetails }) => {
         gap={1}
         sx={{ textAlign: 'center', border: '1px solid #333' }}
       >
-        <RecordedEventsData selectedTest={selectedTest} />
+        <RecordedEventsData
+          recordingStatus={isRecordingMockData}
+          selectedTest={selectedTest}
+        />
       </Box>
     </Box>
   );
