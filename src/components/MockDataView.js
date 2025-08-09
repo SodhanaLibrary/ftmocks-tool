@@ -18,7 +18,12 @@ import Alert from '@mui/material/Alert';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import Popover from '@mui/material/Popover';
-import { getDuplicateMocks, isMockInDefaultMocks } from './utils/CommonUtils';
+import {
+  getDuplicateMocks,
+  isMockInDefaultMocks,
+  convertToValidJSON,
+  isValidJSON,
+} from './utils/CommonUtils';
 
 const MockDataView = ({
   mockItem,
@@ -29,9 +34,14 @@ const MockDataView = ({
   defaultMocks,
 }) => {
   const [mockData, setMockData] = useState(mockItem);
+  const [mockDataString, setMockDataString] = useState();
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [ipInputValue, setIpInputValue] = useState('');
+
+  useEffect(() => {
+    setMockDataString(JSON.stringify(mockData, null, 2));
+  }, [mockData]);
 
   useEffect(() => {
     if (mockItem) {
@@ -137,7 +147,7 @@ const MockDataView = ({
 
   const onContentChange = (event) => {
     try {
-      const parsedContent = event.target.value;
+      const parsedContent = convertToValidJSON(event.target.value);
       setMockData({
         ...mockData,
         response: { ...mockData.response, content: parsedContent },
@@ -149,7 +159,7 @@ const MockDataView = ({
 
   const onPostDataChange = (event) => {
     try {
-      const parsedContent = event.target.value;
+      const parsedContent = convertToValidJSON(event.target.value);
       setMockData({
         ...mockData,
         request: { ...mockData.request, postData: { text: parsedContent } },
@@ -161,6 +171,7 @@ const MockDataView = ({
 
   const onDataChange = (event) => {
     try {
+      setMockDataString(event.target.value);
       setMockData(JSON.parse(event.target.value));
     } catch (error) {
       console.error('Invalid JSON data:', error);
@@ -438,6 +449,12 @@ const MockDataView = ({
         margin="normal"
         value={mockData.response.content}
         onChange={onContentChange}
+        error={!isValidJSON(mockData.response.content)}
+        helperText={
+          !isValidJSON(mockData.response.content)
+            ? 'Invalid JSON'
+            : 'Valid JSON'
+        }
       />
       {mockData?.request?.postData?.text && (
         <TextField
@@ -464,8 +481,12 @@ const MockDataView = ({
         multiline
         rows={8}
         margin="normal"
-        value={JSON.stringify(mockData, null, 2)}
+        value={mockDataString}
         onChange={onDataChange}
+        error={!isValidJSON(mockDataString)}
+        helperText={
+          !isValidJSON(mockDataString) ? 'Invalid JSON' : 'Valid JSON'
+        }
       />
       <Box display="flex" gap={1} justifyContent="space-between">
         <Box display="flex" gap={1}>
@@ -474,6 +495,7 @@ const MockDataView = ({
             color="primary"
             onClick={onUpdate}
             style={{ marginTop: '16px' }}
+            disabled={!isValidJSON(mockDataString)}
           >
             Update Mock Data
           </Button>
@@ -482,6 +504,7 @@ const MockDataView = ({
             color="primary"
             onClick={duplicateMockData}
             style={{ marginTop: '16px' }}
+            disabled={!isValidJSON(mockDataString)}
           >
             Duplicate
           </Button>
@@ -503,6 +526,7 @@ const MockDataView = ({
               color="secondary"
               onClick={sendToDefaultMockData}
               style={{ marginTop: '16px' }}
+              disabled={!isValidJSON(mockDataString)}
             >
               Send it to Default Mock Data
             </Button>
@@ -513,6 +537,7 @@ const MockDataView = ({
               color="secondary"
               onClick={copyToDefaultMockData}
               style={{ marginTop: '16px' }}
+              disabled={!isValidJSON(mockDataString)}
             >
               Copy it to Default Mock Data
             </Button>

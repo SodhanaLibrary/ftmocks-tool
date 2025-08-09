@@ -25,7 +25,7 @@ import TimelineDot from '@mui/lab/TimelineDot';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import { generatePlaywrightCode, generateRTLCode } from './CodeUtils';
 
-export default function RecordedEventsData({selectedTest}) {
+export default function RecordedEventsData({ selectedTest, recordingStatus }) {
   const [isLoading, setIsLoading] = useState(true);
   const [erroe, setError] = useState(null);
   const [recordedEvents, setRecordedEvents] = useState([]);
@@ -35,7 +35,9 @@ export default function RecordedEventsData({selectedTest}) {
   const fetchRecordedEvents = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/v1/recordedEvents?${selectedTest?.name ? `name=${selectedTest.name}` : ''}`);
+      const response = await fetch(
+        `/api/v1/recordedEvents?${selectedTest?.name ? `name=${selectedTest.name}` : ''}`
+      );
       if (!response.ok) {
         throw new Error('Failed to fetch default mocks');
       }
@@ -79,9 +81,12 @@ export default function RecordedEventsData({selectedTest}) {
   const deleteAll = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/v1/deleteAllEvents?${selectedTest?.name ? `name=${selectedTest.name}` : ''}`, {
-        method: 'DELETE',
-      });
+      const response = await fetch(
+        `/api/v1/deleteAllEvents?${selectedTest?.name ? `name=${selectedTest.name}` : ''}`,
+        {
+          method: 'DELETE',
+        }
+      );
       if (!response.ok) {
         throw new Error('Failed to fetch default mocks');
       }
@@ -110,12 +115,24 @@ export default function RecordedEventsData({selectedTest}) {
   };
 
   const genPlayWriteCode = () => {
-    setGenCode(generatePlaywrightCode(recordedEvents, testsSummary, selectedTest));
+    setGenCode(
+      generatePlaywrightCode(recordedEvents, testsSummary, selectedTest)
+    );
   };
 
   useEffect(() => {
     fetchRecordedEvents();
-  }, []);
+
+    if (recordingStatus) {
+      const interval = setInterval(() => {
+        if (recordingStatus) {
+          fetchRecordedEvents();
+        }
+      }, 10000);
+
+      return () => clearInterval(interval);
+    }
+  }, [recordingStatus]);
 
   return (
     <Box display="flex">
