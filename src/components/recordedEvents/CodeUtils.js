@@ -52,8 +52,8 @@ export function compareMockToRequest(mock, req) {
 }
 
 function getPreviousURLaction(actions, index) {
-  for(let i=index; i>=0; i--) {
-    if(actions[i].type === 'url') {
+  for (let i = index; i >= 0; i--) {
+    if (actions[i].type === 'url') {
       return actions[i];
     }
   }
@@ -72,7 +72,7 @@ export function makeSubsetActions(actions, tests) {
       currentActions.push(action);
     } else if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(action.type)) {
       const urlAction = getPreviousURLaction(actions, cindex);
-      if(urlAction) {
+      if (urlAction) {
         currentActions = [urlAction, ...currentActions];
       }
       const test = tests.find((test) =>
@@ -127,7 +127,11 @@ export function makeSubsetActions(actions, tests) {
 }
 
 export function generateRTLCode(actions, tests = [], selectedTest) {
-  const testActions = makeSubsetActions(actions, tests);
+  const testActions = {
+    [selectedTest?.name]: {
+      actions: actions,
+    },
+  };
   const testCodes = [];
   Object.keys(testActions).forEach((testName) => {
     let testCode = testActions[testName].actions
@@ -175,10 +179,21 @@ export function generateRTLCode(actions, tests = [], selectedTest) {
   return testCodes.join('\n');
 }
 
-export function generatePlaywrightCode(actions, tests = [], selectedTest) {
-  const testActions = makeSubsetActions(actions, tests);
+export function generatePlaywrightCode(
+  actions,
+  tests = [],
+  selectedTest,
+  envDetails
+) {
+  console.log(envDetails);
+  const testActions = {
+    [selectedTest?.name]: {
+      actions: actions,
+    },
+  };
+
   const testCodes = [];
-  
+
   Object.keys(testActions).forEach((testName) => {
     let testCode = testActions[testName].actions
       .map((action) => {
@@ -207,12 +222,25 @@ export function generatePlaywrightCode(actions, tests = [], selectedTest) {
       })
       .filter((cd) => !!cd)
       .join('\n');
-    const url = testActions[testName].actions[0]?.type === 'url' ? testActions[testName].actions[0].value : 'http://your-app-url';
-    
+    const url =
+      testActions[testName].actions[0]?.type === 'url'
+        ? testActions[testName].actions[0].value
+        : 'http://your-app-url';
+
     testCode = [
       `// ${selectedTest?.name || testName} test case`,
-      `test('${selectedTest?.name || testName}', async ({ page }) => {`,
-      `  await initiatePlaywrightRoutes(page, ftmocksConifg, '${selectedTest?.name || testName}');`,
+      `import { test, expect } from '@playwright/test';
+import { initiatePlaywrightRoutes } from 'ftmocks-utils';
+
+test('${selectedTest?.name || testName}', async ({ page }) => {`,
+      ` await initiatePlaywrightRoutes(
+        page,
+        {
+          MOCK_DIR: '${envDetails.RELATIVE_MOCK_DIR_FROM_PLAYWRIGHT_DIR || './ftmocks'}',
+          FALLBACK_DIR: '${envDetails.RELATIVE_FALLBACK_DIR_FROM_PLAYWRIGHT_DIR || './public'}',
+        },
+        '${selectedTest.name}'
+      );`,
       `  await page.goto('${url}');`,
       testCode,
       `});`,
@@ -356,5 +384,3 @@ ${testSteps}
 
   return testCodes.join('\n');
 }
-
-

@@ -25,7 +25,11 @@ import TimelineDot from '@mui/lab/TimelineDot';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import { generatePlaywrightCode, generateRTLCode } from './CodeUtils';
 
-export default function RecordedEventsData({ selectedTest, recordingStatus }) {
+export default function RecordedEventsData({
+  selectedTest,
+  recordingStatus,
+  envDetails,
+}) {
   const [isLoading, setIsLoading] = useState(true);
   const [erroe, setError] = useState(null);
   const [recordedEvents, setRecordedEvents] = useState([]);
@@ -116,7 +120,12 @@ export default function RecordedEventsData({ selectedTest, recordingStatus }) {
 
   const genPlayWriteCode = () => {
     setGenCode(
-      generatePlaywrightCode(recordedEvents, testsSummary, selectedTest)
+      generatePlaywrightCode(
+        recordedEvents,
+        testsSummary,
+        selectedTest,
+        envDetails
+      )
     );
   };
 

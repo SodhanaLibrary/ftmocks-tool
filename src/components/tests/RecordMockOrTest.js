@@ -255,6 +255,7 @@ const RecordMockOrTest = ({
         <RecordedEventsData
           recordingStatus={isRecordingMockData}
           selectedTest={selectedTest}
+          envDetails={envDetails}
         />
       </Box>
     </Box>
