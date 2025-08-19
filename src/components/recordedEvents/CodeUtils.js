@@ -185,7 +185,6 @@ export function generatePlaywrightCode(
   selectedTest,
   envDetails
 ) {
-  console.log(envDetails);
   const testActions = {
     [selectedTest?.name]: {
       actions: actions,
@@ -196,6 +195,7 @@ export function generatePlaywrightCode(
 
   Object.keys(testActions).forEach((testName) => {
     let testCode = testActions[testName].actions
+      .filter((action) => action.target)
       .map((action) => {
         switch (action.type) {
           case 'click':

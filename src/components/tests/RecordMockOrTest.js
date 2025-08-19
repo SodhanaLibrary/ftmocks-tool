@@ -104,6 +104,21 @@ const RecordMockOrTest = ({
     }
   };
 
+  const generatePlaywrightCode = async () => {
+    const response = await fetch(`/api/v1/record/playwright`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(config),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to generate playwright code');
+    }
+    const data = await response.json();
+    console.log(data);
+  };
+
   useEffect(() => {
     const fetchRecordingStatus = async () => {
       const response = await fetch(`/api/v1/record/status`);
@@ -221,26 +236,40 @@ const RecordMockOrTest = ({
             flexDirection="column"
             gap={1}
           >
-            <TextField
-              label="URL"
-              fullWidth
-              margin="normal"
-              value={config.url}
-              onChange={onUrlChange}
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={config.startMockServer}
-                  name="startMockServer"
-                  onChange={onCheckboxChange}
-                />
-              }
-              label="Start mock server"
-            />
-            <Button color="primary" onClick={recordTest} variant="contained">
-              Record Test
-            </Button>
+            <Box>
+              <TextField
+                label="URL"
+                fullWidth
+                margin="normal"
+                value={config.url}
+                onChange={onUrlChange}
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={config.startMockServer}
+                    name="startMockServer"
+                    onChange={onCheckboxChange}
+                  />
+                }
+                label="Start mock server"
+              />
+              <Button color="primary" onClick={recordTest} variant="contained">
+                Record Test
+              </Button>
+            </Box>
+            <Typography>OR</Typography>
+            <Box>
+              {envDetails.PLAYWRIGHT_DIR && (
+                <Button
+                  color="primary"
+                  onClick={generatePlaywrightCode}
+                  variant="contained"
+                >
+                  Run Playwright Codegen
+                </Button>
+              )}
+            </Box>
           </Box>
         )}
       </Box>
