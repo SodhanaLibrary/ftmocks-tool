@@ -266,22 +266,27 @@ export default function Tests({ envDetails }) {
   }, [mockSearchTerm]);
 
   const setFilteredMockData = (newFiltrdMocks) => {
-    const indexes = [];
-    newFiltrdMocks.forEach((element) => {
-      indexes.push(
-        selectedTest.mockData.findIndex((md) => md.id === element.id)
-      );
-    });
-    indexes.sort();
-    let k = 0;
-    indexes.forEach((i) => {
-      selectedTest.mockData[i] = newFiltrdMocks[k];
-      k = k + 1;
-    });
-    selectedTest.filteredMockData = sortUrlsByMatch(
-      mockSearchTerm,
-      selectedTest.mockData
-    );
+    const newMockData = [];
+    let pointer1 = 0,
+      pointer2 = 0;
+    while (
+      pointer1 < selectedTest.mockData.length &&
+      pointer2 < newFiltrdMocks.length
+    ) {
+      if (selectedTest.mockData[pointer1].id === newFiltrdMocks[pointer2].id) {
+        newMockData.push(selectedTest.mockData[pointer1]);
+        pointer1++;
+        pointer2++;
+      } else if (
+        newMockData.find((md) => md.id === newFiltrdMocks[pointer2].id)
+      ) {
+        pointer1++;
+      } else {
+        newMockData.push(newFiltrdMocks[pointer2]);
+        pointer2++;
+      }
+    }
+    selectedTest.mockData = newMockData;
     setSelectedTest({ ...selectedTest });
 
     fetch(
