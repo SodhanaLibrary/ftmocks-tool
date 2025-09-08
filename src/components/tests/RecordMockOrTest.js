@@ -20,12 +20,12 @@ const RecordMockOrTest = ({
   const [config, setConfig] = useState({
     url: '',
     pattern: '^/api/.*',
-    avoidDuplicatesWithDefaultMocks: true,
+    avoidDuplicatesWithDefaultMocks: false,
     stopMockServer: true,
     startMockServer: true,
     recordEvents: true,
     testName: selectedTest.name,
-    avoidDuplicatesInTheTest: true,
+    avoidDuplicatesInTheTest: false,
   });
 
   const recordMockData = async () => {
@@ -48,7 +48,7 @@ const RecordMockOrTest = ({
     }
   };
 
-  const recordTest = async () => {
+  const recordTest = async (url) => {
     try {
       setIsRecordingMockData(true);
       await resetMockData();
@@ -57,7 +57,7 @@ const RecordMockOrTest = ({
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(config),
+        body: JSON.stringify(url ? { ...config, url } : config),
       });
       if (!response.ok) {
         throw new Error('Failed to record test');
@@ -98,7 +98,9 @@ const RecordMockOrTest = ({
       if (!response.ok) {
         throw new Error('Failed to stop recording mock data');
       }
-      fetchMockData(selectedTest);
+      fetchMockData(selectedTest, {
+        stopRecording: true,
+      });
     } catch (err) {
       setError(err.message);
     }
@@ -140,7 +142,7 @@ const RecordMockOrTest = ({
           <Box
             p={3}
             sx={{ textAlign: 'center', border: '1px solid #333' }}
-            width="50%"
+            width="100%"
             display="flex"
             flexDirection="column"
             gap={1}
@@ -227,51 +229,6 @@ const RecordMockOrTest = ({
             </Button>
           </Box>
         )}
-        {!isRecordingMockData && (
-          <Box
-            p={3}
-            minWidth="50%"
-            sx={{ textAlign: 'center', border: '1px solid #333' }}
-            display="flex"
-            flexDirection="column"
-            gap={1}
-          >
-            <Box>
-              <TextField
-                label="URL"
-                fullWidth
-                margin="normal"
-                value={config.url}
-                onChange={onUrlChange}
-              />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={config.startMockServer}
-                    name="startMockServer"
-                    onChange={onCheckboxChange}
-                  />
-                }
-                label="Start mock server"
-              />
-              <Button color="primary" onClick={recordTest} variant="contained">
-                Record Test
-              </Button>
-            </Box>
-            <Typography>OR</Typography>
-            <Box>
-              {envDetails.PLAYWRIGHT_DIR && (
-                <Button
-                  color="primary"
-                  onClick={generatePlaywrightCode}
-                  variant="contained"
-                >
-                  Run Playwright Codegen
-                </Button>
-              )}
-            </Box>
-          </Box>
-        )}
       </Box>
       {error && <Typography color="error">{error}</Typography>}
       <Box
@@ -285,6 +242,10 @@ const RecordMockOrTest = ({
           recordingStatus={isRecordingMockData}
           selectedTest={selectedTest}
           envDetails={envDetails}
+          recordEvents={recordTest}
+          playwrightCodeGen={
+            envDetails.PLAYWRIGHT_DIR ? generatePlaywrightCode : null
+          }
         />
       </Box>
     </Box>

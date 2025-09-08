@@ -29,12 +29,16 @@ export default function RecordedEventsData({
   selectedTest,
   recordingStatus,
   envDetails,
+  recordEvents,
+  playwrightCodeGen,
 }) {
   const [isLoading, setIsLoading] = useState(true);
   const [erroe, setError] = useState(null);
   const [recordedEvents, setRecordedEvents] = useState([]);
   const [testsSummary, setTestsSummary] = useState([]);
   const [genCode, setGenCode] = useState('');
+  const [genCodeType, setGenCodeType] = useState(null);
+  const [currentUrl, setCurrentUrl] = useState('');
 
   const fetchRecordedEvents = async () => {
     try {
@@ -47,6 +51,11 @@ export default function RecordedEventsData({
       }
       const data = await response.json();
       setRecordedEvents(data);
+
+      if (data.length > 0) {
+        const url = data.find((event) => event.type === 'url').target;
+        setCurrentUrl(url);
+      }
 
       const resp = await fetch('/api/v1/testsSummary');
       if (!resp.ok) {
@@ -116,6 +125,7 @@ export default function RecordedEventsData({
 
   const genRTLCode = () => {
     setGenCode(generateRTLCode(recordedEvents, testsSummary, selectedTest));
+    setGenCodeType('rtl');
   };
 
   const genPlayWriteCode = () => {
@@ -127,6 +137,7 @@ export default function RecordedEventsData({
         envDetails
       )
     );
+    setGenCodeType('playwright');
   };
 
   useEffect(() => {
@@ -182,6 +193,16 @@ export default function RecordedEventsData({
         <Box sx={{ textAlign: 'center' }}>
           {!recordedEvents.length ? 'No events recorded' : null}
         </Box>
+        {recordedEvents.length > 0 && (
+          <Box sx={{ textAlign: 'center', mt: 2 }}>
+            <Button
+              onClick={() => recordEvents(currentUrl)}
+              variant="contained"
+            >
+              Record Events
+            </Button>
+          </Box>
+        )}
       </Box>
       <Box
         p={2}
@@ -232,6 +253,20 @@ export default function RecordedEventsData({
         >
           {genCode?.length === 0 && '-----'}
           <pre>{genCode}</pre>
+          {genCodeType === 'playwright' && (
+            <Box sx={{ textAlign: 'center', mt: 2 }}>
+              <Typography variant="body2" color="text.secondary">
+                Run playwright codegen to generate the code
+              </Typography>
+              <Button
+                sx={{ mt: 1 }}
+                onClick={playwrightCodeGen}
+                variant="outlined"
+              >
+                Run playwright codegen
+              </Button>
+            </Box>
+          )}
         </Box>
       </Box>
     </Box>
