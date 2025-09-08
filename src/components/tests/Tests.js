@@ -26,6 +26,7 @@ import DraggableMockList from './MockDataList';
 import Snaps from './Snaps';
 import LogViewer from './LogViewer';
 import RecordMockOrTest from './RecordMockOrTest';
+import TestOptimizer from './TestOptimizer';
 import { markDuplicateMocks } from '../utils/CommonUtils';
 
 export default function Tests({ envDetails }) {
@@ -76,7 +77,7 @@ export default function Tests({ envDetails }) {
     }
   };
 
-  const fetchMockData = async (test) => {
+  const fetchMockData = async (test, options) => {
     try {
       const response = await fetch(
         `/api/v1/tests/${test.id}/mockdata?name=${test.name}`
@@ -91,6 +92,13 @@ export default function Tests({ envDetails }) {
         mockData: markedData,
         filteredMockData: sortUrlsByMatch(mockSearchTerm, markedData),
       }));
+      if (options?.testClick) {
+        if (markedData.length === 0) {
+          setSelectedTab(3);
+        }
+      } else if (!options?.stopRecording) {
+        setSelectedTab(0);
+      }
     } catch (error) {
       console.error('Error fetching mock data:', error);
       // Handle the error appropriately, e.g., show an error message to the user
@@ -100,7 +108,9 @@ export default function Tests({ envDetails }) {
   const handleTestClick = (test) => {
     setSelectedTest({ ...test, filteredMockData: [] });
     setMockSearchTerm('');
-    fetchMockData(test);
+    fetchMockData(test, {
+      testClick: true,
+    });
   };
 
   const onTestCaseSearch = (searchTerm) => {
@@ -561,6 +571,15 @@ export default function Tests({ envDetails }) {
               >
                 Logs
               </Button>
+              <Button
+                sx={buttonStyle(4)}
+                variant="text"
+                color="info"
+                size="small"
+                onClick={() => setSelectedTab(4)}
+              >
+                Optimize
+              </Button>
             </Box>
             {selectedTab === 0 && (
               <Box>
@@ -592,6 +611,15 @@ export default function Tests({ envDetails }) {
                 fetchMockData={fetchMockData}
                 envDetails={envDetails}
                 resetMockData={resetMockData}
+              />
+            )}
+            {selectedTab === 4 && (
+              <TestOptimizer
+                selectedTest={selectedTest}
+                fetchMockData={fetchMockData}
+                envDetails={envDetails}
+                resetMockData={resetMockData}
+                fetchTestData={fetchTestData}
               />
             )}
           </Box>

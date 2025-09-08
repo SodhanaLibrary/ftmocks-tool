@@ -25,7 +25,10 @@ const TestCaseCreator = ({ onClose, selectedTest }) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name: testName }),
+        body: JSON.stringify({
+          name: testName.trim(),
+          mode: selectedTest?.mode || 'loose',
+        }),
       });
 
       if (!response.ok) {
@@ -38,6 +41,13 @@ const TestCaseCreator = ({ onClose, selectedTest }) => {
     } catch (error) {
       console.error('Error creating test case:', error);
     }
+  };
+
+  const getErrorText = () => {
+    if (testName.trim() === '') {
+      return 'Test case name is required';
+    }
+    return '';
   };
 
   return (
@@ -67,6 +77,8 @@ const TestCaseCreator = ({ onClose, selectedTest }) => {
           onChange={(e) => setTestName(e.target.value)}
           margin="normal"
           required
+          helperText={getErrorText()}
+          error={getErrorText() !== ''}
         />
         <Button
           type="submit"
@@ -74,6 +86,7 @@ const TestCaseCreator = ({ onClose, selectedTest }) => {
           color="primary"
           fullWidth
           sx={{ mt: 2 }}
+          disabled={getErrorText() !== ''}
         >
           {selectedTest ? 'Update Test Case' : 'Create Test Case'}
         </Button>

@@ -263,6 +263,7 @@ const MockDataView = ({
         setSnackbarMessage('Failed to duplicate mock data');
         setSnackbarOpen(true);
       }
+      onClose(true);
     } catch (error) {
       console.error('Error updating mock data:', error);
       setSnackbarMessage('Error updating mock data');
