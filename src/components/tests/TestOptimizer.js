@@ -114,6 +114,28 @@ const TestOptimizer = ({
     }
   };
 
+  const moveDefaultMocks = async () => {
+    const endpoint = `/api/v1/moveDefaultmocks`;
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+      });
+      if (response.ok) {
+        setSnackbarMessage('Default mocks moved successfully');
+        setSnackbarOpen(true);
+      } else {
+        setSnackbarMessage('Failed to move default mocks');
+        setSnackbarOpen(true);
+      }
+    } catch (error) {
+      console.error('Error moving default mocks:', error);
+      setSnackbarMessage('Error moving default mocks');
+      setSnackbarOpen(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
   };
@@ -129,7 +151,7 @@ const TestOptimizer = ({
                 // Update the selectedTest with the new strict value
                 const updatedTest = {
                   ...selectedTest,
-                  mode: e.target.checked ? 'strict' : 'loose',
+                  mode: e.target.checked ? 'strict' : 'moderate',
                 };
                 updateTest(updatedTest);
               }}
@@ -240,6 +262,26 @@ const TestOptimizer = ({
         </Box>
       )}
 
+      <Box sx={{ mt: 3, pt: 2, borderTop: 1, borderColor: 'divider' }}>
+        <Typography variant="h6" gutterBottom>
+          Default Mock Management
+        </Typography>
+
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Move default mock data to all individual tests. This will copy all
+          default mocks to each test.
+        </Alert>
+
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={moveDefaultMocks}
+          disabled={loading}
+          sx={{ mt: 1 }}
+        >
+          {loading ? 'Moving...' : 'Move Default Mocks to Tests'}
+        </Button>
+      </Box>
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}

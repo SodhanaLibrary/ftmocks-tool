@@ -17,23 +17,23 @@ export default function SitemarkIcon() {
     >
       <SvgIcon sx={{ height: 21, width: 21, mr: 2 }}>
         <svg
-          width="80"
-          height="100"
           xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 100 100"
+          viewBox="0 0 120 120"
+          width="120"
+          height="120"
+          role="img"
+          aria-label="Monoline FM"
         >
-          <circle
-            cx="50"
-            cy="50"
-            r="48"
-            fill="#f0f0f0"
-            stroke="#000"
-            stroke-width="2"
+          <rect width="120" height="120" fill="black" />
+          <path
+            d="M18 96 L18 20 L56 20 M18 54 L48 54
+           M56 20 L72 96 L84 40 L96 96"
+            fill="black"
+            stroke="white"
+            stroke-width="8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
           />
-          <rect x="20" y="20" width="10" height="60" fill="#000" />
-          <rect x="30" y="20" width="30" height="10" fill="#000" />
-          <rect x="30" y="45" width="20" height="10" fill="#000" />
-          <polygon points="60,80 70,20 80,80 90,20 100,80" fill="#000" />
         </svg>
       </SvgIcon>
       <Typography color="primary" variant="h6">

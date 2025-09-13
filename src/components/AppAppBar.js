@@ -79,6 +79,16 @@ export default function AppAppBar() {
           <Sitemark />
           <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 2 }}>
             <Button
+              sx={buttonStyle('/')}
+              component={RouterLink}
+              to="/"
+              variant="text"
+              color="info"
+              size="small"
+            >
+              Projects
+            </Button>
+            <Button
               sx={buttonStyle('/tests')}
               component={RouterLink}
               to="/tests"
@@ -108,46 +118,6 @@ export default function AppAppBar() {
             >
               Mock Server
             </Button>
-            {/* <Button
-              sx={buttonStyle('/recorded-mock-data')}
-              component={RouterLink}
-              to="/recorded-mock-data"
-              variant="text"
-              color="info"
-              size="small"
-            >
-              Recorded Mock Data
-            </Button>
-            <Button
-              sx={buttonStyle('/recorded-events-data')}
-              component={RouterLink}
-              to="/recorded-events-data"
-              variant="text"
-              color="info"
-              size="small"
-            >
-              Code Generator
-            </Button> */}
-            {/* <Button
-                sx={buttonStyle('/coverage-report')}
-                component={RouterLink}
-                to="/coverage-report"
-                variant="text"
-                color="info"
-                size="small"
-              >
-                Coverage report
-              </Button>
-              <Button
-                sx={buttonStyle('/render-map')}
-                component={RouterLink}
-                to="/render-map"
-                variant="text"
-                color="info"
-                size="small"
-              >
-                Render map
-              </Button> */}
           </Box>
         </Box>
         <Box
@@ -188,25 +158,9 @@ export default function AppAppBar() {
               <MenuItem component={RouterLink} to="/default-mock-data">
                 Default mock data
               </MenuItem>
-              {/* <MenuItem component={RouterLink} to="/mock-server">
+              <MenuItem component={RouterLink} to="/mock-server">
                 Mock server
               </MenuItem>
-              <MenuItem component={RouterLink} to="/coverage-report">
-                Coverage report
-              </MenuItem>
-              <MenuItem component={RouterLink} to="/render-map">
-                Render map
-              </MenuItem> */}
-              {/* <MenuItem>
-                <Button color="primary" variant="contained" fullWidth>
-                  Sign up
-                </Button>
-              </MenuItem>
-              <MenuItem>
-                <Button color="primary" variant="outlined" fullWidth>
-                  Sign in
-                </Button>
-              </MenuItem> */}
             </Box>
           </Drawer>
         </Box>
