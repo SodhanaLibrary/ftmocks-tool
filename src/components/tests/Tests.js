@@ -392,7 +392,8 @@ export default function Tests({ envDetails }) {
           border: 1,
           borderColor: 'divider',
           boxShadow: 1,
-          minWidth: '300px',
+          minWidth: '30%',
+          width: '30%',
         }}
       >
         <Box

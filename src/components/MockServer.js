@@ -7,6 +7,7 @@ import {
   MenuItem,
   TextField,
   Button,
+  Autocomplete,
 } from '@mui/material';
 
 export default function MockServer() {
@@ -205,22 +206,18 @@ export default function MockServer() {
             p: 3,
           }}
         >
-          <FormControl fullWidth>
-            <InputLabel id="test-select-label">Test</InputLabel>
-            <Select
-              labelId="test-select-label"
-              id="test-select"
-              value={selectedTest}
-              label="Test"
-              onChange={handleTestChange}
-            >
-              {tests.map((test) => (
-                <MenuItem key={test.id} value={test.name}>
-                  {test.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <Autocomplete
+            fullWidth
+            options={tests}
+            getOptionLabel={(option) => option.name}
+            value={tests.find((test) => test.name === selectedTest) || null}
+            onChange={(event, newValue) => {
+              setSelectedTest(newValue ? newValue.name : '');
+            }}
+            renderInput={(params) => (
+              <TextField {...params} label="Test" variant="outlined" />
+            )}
+          />
           <TextField
             fullWidth
             label="Port"
@@ -229,24 +226,22 @@ export default function MockServer() {
             onChange={handlePortChange}
             type="number"
           />
-          <Box>
-            Preferred Ports: {prefferedPorts.join(', ')}
-          </Box>
+          <Box>Preferred Ports: {prefferedPorts.join(', ')}</Box>
           <Box sx={{ display: 'flex', gap: 2 }}>
-            {!isRunning && <Button
-              variant="contained"
-              color="primary"
-              onClick={handleRun}
-            >
-              Run
-            </Button>}
-            {isRunning && <Button
-              variant="contained"
-              color="primary"
-              onClick={handleUpdate}
-            >
-              Update
-            </Button>}
+            {!isRunning && (
+              <Button variant="contained" color="primary" onClick={handleRun}>
+                Run
+              </Button>
+            )}
+            {isRunning && (
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleUpdate}
+              >
+                Update
+              </Button>
+            )}
             <Button
               variant="contained"
               color="secondary"

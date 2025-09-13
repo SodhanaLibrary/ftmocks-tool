@@ -27,7 +27,7 @@ const TestCaseCreator = ({ onClose, selectedTest }) => {
         },
         body: JSON.stringify({
           name: testName.trim(),
-          mode: selectedTest?.mode || 'loose',
+          mode: selectedTest?.mode || 'moderate',
         }),
       });
 
