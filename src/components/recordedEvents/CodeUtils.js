@@ -103,27 +103,48 @@ export function generatePlaywrightCode(
 
   Object.keys(testActions).forEach((testName) => {
     let testCode = testActions[testName].actions
-      .filter((action) => action.target)
+      .filter(
+        (action, index) =>
+          action.target &&
+          (action.type !== 'input' ||
+            (action.type === 'input' &&
+              testActions[testName].actions?.[index + 1]?.type !== 'input'))
+      )
       .map((action) => {
         switch (action.type) {
           case 'click':
             return `  await page.locator("${action.target}").click();`;
           case 'type':
-            return `  await page.locator("${action.target}").fill('${action.value}');`;
+            if (action.element.type === 'input') {
+              return `  await page.locator("${action.target}").fill('${action.value}');`;
+            }
+            if (action.element.type === 'textarea') {
+              return `  await page.locator("${action.target}").fill('${action.value}');`;
+            }
+            if (action.element.type === 'select') {
+              return `  await page.locator("${action.target}").selectOption('${action.value}');`;
+            }
+            return `  await page.locator("${action.target}").type('${action.value}');`;
+          case 'input':
+            if (action.element.type === 'input') {
+              return `  await page.locator("${action.target}").fill('${action.value}');`;
+            }
+            if (action.element.type === 'textarea') {
+              return `  await page.locator("${action.target}").fill('${action.value}');`;
+            }
+            if (action.element.type === 'select') {
+              return `  await page.locator("${action.target}").selectOption('${action.value}');`;
+            }
+            return `  await page.locator("${action.target}").type('${action.value}');`;
           case 'change':
+            if (action.element.type === 'input') {
+              return `  await page.locator("${action.target}").fill('${action.value}');`;
+            }
             return `  await page.locator("${action.target}").evaluate(el => el.value = '${action.value}');`;
           case 'dblclick':
             return `  await page.locator("${action.target}").dblclick();`;
           case 'contextmenu':
             return `  await page.locator("${action.target}").click({ button: 'right' });`;
-          case 'POST':
-            return `//-------------------------------------------------------------`;
-          case 'PUT':
-            return `//-------------------------------------------------------------`;
-          case 'PATCH':
-            return `//-------------------------------------------------------------`;
-          case 'DELETE':
-            return `//-------------------------------------------------------------`;
           default:
             return null;
         }
