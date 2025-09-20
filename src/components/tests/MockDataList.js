@@ -11,7 +11,6 @@ const DraggableMockList = ({
   selectedMockItem,
   handleMockItemClick,
   setFilteredMockData,
-  deleteAllMockData,
 }) => {
   // Handle the drag end event
   const handleDragEnd = (result) => {
@@ -92,17 +91,6 @@ const DraggableMockList = ({
           )}
         </Droppable>
       </DragDropContext>
-      {selectedTest.filteredMockData.length > 5 && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: 2 }}>
-          <Button
-            variant="contained"
-            color="secondary"
-            onClick={deleteAllMockData}
-          >
-            Delete all mock data
-          </Button>
-        </Box>
-      )}
       {selectedTest.filteredMockData.length === 0 && (
         <Box sx={{ display: 'flex', justifyContent: 'center', margin: 2 }}>
           <Typography variant="body1">

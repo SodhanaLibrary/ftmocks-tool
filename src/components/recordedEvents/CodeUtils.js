@@ -101,6 +101,16 @@ export function generatePlaywrightCode(
 
   const testCodes = [];
 
+  const getLocator = (action) => {
+    if (action.target.split('/').length > 6 && action.selectors.length > 0) {
+      const locators = action.selectors.filter(
+        (selector) => selector.type === 'locator'
+      );
+      return locators.length > 0 ? locators[0].value : action.target;
+    }
+    return action.target;
+  };
+
   Object.keys(testActions).forEach((testName) => {
     let testCode = testActions[testName].actions
       .filter(
@@ -111,40 +121,41 @@ export function generatePlaywrightCode(
               testActions[testName].actions?.[index + 1]?.type !== 'input'))
       )
       .map((action) => {
+        const locator = getLocator(action);
         switch (action.type) {
           case 'click':
-            return `  await page.locator("${action.target}").click();`;
+            return `  await page.locator("${locator}").click();`;
           case 'type':
             if (action.element.type === 'input') {
-              return `  await page.locator("${action.target}").fill('${action.value}');`;
+              return `  await page.locator("${locator}").fill('${action.value}');`;
             }
             if (action.element.type === 'textarea') {
-              return `  await page.locator("${action.target}").fill('${action.value}');`;
+              return `  await page.locator("${locator}").fill('${action.value}');`;
             }
             if (action.element.type === 'select') {
-              return `  await page.locator("${action.target}").selectOption('${action.value}');`;
+              return `  await page.locator("${locator}").selectOption('${action.value}');`;
             }
-            return `  await page.locator("${action.target}").type('${action.value}');`;
+            return `  await page.locator("${locator}").type('${action.value}');`;
           case 'input':
             if (action.element.type === 'input') {
-              return `  await page.locator("${action.target}").fill('${action.value}');`;
+              return `  await page.locator("${locator}").fill('${action.value}');`;
             }
             if (action.element.type === 'textarea') {
-              return `  await page.locator("${action.target}").fill('${action.value}');`;
+              return `  await page.locator("${locator}").fill('${action.value}');`;
             }
             if (action.element.type === 'select') {
-              return `  await page.locator("${action.target}").selectOption('${action.value}');`;
+              return `  await page.locator("${locator}").selectOption('${action.value}');`;
             }
-            return `  await page.locator("${action.target}").type('${action.value}');`;
+            return `  await page.locator("${locator}").type('${action.value}');`;
           case 'change':
             if (action.element.type === 'input') {
-              return `  await page.locator("${action.target}").fill('${action.value}');`;
+              return `  await page.locator("${locator}").fill('${action.value}');`;
             }
-            return `  await page.locator("${action.target}").evaluate(el => el.value = '${action.value}');`;
+            return `  await page.locator("${locator}").evaluate(el => el.value = '${action.value}');`;
           case 'dblclick':
-            return `  await page.locator("${action.target}").dblclick();`;
+            return `  await page.locator("${locator}").dblclick();`;
           case 'contextmenu':
-            return `  await page.locator("${action.target}").click({ button: 'right' });`;
+            return `  await page.locator("${locator}").click({ button: 'right' });`;
           default:
             return null;
         }
