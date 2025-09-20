@@ -151,7 +151,9 @@ export function generatePlaywrightCode(
             if (action.element.type === 'input') {
               return `  await page.locator("${locator}").fill('${action.value}');`;
             }
-            return `  await page.locator("${locator}").evaluate(el => el.value = '${action.value}');`;
+            //return `  await page.locator("${locator}").evaluate(el => el.value = '${action.value}');`;
+            // TODO: Handle change event for select
+            return '';
           case 'dblclick':
             return `  await page.locator("${locator}").dblclick();`;
           case 'contextmenu':

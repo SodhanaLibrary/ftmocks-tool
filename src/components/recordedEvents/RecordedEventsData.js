@@ -49,6 +49,8 @@ export default function RecordedEventsData({
   const [generateCodeAnchorEl, setGenerateCodeAnchorEl] = useState(null);
   const [showEvents, setShowEvents] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [testOutput, setTestOutput] = useState('');
+  const [runningTest, setRunningTest] = useState(false);
 
   const fetchRecordedEvents = async () => {
     try {
@@ -227,22 +229,53 @@ export default function RecordedEventsData({
   };
 
   const playTest = async () => {
-    const response = await fetch(`/api/v1/code/runTest`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        testName: selectedTest.name,
-        generatedCode: genCode,
-        fileName: `${nameToFolder(selectedTest?.name).toLowerCase()}.${genCodeType === 'playwright' ? 'spec.js' : 'test.js'}`,
-      }),
-    });
-    if (!response.ok) {
-      throw new Error('Failed to play test');
+    setRunningTest(true);
+    setTestOutput(''); // Clear previous output
+
+    try {
+      const response = await fetch(`/api/v1/code/runTest`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          testName: selectedTest.name,
+          generatedCode: genCode,
+          fileName: `${nameToFolder(selectedTest?.name).toLowerCase()}.${genCodeType === 'playwright' ? 'spec.js' : 'test.js'}`,
+        }),
+      });
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          setTestOutput((prev) => prev + chunk);
+        }
+      } catch (streamError) {
+        console.error('Error reading stream:', streamError);
+        setTestOutput(
+          (prev) => prev + `\nError reading stream: ${streamError.message}`
+        );
+      } finally {
+        reader.releaseLock();
+      }
+    } catch (error) {
+      console.error('Error running test:', error);
     }
-    const data = await response.json();
-    console.log(data);
+  };
+
+  const onBackClick = () => {
+    if (runningTest) {
+      setRunningTest(false);
+      setTestOutput('');
+    } else {
+      setShowEvents(true);
+    }
   };
 
   return (
@@ -368,10 +401,12 @@ export default function RecordedEventsData({
             justifyContent="space-between"
           >
             <Box display="flex" alignItems="center" gap={1}>
-              <IconButton color="primary" onClick={() => setShowEvents(true)}>
+              <IconButton color="primary" onClick={onBackClick}>
                 <ArrowBackIcon />
               </IconButton>
-              <Typography variant="h5">Generated Code</Typography>
+              <Typography variant="h5">
+                {runningTest ? 'Test Output' : 'Generated Code'}
+              </Typography>
             </Box>
             <Box>
               <Tooltip title="Save and Run Test">
@@ -392,44 +427,61 @@ export default function RecordedEventsData({
             </Box>
           </Box>
           <Divider />
-          <Box
-            p={2}
-            sx={{
-              textAlign: 'left',
-              width: '100%',
-              overflowX: 'scroll',
-            }}
-          >
-            <TextField
-              multiline
-              fullWidth
-              value={genCode}
-              onChange={(e) => setGenCode(e.target.value)}
-              variant="outlined"
+          {!runningTest && (
+            <Box
+              p={2}
               sx={{
-                '& .MuiInputBase-input': {
-                  fontFamily: 'monospace',
-                  fontSize: '0.875rem',
-                },
-                mb: 2,
+                textAlign: 'left',
+                width: '100%',
+                overflowX: 'scroll',
               }}
-              rows={25}
-            />
-            {genCodeType === 'playwright' && (
-              <Box sx={{ textAlign: 'center', mt: 2 }}>
-                <Typography variant="body2" color="text.secondary">
-                  or you can Run playwright codegen to generate the code
-                </Typography>
-                <Button
-                  sx={{ mt: 1 }}
-                  onClick={playwrightCodeGen}
-                  variant="outlined"
-                >
-                  Run playwright codegen
-                </Button>
-              </Box>
-            )}
-          </Box>
+            >
+              <TextField
+                multiline
+                fullWidth
+                value={genCode}
+                onChange={(e) => setGenCode(e.target.value)}
+                variant="outlined"
+                sx={{
+                  '& .MuiInputBase-input': {
+                    fontFamily: 'monospace',
+                    fontSize: '0.875rem',
+                  },
+                  mb: 2,
+                }}
+                rows={25}
+              />
+              {genCodeType === 'playwright' && (
+                <Box sx={{ textAlign: 'center', mt: 2 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    or you can Run playwright codegen to generate the code
+                  </Typography>
+                  <Button
+                    sx={{ mt: 1 }}
+                    onClick={playwrightCodeGen}
+                    variant="outlined"
+                  >
+                    Run playwright codegen
+                  </Button>
+                </Box>
+              )}
+            </Box>
+          )}
+          {runningTest && (
+            <Box
+              p={2}
+              sx={{ textAlign: 'left', width: '100%', overflowX: 'scroll' }}
+            >
+              <TextField
+                multiline
+                fullWidth
+                value={testOutput}
+                readOnly
+                variant="outlined"
+                rows={25}
+              />
+            </Box>
+          )}
         </Box>
       )}
       {/* Edit Event Modal */}

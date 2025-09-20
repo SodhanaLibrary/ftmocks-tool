@@ -78,6 +78,11 @@ const DraggableMockList = ({
                           '& .MuiTypography-root': {
                             color: mockItem.served ? 'success.main' : undefined, // Apply green color to both primary and secondary texts
                           },
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          maxWidth: 'calc(100vw - 650px)',
+                          marginRight: 2,
                         }}
                         primary={mockItem.url}
                       />
