@@ -234,6 +234,7 @@ export default function RecordedEventsData({
       },
       body: JSON.stringify({
         testName: selectedTest.name,
+        generatedCode: genCode,
         fileName: `${nameToFolder(selectedTest?.name).toLowerCase()}.${genCodeType === 'playwright' ? 'spec.js' : 'test.js'}`,
       }),
     });
@@ -373,7 +374,7 @@ export default function RecordedEventsData({
               <Typography variant="h5">Generated Code</Typography>
             </Box>
             <Box>
-              <Tooltip title="Run Test">
+              <Tooltip title="Save and Run Test">
                 <IconButton onClick={playTest} sx={{ mr: 1 }}>
                   <PlayArrowIcon />
                 </IconButton>
@@ -399,10 +400,21 @@ export default function RecordedEventsData({
               overflowX: 'scroll',
             }}
           >
-            {genCode?.length === 0 && '-----'}
-            <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>
-              {genCode}
-            </pre>
+            <TextField
+              multiline
+              fullWidth
+              value={genCode}
+              onChange={(e) => setGenCode(e.target.value)}
+              variant="outlined"
+              sx={{
+                '& .MuiInputBase-input': {
+                  fontFamily: 'monospace',
+                  fontSize: '0.875rem',
+                },
+                mb: 2,
+              }}
+              rows={25}
+            />
             {genCodeType === 'playwright' && (
               <Box sx={{ textAlign: 'center', mt: 2 }}>
                 <Typography variant="body2" color="text.secondary">

@@ -21,6 +21,7 @@ import MockDataCreator from '../MockDataCreator';
 import EditIcon from '@mui/icons-material/Edit';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import { sortUrlsByMatch } from '../utils/SearchUtils';
 import DraggableMockList from './MockDataList';
 import Snaps from './Snaps';
@@ -424,7 +425,7 @@ export default function Tests({ envDetails }) {
             setTestSearchTerm(e.target.value);
           }}
         />
-        <List>
+        <List sx={{ height: 'calc(100vh - 235px)', overflowY: 'scroll' }}>
           {filteredTestCases.map((test) => (
             <ListItem
               button
@@ -454,13 +455,28 @@ export default function Tests({ envDetails }) {
               }}
             >
               <ListItemText primary={test.name} />
-              <IconButton
-                className="delete-icon"
-                onClick={() => handleDeleteTest(test)}
-                aria-label="delete"
-              >
-                <DeleteIcon />
-              </IconButton>
+              <Box display="flex" gap={0}>
+                <Tooltip title="Edit Test Name">
+                  <IconButton
+                    className="delete-icon"
+                    onClick={handleEditTestName}
+                    aria-label="edit"
+                    size="small"
+                  >
+                    <EditIcon />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Delete Test">
+                  <IconButton
+                    className="delete-icon"
+                    onClick={() => handleDeleteTest(test)}
+                    aria-label="delete"
+                    size="small"
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </Tooltip>
+              </Box>
             </ListItem>
           ))}
         </List>
@@ -530,6 +546,14 @@ export default function Tests({ envDetails }) {
                   <AddIcon />
                 </IconButton>
               </Tooltip>
+              <Tooltip title="Delete All Mock Data">
+                <IconButton
+                  onClick={() => deleteAllMockData()}
+                  aria-label="delete all mock data"
+                >
+                  <DeleteSweepIcon />
+                </IconButton>
+              </Tooltip>
             </Box>
           ) : null}
         </Box>
@@ -582,47 +606,49 @@ export default function Tests({ envDetails }) {
                 Optimize
               </Button>
             </Box>
-            {selectedTab === 0 && (
-              <Box>
-                <TextField
-                  hiddenLabel
-                  fullWidth
-                  variant="outlined"
-                  placeholder="Search mock data"
-                  margin="normal"
-                  value={mockSearchTerm}
-                  onChange={(e) => {
-                    setMockSearchTerm(e.target.value);
-                  }}
-                />
-                <DraggableMockList
+            <Box sx={{ height: 'calc(100vh - 200px)', overflowY: 'scroll' }}>
+              {selectedTab === 0 && (
+                <Box>
+                  <TextField
+                    hiddenLabel
+                    fullWidth
+                    variant="outlined"
+                    placeholder="Search mock data"
+                    margin="normal"
+                    value={mockSearchTerm}
+                    onChange={(e) => {
+                      setMockSearchTerm(e.target.value);
+                    }}
+                  />
+                  <DraggableMockList
+                    selectedTest={selectedTest}
+                    selectedMockItem={selectedMockItem}
+                    handleMockItemClick={handleMockItemClick}
+                    setFilteredMockData={setFilteredMockData}
+                    deleteAllMockData={deleteAllMockData}
+                  />
+                </Box>
+              )}
+              {selectedTab === 1 && <Snaps selectedTest={selectedTest} />}
+              {selectedTab === 2 && <LogViewer selectedTest={selectedTest} />}
+              {selectedTab === 3 && (
+                <RecordMockOrTest
                   selectedTest={selectedTest}
-                  selectedMockItem={selectedMockItem}
-                  handleMockItemClick={handleMockItemClick}
-                  setFilteredMockData={setFilteredMockData}
-                  deleteAllMockData={deleteAllMockData}
+                  fetchMockData={fetchMockData}
+                  envDetails={envDetails}
+                  resetMockData={resetMockData}
                 />
-              </Box>
-            )}
-            {selectedTab === 1 && <Snaps selectedTest={selectedTest} />}
-            {selectedTab === 2 && <LogViewer selectedTest={selectedTest} />}
-            {selectedTab === 3 && (
-              <RecordMockOrTest
-                selectedTest={selectedTest}
-                fetchMockData={fetchMockData}
-                envDetails={envDetails}
-                resetMockData={resetMockData}
-              />
-            )}
-            {selectedTab === 4 && (
-              <TestOptimizer
-                selectedTest={selectedTest}
-                fetchMockData={fetchMockData}
-                envDetails={envDetails}
-                resetMockData={resetMockData}
-                fetchTestData={fetchTestData}
-              />
-            )}
+              )}
+              {selectedTab === 4 && (
+                <TestOptimizer
+                  selectedTest={selectedTest}
+                  fetchMockData={fetchMockData}
+                  envDetails={envDetails}
+                  resetMockData={resetMockData}
+                  fetchTestData={fetchTestData}
+                />
+              )}
+            </Box>
           </Box>
         ) : (
           <Typography>Select a test case to view mock data</Typography>
