@@ -76,6 +76,10 @@ export default function FtMocksTool() {
               }
             />
             <Route path="/tests" element={<Tests envDetails={envDetails} />} />
+            <Route
+              path="/tests/:testId"
+              element={<Tests envDetails={envDetails} />}
+            />
             <Route path="/default-mock-data" element={<DefaultMockData />} />
             <Route path="/mock-server" element={<MockServer />} />
           </Routes>
