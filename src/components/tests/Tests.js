@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
   List,
@@ -12,9 +13,7 @@ import MockDataView from '../MockDataView';
 import IconButton from '@mui/material/IconButton';
 import AddIcon from '@mui/icons-material/Add';
 import Tooltip from '@mui/material/Tooltip';
-import Tabs from '@mui/material/Tabs';
 import Button from '@mui/material/Button';
-import Tab from '@mui/material/Tab';
 import TestCaseCreator from './TestCaseCreator';
 import DeleteIcon from '@mui/icons-material/Delete';
 import MockDataCreator from '../MockDataCreator';
@@ -31,6 +30,8 @@ import TestOptimizer from './TestOptimizer';
 import { markDuplicateMocks } from '../utils/CommonUtils';
 
 export default function Tests({ envDetails }) {
+  const { testId } = useParams();
+  const navigate = useNavigate();
   const [selectedTest, setSelectedTest] = useState(null);
   const [selectedTab, setSelectedTab] = useState(0);
   const [filteredTestCases, setFilteredTestCases] = useState([]);
@@ -109,6 +110,7 @@ export default function Tests({ envDetails }) {
   const handleTestClick = (test) => {
     setSelectedTest({ ...test, filteredMockData: [] });
     setMockSearchTerm('');
+    navigate(`/tests/${test.id}`);
     fetchMockData(test, {
       testClick: true,
     });
@@ -125,6 +127,24 @@ export default function Tests({ envDetails }) {
     fetchTestData();
     fetchDefaultMocks();
   }, []);
+
+  // Handle URL parameter changes
+  useEffect(() => {
+    if (testId && testCases.length > 0) {
+      const test = testCases.find((t) => t.id === testId);
+      if (test) {
+        setSelectedTest({ ...test, filteredMockData: [] });
+        setMockSearchTerm('');
+        fetchMockData(test, {
+          testClick: true,
+        });
+      }
+    } else if (!testId && selectedTest) {
+      // If no testId in URL, clear selection
+      setSelectedTest(null);
+      setSelectedMockItem(null);
+    }
+  }, [testId, testCases]);
 
   useEffect(() => {
     if (testCases.length > 0) {
@@ -228,6 +248,10 @@ export default function Tests({ envDetails }) {
         if (response.ok) {
           console.log('Test deleted successfully');
           fetchTestData();
+          // Navigate back to tests list if we're viewing the deleted test
+          if (selectedTest && selectedTest.id === test.id) {
+            navigate('/tests');
+          }
         } else {
           console.error('Failed to delete test');
         }
@@ -248,6 +272,8 @@ export default function Tests({ envDetails }) {
     setTestCaseCreatorOpen(false);
     if (refresh) {
       fetchTestData();
+      // Navigate back to tests list after creating/editing
+      navigate('/tests');
     }
   };
 

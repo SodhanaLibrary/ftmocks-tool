@@ -170,6 +170,10 @@ export default function RecordedEventsData({
     }
   }, [recordingStatus]);
 
+  useEffect(() => {
+    fetchRecordedEvents();
+  }, [selectedTest]);
+
   const handleGenerateCodeClick = (event) => {
     setGenerateCodeAnchorEl(event.currentTarget);
   };

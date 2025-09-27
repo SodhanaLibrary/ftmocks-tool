@@ -128,7 +128,7 @@ const RecordMockOrTest = ({
       setIsRecordingMockData(data.status === 'running');
     };
     fetchRecordingStatus();
-  }, []);
+  }, [selectedTest]);
 
   return (
     <Box
