@@ -1,3 +1,24 @@
+const charDifference = (str1, str2) => {
+  let count1 = {},
+    count2 = {};
+
+  for (let ch of str1) count1[ch] = (count1[ch] || 0) + 1;
+  for (let ch of str2) count2[ch] = (count2[ch] || 0) + 1;
+
+  let diff = 0;
+  let chars = new Set([...Object.keys(count1), ...Object.keys(count2)]);
+
+  for (let ch of chars) {
+    diff += Math.abs((count1[ch] || 0) - (count2[ch] || 0));
+  }
+
+  return diff;
+};
+
+const nameToFolder = (name) => {
+  return name.replaceAll(' ', '_');
+};
+
 const areJsonEqual = (jsonObj1, jsonObj2) => {
   // Check if both are objects and not null
   if (
@@ -169,6 +190,8 @@ export const markDuplicateMocks = (mocks) => {
     const duplicateMocks = mocks.filter((m) => compareMockToMock(mock, m));
     if (duplicateMocks.length > 1) {
       mock.isDuplicate = true;
+    } else {
+      mock.isDuplicate = false;
     }
   });
   return mocks;
@@ -209,3 +232,5 @@ export const convertToValidJSON = (json) => {
     }
   }
 };
+
+export { charDifference, nameToFolder };

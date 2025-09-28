@@ -121,13 +121,14 @@ const RecordMockOrTest = ({
     console.log(data);
   };
 
+  const fetchRecordingStatus = async () => {
+    const response = await fetch(`/api/v1/record/status`);
+    const data = await response.json();
+    setIsRecordingMockData(data.status === 'running');
+  };
+
   useEffect(() => {
-    const fetchRecordingStatus = async () => {
-      const response = await fetch(`/api/v1/record/status`);
-      const data = await response.json();
-      setIsRecordingMockData(data.status === 'running');
-    };
-    fetchRecordingStatus();
+    setTimeout(fetchRecordingStatus, 1000);
   }, [selectedTest]);
 
   return (

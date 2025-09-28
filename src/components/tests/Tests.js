@@ -73,10 +73,12 @@ export default function Tests({ envDetails }) {
       const data = await response.json();
       setFilteredTestCases(data);
       setTestCases(data);
+      return data;
     } catch (error) {
       console.error('Error fetching test data:', error);
       // Handle the error appropriately, e.g., show an error message to the user
     }
+    return [];
   };
 
   const fetchMockData = async (test, options) => {
@@ -243,6 +245,13 @@ export default function Tests({ envDetails }) {
   };
 
   const handleDeleteTest = (test) => {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete the test "${test.name}"?`
+      )
+    ) {
+      return;
+    }
     fetch(`/api/v1/tests/${test.id}?name=${test.name}`, { method: 'DELETE' })
       .then((response) => {
         if (response.ok) {
@@ -267,13 +276,32 @@ export default function Tests({ envDetails }) {
     fetchMockData(selectedTest);
   };
 
-  const onCloseTestCaseCreator = (refresh) => {
+  const onCloseTestCaseCreator = async (refresh, testName) => {
     setTestCaseEditorOpen(false);
     setTestCaseCreatorOpen(false);
     if (refresh) {
-      fetchTestData();
+      const data = await fetchTestData();
       // Navigate back to tests list after creating/editing
-      navigate('/tests');
+      if (!testName) {
+        navigate('/tests');
+      } else {
+        const test = data.find((test) => test.name === testName);
+        if (test) {
+          handleTestClick(test);
+          // Scroll to bottom of test cases list to show the newly created test
+          setTimeout(() => {
+            const testCasesList = document.getElementById('test-cases-list');
+            if (testCasesList) {
+              testCasesList.scrollTo({
+                top: testCasesList.scrollHeight,
+                behavior: 'smooth',
+              });
+            }
+          }, 100);
+        } else {
+          navigate('/tests');
+        }
+      }
     }
   };
 
@@ -451,7 +479,10 @@ export default function Tests({ envDetails }) {
             setTestSearchTerm(e.target.value);
           }}
         />
-        <List sx={{ height: 'calc(100vh - 235px)', overflowY: 'scroll' }}>
+        <List
+          id="test-cases-list"
+          sx={{ height: 'calc(100vh - 235px)', overflowY: 'scroll' }}
+        >
           {filteredTestCases.map((test) => (
             <ListItem
               button

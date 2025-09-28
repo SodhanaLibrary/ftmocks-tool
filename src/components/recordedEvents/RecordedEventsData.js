@@ -25,6 +25,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
+import AnsiToHtml from 'ansi-to-html';
 
 import {
   generatePlaywrightCode,
@@ -282,6 +283,10 @@ export default function RecordedEventsData({
     }
   };
 
+  const convert = new AnsiToHtml();
+
+  const htmlOutput = convert.toHtml(testOutput).replace(/\n/g, '<br/>');
+
   return (
     <Box width="100%">
       {showEvents && (
@@ -474,15 +479,31 @@ export default function RecordedEventsData({
           {runningTest && (
             <Box
               p={2}
-              sx={{ textAlign: 'left', width: '100%', overflowX: 'scroll' }}
+              sx={{
+                textAlign: 'left',
+                width: 'calc(100vw - 500px)',
+                overflowX: 'scroll',
+              }}
             >
-              <TextField
+              {/* <TextField
                 multiline
                 fullWidth
                 value={testOutput}
                 readOnly
                 variant="outlined"
                 rows={25}
+              /> */}
+              <div
+                style={{
+                  background: 'black',
+                  color: 'white',
+                  fontFamily: 'monospace',
+                  padding: '10px',
+                  borderRadius: '8px',
+                  overflowY: 'auto',
+                  height: '700px',
+                }}
+                dangerouslySetInnerHTML={{ __html: htmlOutput }}
               />
             </Box>
           )}

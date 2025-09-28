@@ -37,7 +37,7 @@ const TestCaseCreator = ({ onClose, selectedTest }) => {
 
       const data = await response.json();
       console.log('Test case created:', data);
-      onClose(true);
+      onClose(true, testName.trim());
     } catch (error) {
       console.error('Error creating test case:', error);
     }
