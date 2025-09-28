@@ -13,7 +13,9 @@ import MockDataView from '../MockDataView';
 import MockDataCreator from '../MockDataCreator';
 import IconButton from '@mui/material/IconButton';
 import AddIcon from '@mui/icons-material/Add';
+import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import Tooltip from '@mui/material/Tooltip';
+import DefaultRecorder from './DefaultRecorder';
 import { sortUrlsByMatch } from '../utils/SearchUtils';
 
 export default function DefaultMockData() {
@@ -22,6 +24,7 @@ export default function DefaultMockData() {
   const [filteredMockData, setFilteredMockData] = useState([]);
   const [mockData, setMockData] = useState([]);
   const [isNewMockDrawerOpen, setIsNewMockDrawerOpen] = useState(false);
+  const [isRecordMockDrawerOpen, setIsRecordMockDrawerOpen] = useState(false);
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -93,6 +96,15 @@ export default function DefaultMockData() {
     setIsNewMockDrawerOpen(false);
     fetchDefaultMocks();
   };
+
+  const handleOpenRecordMockDrawer = () => {
+    setIsRecordMockDrawerOpen(true);
+  };
+
+  const handleCloseRecordMockDrawer = () => {
+    setIsRecordMockDrawerOpen(false);
+    fetchDefaultMocks();
+  };
   return (
     <Box
       sx={{
@@ -118,15 +130,26 @@ export default function DefaultMockData() {
           <Typography variant="h6" gutterBottom>
             Mock Data
           </Typography>
-          <Tooltip title="Add Mock Data">
-            <IconButton
-              color="primary"
-              aria-label="add mock data"
-              onClick={handleOpenNewMockDrawer}
-            >
-              <AddIcon />
-            </IconButton>
-          </Tooltip>
+          <Box>
+            <Tooltip title="Add Mock Data">
+              <IconButton
+                color="primary"
+                aria-label="add mock data"
+                onClick={handleOpenNewMockDrawer}
+              >
+                <AddIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Record mock data">
+              <IconButton
+                color="secondary"
+                aria-label="record mock data"
+                onClick={handleOpenRecordMockDrawer}
+              >
+                <FiberManualRecordIcon />
+              </IconButton>
+            </Tooltip>
+          </Box>
         </Box>
         <TextField
           hiddenLabel
@@ -147,6 +170,7 @@ export default function DefaultMockData() {
               onClick={() => handleMockItemClick(mockItem)}
               selected={selectedMockItem === mockItem}
               sx={{
+                color: mockItem.mockData.served ? 'success.main' : undefined,
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 backgroundColor:
@@ -182,6 +206,13 @@ export default function DefaultMockData() {
         onClose={handleCloseNewMockDrawer}
       >
         <MockDataCreator onClose={handleCloseNewMockDrawer} />
+      </Drawer>
+      <Drawer
+        anchor="right"
+        open={isRecordMockDrawerOpen}
+        onClose={handleCloseRecordMockDrawer}
+      >
+        <DefaultRecorder onClose={handleCloseRecordMockDrawer} />
       </Drawer>
     </Box>
   );
