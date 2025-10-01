@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Container } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
+import { Box, Typography, Container, Paper } from '@mui/material';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import SimpleJsonTable from './EnvTable';
 import ServerStatus from './ServerStatus';
 import EnvTable from './EnvTable';
@@ -11,6 +11,7 @@ export default function TestSummary({ envDetails, fetchEnvDetails }) {
   const [testCases, setTestCases] = useState([]);
   const [projects, setProjects] = useState([]);
   const [defaultMocks, setDefaultMocks] = useState([]);
+  const navigate = useNavigate();
   const [serverStatus, setServerStatus] = useState({});
 
   const fetchMockServerStatus = async (testsTemp) => {
@@ -111,37 +112,31 @@ export default function TestSummary({ envDetails, fetchEnvDetails }) {
   }, []);
 
   return (
-    <Container>
-      <Box
-        sx={{
-          flexGrow: 1,
-          p: 3,
-          pt: 0,
-          display: 'flex',
-          flexDirection: { xs: 'column', md: 'row' },
-          gap: 5,
-          margin: 'auto',
-          mt: 15,
-          justifyContent: 'center',
-        }}
-      >
+    <Box
+      sx={{ width: '100%', columnCount: 2, columnGap: 2, pl: 3, pr: 3, pt: 1 }}
+    >
+      <Paper sx={{ p: 2, display: 'flex', gap: 2 }}>
         <Box
-          component={RouterLink}
-          to="/tests"
           sx={{
             p: 3,
             cursor: 'pointer',
             border: '1px solid #ccc',
             borderRadius: 2,
-            width: '30%',
+            width: '50%',
           }}
         >
           <Box
+            onClick={() => {
+              navigate('/tests');
+            }}
             sx={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
               width: '100%',
+              '&:hover': {
+                color: 'primary.main',
+              },
             }}
           >
             <Typography variant="h5" gutterBottom>
@@ -153,14 +148,18 @@ export default function TestSummary({ envDetails, fetchEnvDetails }) {
           </Box>
         </Box>
         <Box
-          component={RouterLink}
-          to="/default-mock-data"
+          onClick={() => {
+            navigate('/default-mock-data');
+          }}
           sx={{
             p: 3,
             cursor: 'pointer',
             border: '1px solid #ccc',
             borderRadius: 2,
-            width: '30%',
+            width: '50%',
+            '&:hover': {
+              color: 'primary.main',
+            },
           }}
         >
           <Box
@@ -179,34 +178,34 @@ export default function TestSummary({ envDetails, fetchEnvDetails }) {
             </Typography>
           </Box>
         </Box>
-      </Box>
+      </Paper>
 
       {serverStatus.testName && (
-        <Box sx={{ mb: 4 }}>
+        <Paper sx={{ mt: 2, p: 2 }}>
           <ServerStatus
             testName={serverStatus.testName}
             port={serverStatus.port}
+            onClick={() => {
+              navigate('/mock-server');
+            }}
           />
-        </Box>
+        </Paper>
       )}
 
       <UpdateChecker />
       {envDetails && (
-        <Box>
-          <Box sx={{ margin: 'auto' }}>
-            <EnvTable data={envDetails} />
-          </Box>
-        </Box>
+        <Paper sx={{ mt: 2, p: 2 }}>
+          <EnvTable data={envDetails} />
+        </Paper>
       )}
-      <Box mt={2}>
-        <Box sx={{ margin: 'auto' }}>
-          <ProjectTable
-            data={projects}
-            onClickProject={onClickProject}
-            refetchProjects={fetchProjects}
-          />
-        </Box>
-      </Box>
-    </Container>
+      <Paper sx={{ mt: 2, p: 2 }}>
+        <ProjectTable
+          envDetails={envDetails}
+          data={projects}
+          onClickProject={onClickProject}
+          refetchProjects={fetchProjects}
+        />
+      </Paper>
+    </Box>
   );
 }

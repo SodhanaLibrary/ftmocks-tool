@@ -12,10 +12,9 @@ const ServerStatus = ({ testName, port, onClick }) => {
       p={2}
       borderRadius={2}
       boxShadow={3}
-      width="fit-content"
       margin="auto"
       onClick={onClick}
-      sx={{ cursor: 'pointer' }}
+      sx={{ cursor: 'pointer', '&:hover': { color: 'primary.main' } }}
     >
       <ServerIcon fontSize="large" style={{ marginRight: 8, fontSize: 70 }} />
       <Box>

@@ -18,7 +18,12 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Typography from '@mui/material/Typography';
 
-const ProjectTable = ({ data, onClickProject, refetchProjects }) => {
+const ProjectTable = ({
+  data,
+  onClickProject,
+  refetchProjects,
+  envDetails,
+}) => {
   const [openModal, setOpenModal] = useState(false);
   const [envLocation, setEnvLocation] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -81,9 +86,11 @@ const ProjectTable = ({ data, onClickProject, refetchProjects }) => {
         style={{
           marginBottom: '16px',
           display: 'flex',
-          justifyContent: 'flex-end',
+          justifyContent: 'space-between',
+          alignItems: 'center',
         }}
       >
+        <Typography variant="h6">Projects</Typography>
         <Button
           variant="contained"
           color="primary"
@@ -109,8 +116,11 @@ const ProjectTable = ({ data, onClickProject, refetchProjects }) => {
           <TableBody>
             {data.map((key) => (
               <TableRow sx={{ cursor: 'pointer' }} key={key}>
-                <TableCell onClick={() => onClickProject(key)}>
-                  <Typography color="primary">{String(key)}</Typography>
+                <TableCell
+                  onClick={() => onClickProject(key)}
+                  sx={{ '&:hover': { color: 'primary.main' } }}
+                >
+                  <Typography>{String(key)}</Typography>
                 </TableCell>
                 <TableCell>
                   <IconButton
