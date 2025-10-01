@@ -4,13 +4,17 @@ import { Box } from '@mui/material';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
+import Autocomplete from '@mui/material/Autocomplete';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import CloseIcon from '@mui/icons-material/Close';
 
-const DefaultRecorder = ({ fetchMockData }) => {
+const DefaultRecorder = ({ onClose }) => {
   const [isRecordingMockData, setIsRecordingMockData] = useState(false);
   const [error, setError] = useState(null);
   const [config, setConfig] = useState({
     url: '',
-    pattern: '^/api/.*',
+    patterns: ['^/api/.*'],
     testName: null,
   });
 
@@ -40,10 +44,10 @@ const DefaultRecorder = ({ fetchMockData }) => {
     });
   };
 
-  const onPatternChange = (event) => {
+  const onPatternsChange = (event, newPatterns) => {
     setConfig({
       ...config,
-      pattern: event.target.value,
+      patterns: newPatterns,
     });
   };
 
@@ -56,7 +60,7 @@ const DefaultRecorder = ({ fetchMockData }) => {
       if (!response.ok) {
         throw new Error('Failed to stop recording mock data');
       }
-      fetchMockData(null, {
+      onClose(null, {
         stopRecording: true,
       });
     } catch (err) {
@@ -70,6 +74,11 @@ const DefaultRecorder = ({ fetchMockData }) => {
     setIsRecordingMockData(data.status === 'running');
   };
 
+  const onCloseDrawer = () => {
+    setIsRecordingMockData(false);
+    onClose();
+  };
+
   useEffect(() => {
     setTimeout(fetchRecordingStatus, 1000);
   }, []);
@@ -81,13 +90,28 @@ const DefaultRecorder = ({ fetchMockData }) => {
       flexDirection="column"
       sx={{ width: '500px', margin: '0 auto', textAlign: 'left', mt: 4 }}
     >
-      <Box sx={{ pl: 3 }}>
+      <Box
+        sx={{ pl: 3, pr: 3, display: 'flex', justifyContent: 'space-between' }}
+      >
         <Typography variant="h6" gutterBottom>
           Record Mock Data
         </Typography>
+        <IconButton
+          color="primary"
+          aria-label="record mock data"
+          onClick={onCloseDrawer}
+        >
+          <CloseIcon />
+        </IconButton>
       </Box>
 
-      <Box width="100%" display="flex" flexDirection="row" gap={1}>
+      <Box
+        width="100%"
+        display="flex"
+        flexDirection="row"
+        gap={1}
+        sx={{ mt: -2 }}
+      >
         {!isRecordingMockData && (
           <Box
             p={3}
@@ -104,12 +128,42 @@ const DefaultRecorder = ({ fetchMockData }) => {
               value={config.url}
               onChange={onUrlChange}
             />
-            <TextField
-              label="Pattern"
-              fullWidth
-              margin="normal"
-              value={config.pattern}
-              onChange={onPatternChange}
+            <Autocomplete
+              multiple
+              freeSolo
+              options={[]}
+              value={config.patterns}
+              onChange={onPatternsChange}
+              onInputChange={(event, newInputValue, reason) => {
+                if (reason === 'input' && newInputValue.includes(',')) {
+                  const patterns = newInputValue
+                    .split(',')
+                    .map((p) => p.trim())
+                    .filter((p) => p.length > 0);
+                  const existingPatterns = config.patterns;
+                  const newPatterns = [...existingPatterns, ...patterns];
+                  onPatternsChange(event, newPatterns);
+                }
+              }}
+              renderTags={(value, getTagProps) =>
+                value.map((option, index) => (
+                  <Chip
+                    variant="outlined"
+                    label={option}
+                    {...getTagProps({ index })}
+                    key={index}
+                  />
+                ))
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Patterns"
+                  placeholder="Enter patterns separated by commas (e.g., ^/api/.*, ^/v1/.*)"
+                  margin="normal"
+                  fullWidth
+                />
+              )}
             />
             <Button
               color="primary"

@@ -6,7 +6,8 @@ import TextField from '@mui/material/TextField';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import Typography from '@mui/material/Typography';
-import Snackbar from '@mui/material/Snackbar';
+import Autocomplete from '@mui/material/Autocomplete';
+import Chip from '@mui/material/Chip';
 import RecordedEventsData from '../recordedEvents/RecordedEventsData';
 
 const RecordMockOrTest = ({
@@ -19,7 +20,7 @@ const RecordMockOrTest = ({
   const [error, setError] = useState(null);
   const [config, setConfig] = useState({
     url: '',
-    pattern: '^/api/.*',
+    patterns: ['^/api/.*'],
     avoidDuplicatesWithDefaultMocks: false,
     stopMockServer: true,
     startMockServer: true,
@@ -82,10 +83,10 @@ const RecordMockOrTest = ({
     });
   };
 
-  const onPatternChange = (event) => {
+  const onPatternsChange = (event, newPatterns) => {
     setConfig({
       ...config,
-      pattern: event.target.value,
+      patterns: newPatterns,
     });
   };
 
@@ -155,12 +156,42 @@ const RecordMockOrTest = ({
               value={config.url}
               onChange={onUrlChange}
             />
-            <TextField
-              label="Pattern"
-              fullWidth
-              margin="normal"
-              value={config.pattern}
-              onChange={onPatternChange}
+            <Autocomplete
+              multiple
+              freeSolo
+              options={[]}
+              value={config.patterns}
+              onChange={onPatternsChange}
+              onInputChange={(event, newInputValue, reason) => {
+                if (reason === 'input' && newInputValue.includes(',')) {
+                  const patterns = newInputValue
+                    .split(',')
+                    .map((p) => p.trim())
+                    .filter((p) => p.length > 0);
+                  const existingPatterns = config.patterns;
+                  const newPatterns = [...existingPatterns, ...patterns];
+                  onPatternsChange(event, newPatterns);
+                }
+              }}
+              renderTags={(value, getTagProps) =>
+                value.map((option, index) => (
+                  <Chip
+                    variant="outlined"
+                    label={option}
+                    {...getTagProps({ index })}
+                    key={index}
+                  />
+                ))
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Patterns"
+                  placeholder="Enter patterns separated by commas (e.g., ^/api/.*, ^/v1/.*)"
+                  margin="normal"
+                  fullWidth
+                />
+              )}
             />
             <FormControlLabel
               control={

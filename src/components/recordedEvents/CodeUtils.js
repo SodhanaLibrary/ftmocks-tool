@@ -146,6 +146,12 @@ export function generatePlaywrightCode(
             if (action.element.type === 'select') {
               return `  await page.locator("${locator}").selectOption('${action.value}');`;
             }
+            if (action.element.type === 'checkbox') {
+              return '';
+            }
+            if (action.element.type === 'radio') {
+              return '';
+            }
             return `  await page.locator("${locator}").type('${action.value}');`;
           case 'change':
             if (action.element.type === 'input') {
@@ -158,6 +164,8 @@ export function generatePlaywrightCode(
             return `  await page.locator("${locator}").dblclick();`;
           case 'contextmenu':
             return `  await page.locator("${locator}").click({ button: 'right' });`;
+          case 'popstate-url':
+            return `  await page.goBack();`;
           default:
             return null;
         }

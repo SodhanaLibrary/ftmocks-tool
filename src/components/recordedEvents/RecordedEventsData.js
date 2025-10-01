@@ -438,32 +438,24 @@ export default function RecordedEventsData({
           <Divider />
           {!runningTest && (
             <Box
-              p={2}
               sx={{
-                textAlign: 'left',
-                width: '100%',
-                overflowX: 'scroll',
+                display: 'flex',
+                flexDirection: 'column',
               }}
             >
-              <TextField
-                multiline
-                fullWidth
-                value={genCode}
-                onChange={(e) => setGenCode(e.target.value)}
-                variant="outlined"
-                sx={{
-                  '& .MuiInputBase-input': {
-                    fontFamily: 'monospace',
-                    fontSize: '0.875rem',
-                  },
-                  mb: 2,
-                }}
-                rows={25}
-              />
               {genCodeType === 'playwright' && (
-                <Box sx={{ textAlign: 'center', mt: 2 }}>
+                <Box
+                  sx={{
+                    textAlign: 'center',
+                    display: 'flex',
+                    gap: 2,
+                    alignItems: 'center',
+                    pl: 2,
+                  }}
+                >
                   <Typography variant="body2" color="text.secondary">
-                    or you can Run playwright codegen to generate the code
+                    Find generated code below or you can Run playwright codegen
+                    to generate the code
                   </Typography>
                   <Button
                     sx={{ mt: 1 }}
@@ -474,6 +466,30 @@ export default function RecordedEventsData({
                   </Button>
                 </Box>
               )}
+              <Box
+                p={2}
+                sx={{
+                  textAlign: 'left',
+                  width: '100%',
+                  overflowX: 'scroll',
+                }}
+              >
+                <TextField
+                  multiline
+                  fullWidth
+                  value={genCode}
+                  onChange={(e) => setGenCode(e.target.value)}
+                  variant="outlined"
+                  sx={{
+                    '& .MuiInputBase-input': {
+                      fontFamily: 'monospace',
+                      fontSize: '0.875rem',
+                    },
+                    mb: 2,
+                  }}
+                  rows={25}
+                />
+              </Box>
             </Box>
           )}
           {runningTest && (
