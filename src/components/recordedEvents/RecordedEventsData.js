@@ -18,6 +18,8 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import Autocomplete from '@mui/material/Autocomplete';
+import AddIcon from '@mui/icons-material/Add';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -283,6 +285,68 @@ export default function RecordedEventsData({
     }
   };
 
+  // Duplicates a recorded event by calling the backend API and updating the local state
+  const duplicateEvent = async (eventId) => {
+    if (!selectedTest?.name || !eventId) return;
+    try {
+      const response = await fetch(
+        `/api/v1/recordedEvents/${eventId}/duplicate?name=${encodeURIComponent(selectedTest.name)}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to duplicate event');
+      }
+      const duplicatedEvent = await response.json();
+      // Insert the duplicated event after the original in the local state
+      setRecordedEvents((prevEvents) => {
+        const idx = prevEvents.findIndex((e) => e.id === eventId);
+        if (idx === -1) return prevEvents;
+        const newEvents = [...prevEvents];
+        newEvents.splice(idx + 1, 0, duplicatedEvent);
+        return newEvents;
+      });
+    } catch (error) {
+      console.error('Error duplicating event:', error);
+    }
+  };
+
+  // Adds an empty event by calling the backend API and updating the local state
+  const addEmptyEvent = async (eventId) => {
+    if (!selectedTest?.name || !eventId) return;
+    try {
+      const response = await fetch(
+        `/api/v1/recordedEvents/${eventId}/emptyEvent?name=${encodeURIComponent(selectedTest.name)}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add empty event');
+      }
+      const newEvent = await response.json();
+      // Insert the new empty event after the original in the local state
+      setRecordedEvents((prevEvents) => {
+        const idx = prevEvents.findIndex((e) => e.id === eventId);
+        if (idx === -1) return prevEvents;
+        const newEvents = [...prevEvents];
+        newEvents.splice(idx + 1, 0, newEvent);
+        return newEvents;
+      });
+    } catch (error) {
+      console.error('Error adding empty event:', error);
+    }
+  };
+
   const convert = new AnsiToHtml();
 
   const htmlOutput = convert.toHtml(testOutput).replace(/\n/g, '<br/>');
@@ -358,26 +422,54 @@ export default function RecordedEventsData({
                   <Typography variant="body2">{re.time}</Typography>
                 </Box>
                 <Box className="action-buttons">
-                  <IconButton
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      editEvent(re);
-                    }}
-                    aria-label="edit"
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteEvent(re);
-                    }}
-                    aria-label="delete"
-                  >
-                    <DeleteIcon />
-                  </IconButton>
+                  <Tooltip title="Duplicate Event">
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        duplicateEvent(re.id);
+                      }}
+                      aria-label="duplicate"
+                    >
+                      <ContentCopyIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Creact New Event">
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addEmptyEvent(re.id);
+                      }}
+                      aria-label="create new event"
+                    >
+                      <AddIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Edit Event">
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        editEvent(re);
+                      }}
+                      aria-label="edit"
+                    >
+                      <EditIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Delete Event">
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteEvent(re);
+                      }}
+                      aria-label="delete"
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Tooltip>
                 </Box>
               </Box>
             ))}
@@ -574,23 +666,52 @@ export default function RecordedEventsData({
                 <MenuItem value="change">Change</MenuItem>
               </TextField>
 
-              <TextField
+              <Autocomplete
+                freeSolo
+                options={
+                  selectedEvent.selectors
+                    ?.filter((s) => s.type === 'locator')
+                    .map((s) => s.value || '') || []
+                }
+                value={selectedEvent.target || ''}
+                onInputChange={(_, value) => {
+                  setSelectedEvent({
+                    ...selectedEvent,
+                    target: value,
+                  });
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Target"
+                    variant="outlined"
+                    fullWidth
+                    sx={{ mb: 1 }}
+                  />
+                )}
+              />
+              {/* <TextField
                 label="Target"
                 value={selectedEvent.target || ''}
                 onChange={(e) =>
                   setSelectedEvent({ ...selectedEvent, target: e.target.value })
                 }
                 fullWidth
-              />
+              /> */}
 
-              <TextField
-                label="Value"
-                value={selectedEvent.value || ''}
-                onChange={(e) =>
-                  setSelectedEvent({ ...selectedEvent, value: e.target.value })
-                }
-                fullWidth
-              />
+              {typeof selectedEvent.value === 'string' && (
+                <TextField
+                  label="Value"
+                  value={selectedEvent.value || ''}
+                  onChange={(e) =>
+                    setSelectedEvent({
+                      ...selectedEvent,
+                      value: e.target.value,
+                    })
+                  }
+                  fullWidth
+                />
+              )}
 
               <Box display="flex" mt={2}>
                 <Box display="flex" gap={1} width="50%">
