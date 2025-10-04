@@ -29,7 +29,6 @@ const MockDataView = ({
   mockItem,
   onClose,
   selectedTest,
-  recordedMock,
   onClickUpload,
   defaultMocks,
 }) => {
@@ -60,7 +59,7 @@ const MockDataView = ({
   const onDelete = async () => {
     const endpoint = selectedTest
       ? `/api/v1/tests/${selectedTest.id}/mockdata/${mockItem.id}?name=${selectedTest.name}`
-      : `/api/v1/${!recordedMock ? 'defaultmocks' : 'recordedMocks'}/${mockItem.id}`;
+      : `/api/v1/defaultmocks/${mockItem.id}`;
     await fetch(endpoint, {
       method: 'DELETE',
       headers: {
@@ -84,7 +83,7 @@ const MockDataView = ({
   const deleteDuplicate = async (mock) => {
     const endpoint = selectedTest
       ? `/api/v1/tests/${selectedTest.id}/mockdata/${mock.id}?name=${selectedTest.name}`
-      : `/api/v1/${!recordedMock ? 'defaultmocks' : 'recordedMocks'}/${mock.id}`;
+      : `/api/v1/defaultmocks/${mock.id}`;
     await fetch(endpoint, {
       method: 'DELETE',
       headers: {
@@ -118,7 +117,7 @@ const MockDataView = ({
   const onUpdate = async () => {
     const endpoint = selectedTest
       ? `/api/v1/tests/${selectedTest.id}/mockdata/${mockItem.id}?name=${selectedTest.name}`
-      : `/api/v1/${!recordedMock ? 'defaultmocks' : 'recordedMocks'}/${mockItem.id}`;
+      : `/api/v1/defaultmocks/${mockItem.id}`;
     try {
       const response = await fetch(endpoint, {
         method: 'PUT',
@@ -244,7 +243,7 @@ const MockDataView = ({
   const duplicateMockData = async () => {
     const endpoint = selectedTest
       ? `/api/v1/tests/${selectedTest.id}/mockdata?name=${selectedTest.name}`
-      : `/api/v1/${!recordedMock ? 'defaultmocks' : 'recordedMocks'}`;
+      : `/api/v1/defaultmocks`;
     try {
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -332,13 +331,6 @@ const MockDataView = ({
             <IconButton onClick={onClose} aria-label="close">
               <CloseIcon />
             </IconButton>
-          )}
-          {recordedMock && (
-            <Tooltip title="Move this mock to Test or Default mock data">
-              <IconButton onClick={onClickUpload} aria-label="delete">
-                <UploadIcon color="secondary" />
-              </IconButton>
-            </Tooltip>
           )}
           <Tooltip title="Delete">
             <IconButton onClick={onDelete} aria-label="delete">
@@ -594,7 +586,6 @@ MockDataView.defaultProps = {
     },
   },
   selectedTest: null,
-  recordedMock: false,
   defaultMocks: [],
 };
 
