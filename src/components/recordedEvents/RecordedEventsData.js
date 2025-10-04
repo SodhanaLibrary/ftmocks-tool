@@ -27,6 +27,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import AnsiToHtml from 'ansi-to-html';
 
 import {
@@ -54,6 +55,8 @@ export default function RecordedEventsData({
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [testOutput, setTestOutput] = useState('');
   const [runningTest, setRunningTest] = useState(false);
+  const [draggedItem, setDraggedItem] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
 
   const fetchRecordedEvents = async () => {
     try {
@@ -347,6 +350,85 @@ export default function RecordedEventsData({
     }
   };
 
+  // HTML5 Drag and Drop handlers
+  const handleDragStart = (e, event, index) => {
+    setDraggedItem({ event, index });
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.target.outerHTML);
+    e.dataTransfer.setDragImage(e.target, 0, 0);
+  };
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverIndex(index);
+  };
+
+  const handleDragLeave = (e) => {
+    // Only clear if we're leaving the entire list area
+    const rect = e.currentTarget.getBoundingClientRect();
+    if (
+      e.clientX < rect.left ||
+      e.clientX > rect.right ||
+      e.clientY < rect.top ||
+      e.clientY > rect.bottom
+    ) {
+      setDragOverIndex(null);
+    }
+  };
+
+  const handleDrop = async (e, targetIndex) => {
+    e.preventDefault();
+    setDragOverIndex(null);
+
+    if (!draggedItem || draggedItem.index === targetIndex) {
+      setDraggedItem(null);
+      return;
+    }
+
+    const sourceIndex = draggedItem.index;
+    const newRecordedEvents = Array.from(recordedEvents);
+    const [reorderedItem] = newRecordedEvents.splice(sourceIndex, 1);
+    newRecordedEvents.splice(targetIndex, 0, reorderedItem);
+
+    // Update local state immediately for better UX
+    setRecordedEvents(newRecordedEvents);
+    setDraggedItem(null);
+
+    // Update the backend with new order
+    try {
+      const response = await fetch(
+        `/api/v1/reorderRecordedEvents?name=${encodeURIComponent(selectedTest.name)}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            eventIds: newRecordedEvents.map((event) => event.id),
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        // If backend update fails, revert local state
+        setRecordedEvents(recordedEvents);
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to reorder events');
+      }
+    } catch (error) {
+      console.error('Error reordering events:', error);
+      // Revert to original order on error
+      setRecordedEvents(recordedEvents);
+      setError('Failed to save new order. Changes have been reverted.');
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDraggedItem(null);
+    setDragOverIndex(null);
+  };
+
   const convert = new AnsiToHtml();
 
   const htmlOutput = convert.toHtml(testOutput).replace(/\n/g, '<br/>');
@@ -396,6 +478,13 @@ export default function RecordedEventsData({
           <List>
             {recordedEvents.map((re, index) => (
               <Box
+                key={re.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, re, index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, index)}
+                onDragEnd={handleDragEnd}
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
@@ -403,6 +492,12 @@ export default function RecordedEventsData({
                   '&:hover': {
                     backgroundColor: 'action.hover',
                   },
+                  backgroundColor:
+                    draggedItem?.index === index
+                      ? 'action.selected'
+                      : dragOverIndex === index
+                        ? 'background.light'
+                        : 'transparent',
                   gap: 1,
                   '& .action-buttons': {
                     display: 'none',
@@ -410,16 +505,46 @@ export default function RecordedEventsData({
                   '&:hover .action-buttons': {
                     display: 'flex',
                   },
+                  transition: 'all 0.2s ease',
+                  transform:
+                    draggedItem?.index === index
+                      ? 'rotate(3deg) scale(1.02)'
+                      : 'none',
+                  opacity: draggedItem?.index === index ? 0.7 : 1,
+                  cursor: 'grab',
+                  border:
+                    dragOverIndex === index && draggedItem?.index !== index
+                      ? '1px dashed'
+                      : '0px solid transparent',
+                  borderColor: 'primary.main',
+                  borderRadius: 1,
                 }}
                 p={1}
-                key={re.id}
                 onClick={() => editEvent(re)}
               >
-                <Box sx={{ textAlign: 'left' }}>
-                  <Typography variant="body1">
-                    {re.type} ({re.target})
-                  </Typography>
-                  <Typography variant="body2">{re.time}</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      color: 'text.secondary',
+                      '&:hover': {
+                        color: 'primary.main',
+                      },
+                      cursor: 'grab',
+                      '&:active': {
+                        cursor: 'grabbing',
+                      },
+                    }}
+                  >
+                    <DragIndicatorIcon />
+                  </Box>
+                  <Box sx={{ textAlign: 'left' }}>
+                    <Typography variant="body1">
+                      {re.type} ({re.target})
+                    </Typography>
+                    <Typography variant="body2">{re.time}</Typography>
+                  </Box>
                 </Box>
                 <Box className="action-buttons">
                   <Tooltip title="Duplicate Event">
@@ -434,7 +559,7 @@ export default function RecordedEventsData({
                       <ContentCopyIcon />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title="Creact New Event">
+                  <Tooltip title="Create New Event">
                     <IconButton
                       size="small"
                       onClick={(e) => {
