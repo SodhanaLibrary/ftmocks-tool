@@ -19,8 +19,8 @@ const RecordMockOrTest = ({
   const [isRecordingMockData, setIsRecordingMockData] = useState(false);
   const [error, setError] = useState(null);
   const [config, setConfig] = useState({
-    url: envDetails?.URLS?.[0] || '',
-    patterns: ['^/api/.*'],
+    url: envDetails?.MetaData?.urls[0] || '',
+    patterns: envDetails?.MetaData?.patterns || ['^/api/.*'],
     avoidDuplicatesWithDefaultMocks: false,
     stopMockServer: true,
     startMockServer: true,
