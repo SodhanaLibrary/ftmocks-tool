@@ -34,7 +34,7 @@ const ProjectTable = ({
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ project }),
+      body: JSON.stringify(project),
     });
     refetchProjects();
   };
@@ -114,17 +114,17 @@ const ProjectTable = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {data.map((key) => (
-              <TableRow sx={{ cursor: 'pointer' }} key={key}>
+            {data.map((project) => (
+              <TableRow sx={{ cursor: 'pointer' }} key={project.env_file}>
                 <TableCell
-                  onClick={() => onClickProject(key)}
+                  onClick={() => onClickProject(project)}
                   sx={{ '&:hover': { color: 'primary.main' } }}
                 >
-                  <Typography>{String(key)}</Typography>
+                  <Typography>{String(project.env_file)}</Typography>
                 </TableCell>
                 <TableCell>
                   <IconButton
-                    onClick={() => handleDeleteProject(key)}
+                    onClick={() => handleDeleteProject(project)}
                     title="Delete project"
                   >
                     <DeleteIcon />

@@ -26,6 +26,7 @@ import {
 } from './utils/CommonUtils';
 
 const MockDataView = ({
+  envDetails,
   mockItem,
   onClose,
   selectedTest,
@@ -571,6 +572,7 @@ MockDataView.propTypes = {
     id: PropTypes.string.isRequired,
   }),
   defaultMocks: PropTypes.array.isRequired,
+  envDetails: PropTypes.object.isRequired,
 };
 
 MockDataView.defaultProps = {
@@ -587,6 +589,7 @@ MockDataView.defaultProps = {
   },
   selectedTest: null,
   defaultMocks: [],
+  envDetails: null,
 };
 
 export default MockDataView;

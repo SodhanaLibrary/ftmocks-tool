@@ -189,6 +189,7 @@ export default function Tests({ envDetails }) {
         sx={{ width: 300 }}
       >
         <MockDataView
+          envDetails={envDetails}
           selectedTest={selectedTest}
           onClose={handleDrawerClose}
           mockItem={selectedMockItem}
@@ -635,7 +636,7 @@ export default function Tests({ envDetails }) {
               >
                 Mocks
               </Button>
-              <Button
+              {/* <Button
                 sx={buttonStyle(1)}
                 variant="text"
                 color="info"
@@ -652,7 +653,7 @@ export default function Tests({ envDetails }) {
                 onClick={() => setSelectedTab(2)}
               >
                 Logs
-              </Button>
+              </Button> */}
               <Button
                 sx={buttonStyle(4)}
                 variant="text"

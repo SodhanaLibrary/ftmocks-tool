@@ -446,7 +446,7 @@ export default function RecordedEventsData({
           >
             <Box display="flex" alignItems="center" gap={1}>
               <Typography variant="h5">Events Data</Typography>
-              <Button
+              {/* <Button
                 variant="contained"
                 onClick={handleGenerateCodeClick}
                 endIcon={<ArrowDropDownIcon />}
@@ -463,7 +463,14 @@ export default function RecordedEventsData({
                 <MenuItem onClick={genPlayWriteCode}>
                   Generate Playwright Code
                 </MenuItem>
-              </Menu>
+              </Menu> */}
+              <Button
+                variant="contained"
+                onClick={genPlayWriteCode}
+                sx={{ ml: 2 }}
+              >
+                Generate Playwright Code
+              </Button>
             </Box>
             <Box>
               <IconButton onClick={downloadTextAsFile}>
@@ -660,29 +667,6 @@ export default function RecordedEventsData({
                 flexDirection: 'column',
               }}
             >
-              {genCodeType === 'playwright' && (
-                <Box
-                  sx={{
-                    textAlign: 'center',
-                    display: 'flex',
-                    gap: 2,
-                    alignItems: 'center',
-                    pl: 2,
-                  }}
-                >
-                  <Typography variant="body2" color="text.secondary">
-                    Find generated code below or you can Run playwright codegen
-                    to generate the code
-                  </Typography>
-                  <Button
-                    sx={{ mt: 1 }}
-                    onClick={playwrightCodeGen}
-                    variant="outlined"
-                  >
-                    Run playwright codegen
-                  </Button>
-                </Box>
-              )}
               <Box
                 p={2}
                 sx={{
@@ -707,6 +691,29 @@ export default function RecordedEventsData({
                   rows={25}
                 />
               </Box>
+              {genCodeType === 'playwright' && playwrightCodeGen && (
+                <Box
+                  sx={{
+                    textAlign: 'center',
+                    display: 'flex',
+                    gap: 2,
+                    alignItems: 'center',
+                    pl: 2,
+                  }}
+                >
+                  <Typography variant="body2" color="text.secondary">
+                    Find generated code below or you can Run playwright codegen
+                    to generate the code
+                  </Typography>
+                  <Button
+                    sx={{ mt: 1 }}
+                    onClick={playwrightCodeGen}
+                    variant="outlined"
+                  >
+                    Run playwright codegen
+                  </Button>
+                </Box>
+              )}
             </Box>
           )}
           {runningTest && (

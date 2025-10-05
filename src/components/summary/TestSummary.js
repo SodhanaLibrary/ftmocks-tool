@@ -86,7 +86,7 @@ export default function TestSummary({ envDetails, fetchEnvDetails }) {
     fetchProjects();
   };
 
-  const onClickProject = async (envFile) => {
+  const onClickProject = async (project) => {
     try {
       const response = await fetch('/api/v1/projects', {
         method: 'PUT',
@@ -94,7 +94,7 @@ export default function TestSummary({ envDetails, fetchEnvDetails }) {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify({ env_file: envFile }),
+        body: JSON.stringify(project),
       });
       if (!response.ok) {
         throw new Error('Failed to fetch projects');
