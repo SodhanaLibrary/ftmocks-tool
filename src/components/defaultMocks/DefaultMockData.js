@@ -14,8 +14,10 @@ import MockDataCreator from '../MockDataCreator';
 import IconButton from '@mui/material/IconButton';
 import AddIcon from '@mui/icons-material/Add';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
+import SpeedIcon from '@mui/icons-material/Speed';
 import Tooltip from '@mui/material/Tooltip';
 import DefaultRecorder from './DefaultRecorder';
+import DefaultOptimizer from './DefaultOptimizer';
 import { sortUrlsByMatch } from '../utils/SearchUtils';
 
 export default function DefaultMockData() {
@@ -25,6 +27,7 @@ export default function DefaultMockData() {
   const [mockData, setMockData] = useState([]);
   const [isNewMockDrawerOpen, setIsNewMockDrawerOpen] = useState(false);
   const [isRecordMockDrawerOpen, setIsRecordMockDrawerOpen] = useState(false);
+  const [isOptimizerDrawerOpen, setIsOptimizerDrawerOpen] = useState(false);
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -105,6 +108,15 @@ export default function DefaultMockData() {
     setIsRecordMockDrawerOpen(false);
     fetchDefaultMocks();
   };
+
+  const handleOpenOptimizerDrawer = () => {
+    setIsOptimizerDrawerOpen(true);
+  };
+
+  const handleCloseOptimizerDrawer = () => {
+    setIsOptimizerDrawerOpen(false);
+    fetchDefaultMocks();
+  };
   return (
     <Box
       sx={{
@@ -147,6 +159,15 @@ export default function DefaultMockData() {
                 onClick={handleOpenRecordMockDrawer}
               >
                 <FiberManualRecordIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Optimize mock data">
+              <IconButton
+                color="info"
+                aria-label="optimize mock data"
+                onClick={handleOpenOptimizerDrawer}
+              >
+                <SpeedIcon />
               </IconButton>
             </Tooltip>
           </Box>
@@ -213,6 +234,16 @@ export default function DefaultMockData() {
         onClose={handleCloseRecordMockDrawer}
       >
         <DefaultRecorder onClose={handleCloseRecordMockDrawer} />
+      </Drawer>
+      <Drawer
+        anchor="right"
+        open={isOptimizerDrawerOpen}
+        onClose={handleCloseOptimizerDrawer}
+      >
+        <DefaultOptimizer
+          onClose={handleCloseOptimizerDrawer}
+          unusedMocks={mockData.filter((mock) => !mock?.mockData?.served)}
+        />
       </Drawer>
     </Box>
   );

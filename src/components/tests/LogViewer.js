@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
+import AnsiToHtml from 'ansi-to-html';
 
 const LogViewer = ({ selectedTest }) => {
   const [logs, setLogs] = useState([]);
@@ -63,6 +64,8 @@ const LogViewer = ({ selectedTest }) => {
   const handleChange = (event) => {
     setType(event.target.value);
   };
+
+  const convert = new AnsiToHtml();
 
   return (
     <TableContainer component={Paper}>
@@ -122,7 +125,13 @@ const LogViewer = ({ selectedTest }) => {
                 <TableCell>{log.type}</TableCell>
                 <TableCell>
                   <Box sx={{ maxWidth: '800px', overflow: 'scroll' }}>
-                    <pre>{log.message}</pre>
+                    <pre
+                      dangerouslySetInnerHTML={{
+                        __html: convert
+                          .toHtml(log.message)
+                          .replace(/\n/g, '<br/>'),
+                      }}
+                    />
                   </Box>
                 </TableCell>
                 <TableCell>{formatTimestamp(log.time)}</TableCell>

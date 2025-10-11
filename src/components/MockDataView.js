@@ -17,6 +17,7 @@ import UploadIcon from '@mui/icons-material/Upload';
 import Alert from '@mui/material/Alert';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
+import Autocomplete from '@mui/material/Autocomplete';
 import Popover from '@mui/material/Popover';
 import {
   getDuplicateMocks,
@@ -24,6 +25,7 @@ import {
   convertToValidJSON,
   isValidJSON,
 } from './utils/CommonUtils';
+import { FtJSON } from './utils/FtJSON';
 
 const MockDataView = ({
   envDetails,
@@ -40,14 +42,14 @@ const MockDataView = ({
   const [ipInputValue, setIpInputValue] = useState('');
 
   useEffect(() => {
-    setMockDataString(JSON.stringify(mockData, null, 2));
+    setMockDataString(FtJSON.stringify(mockData, null, 2));
   }, [mockData]);
 
   useEffect(() => {
     if (mockItem) {
       try {
         mockItem.response.content = mockItem.response.content
-          ? JSON.stringify(JSON.parse(mockItem.response.content), null, 2)
+          ? FtJSON.stringify(FtJSON.parse(mockItem.response.content), null, 2)
           : '';
         setMockData({ ...mockItem });
       } catch (e) {
@@ -126,7 +128,7 @@ const MockDataView = ({
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify(mockData),
+        body: FtJSON.stringify(mockData),
       });
 
       if (response.ok) {
@@ -172,7 +174,7 @@ const MockDataView = ({
   const onDataChange = (event) => {
     try {
       setMockDataString(event.target.value);
-      setMockData(JSON.parse(event.target.value));
+      setMockData(FtJSON.parse(event.target.value));
     } catch (error) {
       console.error('Invalid JSON data:', error);
     }
@@ -215,6 +217,13 @@ const MockDataView = ({
     setMockData({ ...mockData });
   };
 
+  const onWaitForChange = (event, newMockIds) => {
+    setMockData({
+      ...mockData,
+      waitFor: newMockIds,
+    });
+  };
+
   const ignoreForAll = async (chip) => {
     const response = await fetch('/api/v1/ignoreForAll', {
       method: 'POST',
@@ -222,7 +231,7 @@ const MockDataView = ({
         'Content-Type': 'application/json',
         Authorization: `Bearer ${localStorage.getItem('token')}`,
       },
-      body: JSON.stringify(
+      body: FtJSON.stringify(
         {
           param: chip,
           testName: selectedTest.name,
@@ -252,7 +261,7 @@ const MockDataView = ({
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify(mockData, null, 2),
+        body: FtJSON.stringify(mockData, null, 2),
       });
 
       if (response.ok) {
@@ -280,7 +289,7 @@ const MockDataView = ({
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify(mockData, null, 2),
+        body: FtJSON.stringify(mockData, null, 2),
       });
       if (response.ok) {
         setSnackbarMessage('Mock data sent to default mock data successfully');
@@ -389,6 +398,47 @@ const MockDataView = ({
           label="Wait for previous mock trigger"
         />
       )}
+      {/* {selectedTest && (
+        <Autocomplete
+          multiple
+          freeSolo
+          options={[]}
+          name="waitFor"
+          value={mockData.waitFor}
+          onChange={onWaitForChange}
+          onInputChange={(event, newInputValue, reason) => {
+            if (reason === 'input' && newInputValue.includes(',')) {
+              const mockIds = newInputValue
+                .split(',')
+                .map((p) => p.trim())
+                .filter((p) => p.length > 0);
+              const existingMockIds = mockData.waitFor || [];
+              const newMockIds = [...existingMockIds, ...mockIds];
+              onWaitForChange(event, newMockIds);
+            }
+          }}
+          renderTags={(value, getTagProps) =>
+            value.map((option, index) => (
+              <Chip
+                variant="outlined"
+                label={option}
+                {...getTagProps({ index })}
+                key={index}
+              />
+            ))
+          }
+          renderInput={(params) => (
+            <TextField
+              name="waitFor"
+              {...params}
+              label="Wait for Mocks to be served"
+              placeholder="Enter mock id, then press Enter"
+              margin="normal"
+              fullWidth
+            />
+          )}
+        />
+      )} */}
 
       <Box
         sx={{ width: '100%', display: 'flex', gap: 1, alignItems: 'center' }}
@@ -459,8 +509,8 @@ const MockDataView = ({
           margin="normal"
           value={
             mockData?.request?.postData?.mimeType === 'application/json'
-              ? JSON.stringify(
-                  JSON.parse(mockData?.request?.postData?.text),
+              ? FtJSON.stringify(
+                  FtJSON.parse(mockData?.request?.postData?.text),
                   null,
                   2
                 )

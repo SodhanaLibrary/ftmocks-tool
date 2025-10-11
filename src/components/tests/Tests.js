@@ -644,7 +644,7 @@ export default function Tests({ envDetails }) {
                 onClick={() => setSelectedTab(1)}
               >
                 Snaps
-              </Button>
+              </Button> */}
               <Button
                 sx={buttonStyle(2)}
                 variant="text"
@@ -653,7 +653,7 @@ export default function Tests({ envDetails }) {
                 onClick={() => setSelectedTab(2)}
               >
                 Logs
-              </Button> */}
+              </Button>
               <Button
                 sx={buttonStyle(4)}
                 variant="text"
