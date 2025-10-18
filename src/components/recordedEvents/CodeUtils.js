@@ -102,13 +102,16 @@ export function generatePlaywrightCode(
   const testCodes = [];
 
   const getLocator = (action) => {
-    if (action.target.split('/').length > 6 && action.selectors.length > 0) {
+    if (
+      action?.target?.split('/').length > 6 &&
+      action?.selectors?.length > 0
+    ) {
       const locators = action.selectors.filter(
         (selector) => selector.type === 'locator'
       );
       return locators.length > 0 ? locators[0].value : action.target;
     }
-    return action.target;
+    return action?.target;
   };
 
   Object.keys(testActions).forEach((testName) => {
@@ -166,6 +169,14 @@ export function generatePlaywrightCode(
             return `  await page.locator("${locator}").click({ button: 'right' });`;
           case 'popstate-url':
             return `  await page.goBack();`;
+          case 'hover':
+            return `  await page.locator("${locator}").hover();`;
+          case 'keydown':
+            return `  await page.keyboard.press('${action.value}');`;
+          case 'keyup':
+            return `  await page.keyboard.press('${action.value}');`;
+          case 'keypress':
+            return `  await page.keyboard.press('${action.value}');`;
           default:
             return null;
         }

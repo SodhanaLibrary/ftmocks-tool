@@ -431,6 +431,12 @@ export default function Tests({ envDetails }) {
     },
   });
 
+  useEffect(() => {
+    if (selectedTab === 0) {
+      fetchMockData(selectedTest);
+    }
+  }, [selectedTab]);
+
   return (
     <Box
       sx={{

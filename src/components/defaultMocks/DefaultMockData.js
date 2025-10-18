@@ -242,7 +242,7 @@ export default function DefaultMockData() {
       >
         <DefaultOptimizer
           onClose={handleCloseOptimizerDrawer}
-          unusedMocks={mockData.filter((mock) => !mock?.mockData?.served)}
+          mockData={mockData}
         />
       </Drawer>
     </Box>

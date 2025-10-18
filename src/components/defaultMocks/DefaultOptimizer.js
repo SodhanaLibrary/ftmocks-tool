@@ -8,10 +8,55 @@ import {
   Typography,
 } from '@mui/material';
 
-const DefaultOptimizer = ({ unusedMocks = [], onClose, resetMockData }) => {
+const DefaultOptimizer = ({ onClose, mockData = [] }) => {
   const [loading, setLoading] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const unusedMocks = mockData.filter((mock) => !mock?.mockData?.served);
+  const usedMocks = mockData.filter((mock) => mock?.mockData?.served);
+
+  const resetAllMocks = async () => {
+    if (usedMocks.length === 0) return;
+
+    setLoading(true);
+    try {
+      const updatePromises = usedMocks.map((mock) =>
+        fetch(`/api/v1/defaultmocks/${mock.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: JSON.stringify(
+            Object.assign({}, mock.mockData, { served: false })
+          ),
+        })
+      );
+
+      const responses = await Promise.all(updatePromises);
+      const allSuccessful = responses.every((response) => response.ok);
+
+      if (allSuccessful) {
+        setSnackbarMessage(
+          `Successfully deleted ${unusedMocks.length} unused mock(s)`
+        );
+        setSnackbarOpen(true);
+        // Refresh mock data
+        if (onClose) {
+          await onClose();
+        }
+      } else {
+        setSnackbarMessage('Failed to delete some unused mocks');
+        setSnackbarOpen(true);
+      }
+    } catch (error) {
+      console.error('Error deleting unused mocks:', error);
+      setSnackbarMessage('Error deleting unused mocks');
+      setSnackbarOpen(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const deleteUnusedMocks = async () => {
     if (unusedMocks.length === 0) return;
@@ -36,10 +81,7 @@ const DefaultOptimizer = ({ unusedMocks = [], onClose, resetMockData }) => {
           `Successfully deleted ${unusedMocks.length} unused mock(s)`
         );
         setSnackbarOpen(true);
-
-        if (resetMockData) {
-          await resetMockData();
-        }
+        await resetAllMocks();
         // Refresh mock data
         if (onClose) {
           await onClose();
@@ -75,7 +117,7 @@ const DefaultOptimizer = ({ unusedMocks = [], onClose, resetMockData }) => {
         </Typography>
       </Box>
       <Box>
-        {unusedMocks.length === 0 ? (
+        {unusedMocks.length === 0 && unusedMocks.length !== mockData.length ? (
           <Alert severity="success">
             All mock data in this test has been used. No optimization needed!
           </Alert>
@@ -90,9 +132,21 @@ const DefaultOptimizer = ({ unusedMocks = [], onClose, resetMockData }) => {
         variant="contained"
         color="secondary"
         onClick={deleteUnusedMocks}
-        disabled={loading || unusedMocks.length === 0}
+        disabled={
+          loading ||
+          unusedMocks.length === 0 ||
+          unusedMocks.length === mockData.length
+        }
       >
         Delete All Unused Mocks
+      </Button>
+      <Button
+        variant="contained"
+        color="secondary"
+        onClick={resetAllMocks}
+        disabled={loading || unusedMocks.length === mockData.length}
+      >
+        Reset All Mocks
       </Button>
       {loading && <CircularProgress size={24} />}
       <Snackbar

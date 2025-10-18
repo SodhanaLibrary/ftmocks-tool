@@ -20,6 +20,7 @@ import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import Autocomplete from '@mui/material/Autocomplete';
 import AddIcon from '@mui/icons-material/Add';
+import GavelOutlined from '@mui/icons-material/GavelOutlined';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -178,6 +179,7 @@ export default function RecordedEventsData({
 
   useEffect(() => {
     fetchRecordedEvents();
+    setShowEvents(true);
   }, [selectedTest]);
 
   const handleGenerateCodeClick = (event) => {
@@ -238,7 +240,7 @@ export default function RecordedEventsData({
     }
   };
 
-  const playTest = async () => {
+  const playTest = async (withUI = false) => {
     setRunningTest(true);
     setTestOutput(''); // Clear previous output
 
@@ -249,6 +251,7 @@ export default function RecordedEventsData({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          withUI,
           testName: selectedTest.name,
           generatedCode: genCode,
           fileName: `${nameToFolder(selectedTest?.name).toLowerCase()}.${genCodeType === 'playwright' ? 'spec.js' : 'test.js'}`,
@@ -643,8 +646,13 @@ export default function RecordedEventsData({
             </Box>
             <Box>
               <Tooltip title="Save and Run Test">
-                <IconButton onClick={playTest} sx={{ mr: 1 }}>
+                <IconButton onClick={() => playTest(false)} sx={{ mr: 1 }}>
                   <PlayArrowIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Save and Run Test With Playwright UI">
+                <IconButton onClick={() => playTest(true)} sx={{ mr: 1 }}>
+                  <GavelOutlined />
                 </IconButton>
               </Tooltip>
               <Tooltip title="Save File">
