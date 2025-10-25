@@ -281,7 +281,7 @@ const MockDataView = ({
   };
 
   const copyToDefaultMockData = async () => {
-    const endpoint = `/api/v1/defaultmocks`;
+    const endpoint = `/api/v1/moveMockToDefaultMocks`;
     try {
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -289,7 +289,11 @@ const MockDataView = ({
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
-        body: FtJSON.stringify(mockData, null, 2),
+        body: FtJSON.stringify(
+          { mockIds: [mockItem.id], testName: selectedTest.name },
+          null,
+          2
+        ),
       });
       if (response.ok) {
         setSnackbarMessage('Mock data sent to default mock data successfully');
@@ -304,10 +308,27 @@ const MockDataView = ({
     }
   };
 
-  const sendToDefaultMockData = async () => {
-    await copyToDefaultMockData();
-    await onDelete();
-    onClose(true);
+  const copyDefaultMockToAllTests = async () => {
+    const endpoint = `/api/v1/moveDefaultmocks`;
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        body: FtJSON.stringify({ mockIds: [mockItem.id] }, null, 2),
+      });
+      if (response.ok) {
+        setSnackbarMessage('Default mocks moved successfully');
+        setSnackbarOpen(true);
+      } else {
+        setSnackbarMessage('Failed to move default mocks');
+        setSnackbarOpen(true);
+      }
+    } catch (error) {
+      console.error('Error moving default mocks:', error);
+      setSnackbarMessage('Error moving default mocks');
+      setSnackbarOpen(true);
+    } finally {
+      onClose();
+    }
   };
 
   if (!mockItem) return null;
@@ -398,7 +419,7 @@ const MockDataView = ({
           label="Wait for previous mock trigger"
         />
       )}
-      {/* {selectedTest && (
+      {selectedTest && (
         <Autocomplete
           multiple
           freeSolo
@@ -438,7 +459,7 @@ const MockDataView = ({
             />
           )}
         />
-      )} */}
+      )}
 
       <Box
         sx={{ width: '100%', display: 'flex', gap: 1, alignItems: 'center' }}
@@ -568,22 +589,20 @@ const MockDataView = ({
             <Button
               variant="contained"
               color="secondary"
-              onClick={sendToDefaultMockData}
+              onClick={copyToDefaultMockData}
               style={{ marginTop: '16px' }}
-              disabled={!isValidJSON(mockDataString)}
             >
-              Send it to Default Mock Data
+              Copy it to Default Mock Data
             </Button>
           )}
-          {enableSendToDefaultMockData && (
+          {!enableSendToDefaultMockData && (
             <Button
               variant="contained"
               color="secondary"
-              onClick={copyToDefaultMockData}
+              onClick={copyDefaultMockToAllTests}
               style={{ marginTop: '16px' }}
-              disabled={!isValidJSON(mockDataString)}
             >
-              Copy it to Default Mock Data
+              Copy it to All Tests
             </Button>
           )}
         </Box>

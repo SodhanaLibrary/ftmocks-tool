@@ -13,7 +13,9 @@ import {
   Checkbox,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import UpdateIcon from '@mui/icons-material/Update';
 import OptimizeIcon from '@mui/icons-material/TuneOutlined';
+import { v4 as uuidv4 } from 'uuid';
 
 const TestOptimizer = ({
   selectedTest,
@@ -25,6 +27,7 @@ const TestOptimizer = ({
   const [hasServedMocks, setHasServedMocks] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [duplicateIdMocks, setDuplicateIdMocks] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -42,6 +45,13 @@ const TestOptimizer = ({
 
     setHasServedMocks(servedMocks.length > 0);
     setUnusedMocks(unservedMocks);
+
+    const idCount = {};
+    mockData.forEach((mock) => {
+      idCount[mock.id] = (idCount[mock.id] || 0) + 1;
+    });
+    const dupIdMocks = mockData.filter((mock) => idCount[mock.id] > 1);
+    setDuplicateIdMocks(dupIdMocks);
   };
 
   const deleteUnusedMocks = async () => {
@@ -95,6 +105,50 @@ const TestOptimizer = ({
     }
   };
 
+  const updateDuplicateIds = async () => {
+    // Generate new uuids, assign to mocks, and call update
+    if (!selectedTest || duplicateIdMocks.length === 0) return;
+
+    setLoading(true);
+    try {
+      const updatePromises = duplicateIdMocks.map(async (mock) => {
+        const newId = uuidv4();
+        // Call update endpoint with new id for the mock
+        const response = await fetch(
+          `/api/v1/tests/${selectedTest.id}/mockdata/${mock.id}?name=${selectedTest.name}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+            body: JSON.stringify({ ...mock, id: newId }),
+          }
+        );
+        return response.ok;
+      });
+
+      const results = await Promise.all(updatePromises);
+
+      if (results.every(Boolean)) {
+        setSnackbarMessage('Duplicate mock IDs updated successfully');
+        setSnackbarOpen(true);
+        if (fetchMockData) {
+          await fetchMockData(selectedTest);
+        }
+      } else {
+        setSnackbarMessage('Failed to update some duplicate mock IDs');
+        setSnackbarOpen(true);
+      }
+    } catch (error) {
+      console.error('Error updating duplicate mock IDs:', error);
+      setSnackbarMessage('Error updating duplicate mock IDs');
+      setSnackbarOpen(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const updateTest = async (updatedTest) => {
     const response = await fetch(`/api/v1/tests/${selectedTest.id}`, {
       method: 'PUT',
@@ -111,28 +165,6 @@ const TestOptimizer = ({
     } else {
       setSnackbarMessage('Failed to update test');
       setSnackbarOpen(true);
-    }
-  };
-
-  const moveDefaultMocks = async () => {
-    const endpoint = `/api/v1/moveDefaultmocks`;
-    try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-      });
-      if (response.ok) {
-        setSnackbarMessage('Default mocks moved successfully');
-        setSnackbarOpen(true);
-      } else {
-        setSnackbarMessage('Failed to move default mocks');
-        setSnackbarOpen(true);
-      }
-    } catch (error) {
-      console.error('Error moving default mocks:', error);
-      setSnackbarMessage('Error moving default mocks');
-      setSnackbarOpen(true);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -262,6 +294,33 @@ const TestOptimizer = ({
         </Box>
       )}
 
+      {duplicateIdMocks.length > 0 && (
+        <Box>
+          <Box>
+            <Typography variant="subtitle1" gutterBottom>
+              Duplicate ID Mocks:
+            </Typography>
+          </Box>
+          <List sx={{ maxHeight: 300, overflow: 'auto', mb: 2 }}>
+            {duplicateIdMocks.map((mock, index) => (
+              <ListItem key={index}>
+                <ListItemText primary={mock.id} />
+              </ListItem>
+            ))}
+          </List>
+          <Button
+            variant="contained"
+            color="secondary"
+            startIcon={<UpdateIcon />}
+            onClick={updateDuplicateIds}
+            disabled={loading}
+            sx={{ mt: 1 }}
+          >
+            Update Duplicate ID Mocks with new ID
+          </Button>
+        </Box>
+      )}
+
       <Box sx={{ mt: 3, pt: 2, borderTop: 1, borderColor: 'divider' }}>
         <Typography variant="h6" gutterBottom>
           Default Mock Management
@@ -271,16 +330,6 @@ const TestOptimizer = ({
           Move default mock data to all individual tests. This will copy all
           default mocks to each test.
         </Alert>
-
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={moveDefaultMocks}
-          disabled={loading}
-          sx={{ mt: 1 }}
-        >
-          {loading ? 'Moving...' : 'Move Default Mocks to Tests'}
-        </Button>
       </Box>
       <Snackbar
         open={snackbarOpen}

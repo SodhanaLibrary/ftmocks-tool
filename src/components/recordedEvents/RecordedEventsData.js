@@ -175,7 +175,7 @@ export default function RecordedEventsData({
 
       return () => clearInterval(interval);
     }
-  }, [recordingStatus]);
+  }, [recordingStatus, selectedTest]);
 
   useEffect(() => {
     fetchRecordedEvents();
@@ -710,7 +710,7 @@ export default function RecordedEventsData({
                   }}
                 >
                   <Typography variant="body2" color="text.secondary">
-                    Find generated code below or you can Run playwright codegen
+                    Find generated code above or you can Run playwright codegen
                     to generate the code
                   </Typography>
                   <Button

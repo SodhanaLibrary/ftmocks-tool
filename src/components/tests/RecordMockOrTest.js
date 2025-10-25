@@ -129,6 +129,7 @@ const RecordMockOrTest = ({
   };
 
   useEffect(() => {
+    setConfig(Object.assign({}, config, { testName: selectedTest.name }));
     setTimeout(fetchRecordingStatus, 1000);
   }, [selectedTest]);
 
@@ -193,7 +194,7 @@ const RecordMockOrTest = ({
                 />
               )}
             />
-            <FormControlLabel
+            {/* <FormControlLabel
               control={
                 <Checkbox
                   checked={config.avoidDuplicatesWithDefaultMocks}
@@ -212,7 +213,7 @@ const RecordMockOrTest = ({
                 />
               }
               label="Avoid duplicates in the test"
-            />
+            /> */}
             <FormControlLabel
               control={
                 <Checkbox

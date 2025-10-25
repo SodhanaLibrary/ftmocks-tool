@@ -114,6 +114,10 @@ export function generatePlaywrightCode(
     return action?.target;
   };
 
+  const getNth = (action, selector) => {
+    return action?.selectors?.find((s) => s.value === selector)?.nth || 1;
+  };
+
   Object.keys(testActions).forEach((testName) => {
     let testCode = testActions[testName].actions
       .filter(
@@ -125,28 +129,53 @@ export function generatePlaywrightCode(
       )
       .map((action) => {
         const locator = getLocator(action);
+        const nth = getNth(action, locator) - 1;
         switch (action.type) {
           case 'click':
+            if (nth > 0) {
+              return `  await page.locator("${locator}").nth(${nth}).click();`;
+            }
             return `  await page.locator("${locator}").click();`;
           case 'type':
             if (action.element.type === 'input') {
+              if (nth > 0) {
+                return `  await page.locator("${locator}").nth(${nth}).fill('${action.value}');`;
+              }
               return `  await page.locator("${locator}").fill('${action.value}');`;
             }
             if (action.element.type === 'textarea') {
+              if (nth > 0) {
+                return `  await page.locator("${locator}").nth(${nth}).fill('${action.value}');`;
+              }
               return `  await page.locator("${locator}").fill('${action.value}');`;
             }
             if (action.element.type === 'select') {
+              if (nth > 0) {
+                return `  await page.locator("${locator}").nth(${nth}).selectOption('${action.value}');`;
+              }
               return `  await page.locator("${locator}").selectOption('${action.value}');`;
+            }
+            if (nth > 0) {
+              return `  await page.locator("${locator}").nth(${nth}).type('${action.value}');`;
             }
             return `  await page.locator("${locator}").type('${action.value}');`;
           case 'input':
             if (action.element.type === 'input') {
+              if (nth > 0) {
+                return `  await page.locator("${locator}").nth(${nth}).fill('${action.value}');`;
+              }
               return `  await page.locator("${locator}").fill('${action.value}');`;
             }
             if (action.element.type === 'textarea') {
+              if (nth > 0) {
+                return `  await page.locator("${locator}").nth(${nth}).fill('${action.value}');`;
+              }
               return `  await page.locator("${locator}").fill('${action.value}');`;
             }
             if (action.element.type === 'select') {
+              if (nth > 0) {
+                return `  await page.locator("${locator}").nth(${nth}).selectOption('${action.value}');`;
+              }
               return `  await page.locator("${locator}").selectOption('${action.value}');`;
             }
             if (action.element.type === 'checkbox') {
@@ -155,28 +184,52 @@ export function generatePlaywrightCode(
             if (action.element.type === 'radio') {
               return '';
             }
+            if (nth > 0) {
+              return `  await page.locator("${locator}").nth(${nth}).type('${action.value}');`;
+            }
             return `  await page.locator("${locator}").type('${action.value}');`;
           case 'change':
             if (action.element.type === 'input') {
+              if (nth > 0) {
+                return `  await page.locator("${locator}").nth(${nth}).fill('${action.value}');`;
+              }
               return `  await page.locator("${locator}").fill('${action.value}');`;
             }
             //return `  await page.locator("${locator}").evaluate(el => el.value = '${action.value}');`;
             // TODO: Handle change event for select
             return '';
           case 'dblclick':
+            if (nth > 0) {
+              return `  await page.locator("${locator}").nth(${nth}).dblclick();`;
+            }
             return `  await page.locator("${locator}").dblclick();`;
           case 'contextmenu':
+            if (nth > 0) {
+              return `  await page.locator("${locator}").nth(${nth}).click({ button: 'right' });`;
+            }
             return `  await page.locator("${locator}").click({ button: 'right' });`;
           case 'popstate-url':
             return `  await page.goBack();`;
           case 'hover':
+            if (nth > 0) {
+              return `  await page.locator("${locator}").nth(${nth}).hover();`;
+            }
             return `  await page.locator("${locator}").hover();`;
           case 'keydown':
-            return `  await page.keyboard.press('${action.value}');`;
+            if (nth > 0) {
+              return `  await page.locator("${locator}").nth(${nth}).keyboard.down('${action.key}');`;
+            }
+            return `  await page.keyboard.down('${action.key}');`;
           case 'keyup':
-            return `  await page.keyboard.press('${action.value}');`;
+            if (nth > 0) {
+              return `  await page.locator("${locator}").nth(${nth}).keyboard.up('${action.key}');`;
+            }
+            return `  await page.keyboard.up('${action.key}');`;
           case 'keypress':
-            return `  await page.keyboard.press('${action.value}');`;
+            if (nth > 0) {
+              return `  await page.locator("${locator}").nth(${nth}).keyboard.press('${action.key}');`;
+            }
+            return `  await page.keyboard.press('${action.key}');`;
           default:
             return null;
         }
