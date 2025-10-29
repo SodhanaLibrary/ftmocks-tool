@@ -12,6 +12,11 @@ import {
 import MockDataView from '../MockDataView';
 import IconButton from '@mui/material/IconButton';
 import AddIcon from '@mui/icons-material/Add';
+import CreateNewFolderIcon from '@mui/icons-material/CreateNewFolder';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import FolderIcon from '@mui/icons-material/Folder';
+import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import Tooltip from '@mui/material/Tooltip';
 import Button from '@mui/material/Button';
 import TestCaseCreator from './TestCaseCreator';
@@ -43,7 +48,17 @@ export default function Tests({ envDetails }) {
   const [testCaseCreatorOpen, setTestCaseCreatorOpen] = useState(false);
   const [testCaseEditorOpen, setTestCaseEditorOpen] = useState(false);
   const [mockDataCreatorOpen, setMockDataCreatorOpen] = useState(false);
+  const [currentTestCaseType, setCurrentTestCaseType] = useState('testcase');
+  const [currentParentId, setCurrentParentId] = useState(null);
   const [defaultMocks, setDefaultMocks] = useState([]);
+
+  // Drag and drop state for test cases
+  const [draggedTestId, setDraggedTestId] = useState(null);
+  const [dragOverTestId, setDragOverTestId] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Folder state management
+  const [expandedFolders, setExpandedFolders] = useState(new Set());
 
   const handleMockItemClick = (item) => {
     setSelectedMockItem(item);
@@ -208,6 +223,9 @@ export default function Tests({ envDetails }) {
         sx={{ width: 300 }}
       >
         <TestCaseCreator
+          type={currentTestCaseType}
+          parentId={currentParentId}
+          testCases={testCases}
           onClose={onCloseTestCaseCreator}
           selectedTest={testCaseEditorOpen ? selectedTest : null}
         />
@@ -232,6 +250,13 @@ export default function Tests({ envDetails }) {
   };
 
   const deleteAllMockData = () => {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete all mock data for "${selectedTest?.name}"? This action cannot be undone.`
+      )
+    ) {
+      return;
+    }
     fetch(
       `/api/v1/tests/${selectedTest.id}/mockdata?name=${selectedTest.name}`,
       {
@@ -288,15 +313,24 @@ export default function Tests({ envDetails }) {
       } else {
         const test = data.find((test) => test.name === testName);
         if (test) {
-          handleTestClick(test);
+          if (test.type !== 'folder') {
+            handleTestClick(test);
+          }
           // Scroll to bottom of test cases list to show the newly created test
           setTimeout(() => {
             const testCasesList = document.getElementById('test-cases-list');
             if (testCasesList) {
-              testCasesList.scrollTo({
-                top: testCasesList.scrollHeight,
-                behavior: 'smooth',
-              });
+              if (test.type === 'folder') {
+                testCasesList.scrollTo({
+                  top: 0,
+                  behavior: 'smooth',
+                });
+              } else if (currentParentId === null) {
+                testCasesList.scrollTo({
+                  top: testCasesList.scrollHeight,
+                  behavior: 'smooth',
+                });
+              }
             }
           }, 100);
         } else {
@@ -306,14 +340,211 @@ export default function Tests({ envDetails }) {
     }
   };
 
-  const handleEditTestName = () => {
+  const handleEditTestName = (type = 'testcase') => {
+    setCurrentTestCaseType(type);
     setTestCaseEditorOpen(true);
     setTestCaseCreatorOpen(false);
   };
 
-  const handleCreateTestCase = () => {
+  const handleCreateTestCase = (parentId = null) => {
+    setCurrentParentId(parentId);
+    setCurrentTestCaseType('testcase');
     setTestCaseCreatorOpen(true);
     setTestCaseEditorOpen(false);
+  };
+
+  const handleCreateFolder = () => {
+    setCurrentTestCaseType('folder');
+    setTestCaseCreatorOpen(true);
+    setTestCaseEditorOpen(false);
+  };
+
+  // Folder management functions
+  const isFolder = (test) => {
+    return test.type === 'folder' || test.isFolder === true;
+  };
+
+  const toggleFolderExpanded = (folderId) => {
+    console.log('📁 Toggling folder:', folderId);
+    setExpandedFolders((prev) => {
+      const newExpanded = new Set(prev);
+      if (newExpanded.has(folderId)) {
+        newExpanded.delete(folderId);
+      } else {
+        newExpanded.add(folderId);
+      }
+      return newExpanded;
+    });
+  };
+
+  const getChildTests = (parentId) => {
+    return filteredTestCases.filter((test) => test.parentId === parentId);
+  };
+
+  const getRootTests = () => {
+    return filteredTestCases.filter((test) => !test.parentId);
+  };
+
+  // Render individual test item (folder or test case)
+  const renderTestItem = (test, index, depth = 0) => {
+    const isTestFolder = isFolder(test);
+    const isExpanded = expandedFolders.has(test.id);
+    const childTests = isTestFolder ? getChildTests(test.id) : [];
+
+    const handleItemClick = (e) => {
+      if (isTestFolder) {
+        e.stopPropagation();
+        toggleFolderExpanded(test.id);
+      } else {
+        handleTestClickWithDragCheck(test);
+      }
+    };
+
+    return (
+      <React.Fragment key={test.id}>
+        <ListItem
+          button
+          draggable={
+            testSearchTerm.trim() === '' && !isTestFolder ? true : false
+          }
+          onDragStart={(e) => handleTestDragStart(e, test.id)}
+          onDragOver={(e) => handleTestDragOver(e, test.id)}
+          onDragLeave={(e) => handleTestDragLeave(e, test.id)}
+          onDrop={(e) => handleTestDrop(e, test.id)}
+          onDragEnd={handleTestDragEnd}
+          onClick={handleItemClick}
+          selected={
+            !isTestFolder && selectedTest && selectedTest.id === test.id
+          }
+          sx={{
+            pl: 2 + depth * 3, // Indent nested items
+            cursor: isTestFolder ? 'pointer' : 'move',
+            opacity: draggedTestId === test.id ? 0.5 : 1,
+            backgroundColor: (() => {
+              if (dragOverTestId === test.id) return 'action.hover';
+              if (!isTestFolder && selectedTest && selectedTest.id === test.id)
+                return 'action.selected';
+              return 'inherit';
+            })(),
+            border: dragOverTestId === test.id ? '2px dashed #2196f3' : 'none',
+            borderRadius: dragOverTestId === test.id ? 1 : 0,
+            '&:hover': {
+              backgroundColor: (() => {
+                if (dragOverTestId === test.id) return 'action.hover';
+                if (
+                  !isTestFolder &&
+                  selectedTest &&
+                  selectedTest.id === test.id
+                )
+                  return 'action.selected';
+                return 'action.hover';
+              })(),
+            },
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            transition: 'all 0.2s ease',
+            '& .delete-icon': {
+              display: 'none',
+            },
+            '&:hover .delete-icon': {
+              display: 'block',
+            },
+            // Add drag handle visual indicator only for non-folder items when not searching
+            '&::before':
+              testSearchTerm.trim() === '' && !isTestFolder
+                ? {
+                    content: '"⋮⋮"',
+                    marginRight: '8px',
+                    color: '#666',
+                    fontSize: '14px',
+                    cursor: 'grab',
+                    userSelect: 'none',
+                  }
+                : {
+                    display: 'none',
+                  },
+            '&:active::before': {
+              cursor: 'grabbing',
+            },
+          }}
+        >
+          {isTestFolder && (
+            <Box sx={{ display: 'flex', alignItems: 'center', mr: 1 }}>
+              {isExpanded ? <ExpandMoreIcon /> : <ChevronRightIcon />}
+              {isExpanded ? (
+                <FolderOpenIcon sx={{ ml: 0.5 }} />
+              ) : (
+                <FolderIcon sx={{ ml: 0.5 }} />
+              )}
+            </Box>
+          )}
+
+          <ListItemText
+            primary={test.name}
+            sx={{
+              '& .MuiListItemText-primary': {
+                fontWeight: isTestFolder ? 'bold' : 'normal',
+                color: isTestFolder ? 'primary.main' : 'inherit',
+              },
+            }}
+          />
+
+          <Box display="flex" gap={0}>
+            <Tooltip title="Edit Test Name">
+              <IconButton
+                className="delete-icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEditTestName(test.type);
+                }}
+                aria-label="edit"
+                size="small"
+              >
+                <EditIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Delete Test">
+              <IconButton
+                className="delete-icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteTest(test);
+                }}
+                aria-label="delete"
+                size="small"
+              >
+                <DeleteIcon />
+              </IconButton>
+            </Tooltip>
+            {isTestFolder && (
+              <Tooltip title="Add New Test Case">
+                <IconButton
+                  className="add-icon"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCreateTestCase(test.id);
+                  }}
+                  aria-label="add test in folder"
+                  size="small"
+                >
+                  <AddIcon />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Box>
+        </ListItem>
+
+        {/* Render child items if folder is expanded */}
+        {isTestFolder && isExpanded && childTests.length > 0 && (
+          <Box>
+            {childTests.map((childTest, childIndex) =>
+              renderTestItem(childTest, index + childIndex + 1, depth + 1)
+            )}
+          </Box>
+        )}
+      </React.Fragment>
+    );
   };
 
   useEffect(() => {
@@ -431,6 +662,155 @@ export default function Tests({ envDetails }) {
     },
   });
 
+  // Drag and Drop handlers for test cases
+  const handleTestDragStart = (e, testId) => {
+    const draggedTest = filteredTestCases.find((test) => test.id === testId);
+    console.log('🎯 Test drag started:', testId, draggedTest);
+    setDraggedTestId(testId);
+    setIsDragging(true);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.target);
+  };
+
+  const handleTestDragOver = (e, testId) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+
+    if (draggedTestId !== testId) {
+      setDragOverTestId(testId);
+    }
+  };
+
+  const handleTestDragLeave = (e, testId) => {
+    // Only clear dragOverTestId if we're actually leaving the element
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX;
+    const y = e.clientY;
+
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      setDragOverTestId(null);
+    }
+  };
+
+  const handleTestDrop = (e, dropTestId) => {
+    e.preventDefault();
+    console.log('🎯 Test drop event:', { draggedTestId, dropTestId });
+
+    if (draggedTestId === null || draggedTestId === dropTestId) {
+      return;
+    }
+
+    // Find the dragged test and drop target test
+    const draggedTest = filteredTestCases.find(
+      (test) => test.id === draggedTestId
+    );
+    const dropTargetTest = filteredTestCases.find(
+      (test) => test.id === dropTestId
+    );
+
+    if (!draggedTest || !dropTargetTest) {
+      console.error('Could not find dragged or drop target test');
+      return;
+    }
+
+    if (dropTargetTest.type === 'folder') {
+      draggedTest.parentId = dropTargetTest.id;
+      setTestCases([...testCases]);
+      setFilteredTestCases([...filteredTestCases]);
+      fetch(`/api/v1/tests/${draggedTest.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(draggedTest),
+      })
+        .then((response) => {
+          if (response.ok) {
+            console.log('Test moved to folder successfully');
+            fetchTestData();
+          } else {
+            console.error('Failed to move test to folder');
+          }
+        })
+        .catch((error) => {
+          console.error('Error moving test to folder:', error);
+          fetchTestData();
+        });
+    }
+
+    console.log('🔄 Reordering test cases...');
+    console.log(
+      '📊 Before reorder:',
+      filteredTestCases.map((t) => t.name)
+    );
+
+    const newFilteredTestCases = [...filteredTestCases];
+
+    // Find current indices
+    const draggedIndex = newFilteredTestCases.findIndex(
+      (test) => test.id === draggedTestId
+    );
+    const dropIndex = newFilteredTestCases.findIndex(
+      (test) => test.id === dropTestId
+    );
+
+    // Remove the dragged item
+    newFilteredTestCases.splice(draggedIndex, 1);
+
+    // Insert at new position (adjust index if dragging from before the drop target)
+    const insertIndex = draggedIndex < dropIndex ? dropIndex - 1 : dropIndex;
+    newFilteredTestCases.splice(insertIndex, 0, draggedTest);
+
+    console.log(
+      '📊 After reorder:',
+      newFilteredTestCases.map((t) => t.name)
+    );
+    console.log('✅ Test reorder completed');
+
+    setFilteredTestCases(newFilteredTestCases);
+
+    // Also update the main testCases array if no search filter is applied
+    if (!testSearchTerm.trim()) {
+      setTestCases(newFilteredTestCases);
+      fetch(`/api/v1/reorderTests`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          newOrder: newFilteredTestCases.map((t) => t.id),
+        }),
+      })
+        .then((response) => {
+          if (response.ok) {
+            console.log('Test reordered successfully');
+            fetchTestData();
+          } else {
+            console.error('Failed to reorder test');
+          }
+        })
+        .catch((error) => {
+          console.error('Error reordering test:', error);
+        });
+    }
+
+    setDragOverTestId(null);
+  };
+
+  const handleTestDragEnd = () => {
+    console.log('🏁 Test drag ended, clearing state');
+    setDraggedTestId(null);
+    setDragOverTestId(null);
+    // Use setTimeout to prevent click events immediately after drag
+    setTimeout(() => setIsDragging(false), 50);
+  };
+
+  const handleTestClickWithDragCheck = (test) => {
+    if (!isDragging) {
+      handleTestClick(test);
+    }
+  };
+
   useEffect(() => {
     if (selectedTab === 0) {
       fetchMockData(selectedTest);
@@ -466,14 +846,33 @@ export default function Tests({ envDetails }) {
             width: '100%',
           }}
         >
-          <Typography variant="h6" gutterBottom>
-            Test Cases
-          </Typography>
-          <Tooltip title="Create New Test Case">
-            <IconButton onClick={handleCreateTestCase} aria-label="add">
-              <AddIcon />
-            </IconButton>
-          </Tooltip>
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              Test Cases
+            </Typography>
+            <Typography
+              variant="caption"
+              color="textSecondary"
+              sx={{ display: 'block', mt: -1 }}
+            >
+              🔄 Drag to reorder test cases
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 0.5 }}>
+            <Tooltip title="Create New Folder">
+              <IconButton
+                onClick={handleCreateFolder}
+                aria-label="create folder"
+              >
+                <CreateNewFolderIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Create New Test Case">
+              <IconButton onClick={handleCreateTestCase} aria-label="add">
+                <AddIcon />
+              </IconButton>
+            </Tooltip>
+          </Box>
         </Box>
         <TextField
           hiddenLabel
@@ -490,59 +889,7 @@ export default function Tests({ envDetails }) {
           id="test-cases-list"
           sx={{ height: 'calc(100vh - 235px)', overflowY: 'scroll' }}
         >
-          {filteredTestCases.map((test) => (
-            <ListItem
-              button
-              key={test.id}
-              onClick={() => handleTestClick(test)}
-              selected={selectedTest && selectedTest.id === test.id}
-              sx={{
-                backgroundColor:
-                  selectedTest && selectedTest.id === test.id
-                    ? 'action.selected'
-                    : 'inherit',
-                '&:hover': {
-                  backgroundColor:
-                    selectedTest && selectedTest.id === test.id
-                      ? 'action.selected'
-                      : 'action.hover',
-                },
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                '& .delete-icon': {
-                  display: 'none',
-                },
-                '&:hover .delete-icon': {
-                  display: 'block',
-                },
-              }}
-            >
-              <ListItemText primary={test.name} />
-              <Box display="flex" gap={0}>
-                <Tooltip title="Edit Test Name">
-                  <IconButton
-                    className="delete-icon"
-                    onClick={handleEditTestName}
-                    aria-label="edit"
-                    size="small"
-                  >
-                    <EditIcon />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Delete Test">
-                  <IconButton
-                    className="delete-icon"
-                    onClick={() => handleDeleteTest(test)}
-                    aria-label="delete"
-                    size="small"
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-            </ListItem>
-          ))}
+          {getRootTests().map((test, index) => renderTestItem(test, index, 0))}
         </List>
       </Box>
       <Box
@@ -685,6 +1032,7 @@ export default function Tests({ envDetails }) {
                     }}
                   />
                   <DraggableMockList
+                    draggable={mockSearchTerm.trim() === '' ? true : false}
                     selectedTest={selectedTest}
                     selectedMockItem={selectedMockItem}
                     handleMockItemClick={handleMockItemClick}

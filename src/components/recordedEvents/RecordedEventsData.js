@@ -112,6 +112,14 @@ export default function RecordedEventsData({
 
   const deleteAll = async () => {
     try {
+      // Show confirmation dialog before proceeding
+      if (
+        !window.confirm(
+          'Are you sure you want to delete all recorded events? This action cannot be undone.'
+        )
+      ) {
+        return;
+      }
       setIsLoading(true);
       const response = await fetch(
         `/api/v1/deleteAllEvents?${selectedTest?.name ? `name=${selectedTest.name}` : ''}`,
@@ -476,12 +484,16 @@ export default function RecordedEventsData({
               </Button>
             </Box>
             <Box>
-              <IconButton onClick={downloadTextAsFile}>
-                <CloudDownloadIcon />
-              </IconButton>
-              <IconButton onClick={deleteAll}>
-                <DeleteSweepIcon />
-              </IconButton>
+              <Tooltip title="Download as file">
+                <IconButton onClick={downloadTextAsFile}>
+                  <CloudDownloadIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Delete all events">
+                <IconButton onClick={deleteAll}>
+                  <DeleteSweepIcon />
+                </IconButton>
+              </Tooltip>
             </Box>
           </Box>
           <Divider />

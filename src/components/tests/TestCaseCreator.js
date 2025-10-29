@@ -6,12 +6,25 @@ import {
   Typography,
   IconButton,
   Divider,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 
-const TestCaseCreator = ({ onClose, selectedTest }) => {
+const TestCaseCreator = ({
+  testCases,
+  onClose,
+  selectedTest,
+  parentId,
+  type = 'testcase',
+}) => {
   const [testName, setTestName] = useState(
     selectedTest ? selectedTest.name : ''
+  );
+  const [selectedParentId, setSelectedParentId] = useState(
+    selectedTest ? selectedTest.parentId || '' : parentId || ''
   );
 
   const handleSubmit = async (e) => {
@@ -28,6 +41,8 @@ const TestCaseCreator = ({ onClose, selectedTest }) => {
         body: JSON.stringify({
           name: testName.trim(),
           mode: selectedTest?.mode || 'moderate',
+          type: type,
+          parentId: selectedParentId || null,
         }),
       });
 
@@ -44,10 +59,59 @@ const TestCaseCreator = ({ onClose, selectedTest }) => {
   };
 
   const getErrorText = () => {
+    // Ensure testName is unique (case-insensitive)
+    if (
+      testCases &&
+      testName.trim() !== '' &&
+      testCases.some(
+        (test) =>
+          test.name.trim().toLowerCase() === testName.trim().toLowerCase() &&
+          (!selectedTest || test.id !== selectedTest.id)
+      )
+    ) {
+      return 'Test case name must be unique';
+    }
     if (testName.trim() === '') {
       return 'Test case name is required';
     }
     return '';
+  };
+
+  const getHeaderText = () => {
+    if (type === 'testcase') {
+      if (selectedTest) {
+        return 'Edit Test Case';
+      }
+      return 'Create New Test Case';
+    } else if (type === 'folder') {
+      if (selectedTest) {
+        return 'Edit Folder';
+      }
+      return 'Create New Folder';
+    }
+    return '';
+  };
+
+  const getButtonText = () => {
+    if (type === 'testcase') {
+      if (selectedTest) {
+        return 'Update Test Case';
+      }
+      return 'Create Test Case';
+    } else if (type === 'folder') {
+      if (selectedTest) {
+        return 'Update Folder';
+      }
+      return 'Create Folder';
+    }
+    return '';
+  };
+
+  const getAvailableFolders = () => {
+    if (!testCases) return [];
+    return testCases.filter(
+      (test) => test.type === 'folder' || test.isFolder === true
+    );
   };
 
   return (
@@ -61,7 +125,7 @@ const TestCaseCreator = ({ onClose, selectedTest }) => {
         }}
       >
         <Typography variant="h6" gutterBottom>
-          {selectedTest ? 'Edit Test Case' : 'Create New Test Case'}
+          {getHeaderText()}
         </Typography>
         <IconButton onClick={onClose} aria-label="close">
           <CloseIcon />
@@ -71,7 +135,7 @@ const TestCaseCreator = ({ onClose, selectedTest }) => {
       <form onSubmit={handleSubmit}>
         <TextField
           fullWidth
-          label="Test Case Name"
+          label={type === 'folder' ? 'Folder Name' : 'Test Case Name'}
           variant="outlined"
           value={testName}
           onChange={(e) => setTestName(e.target.value)}
@@ -80,6 +144,31 @@ const TestCaseCreator = ({ onClose, selectedTest }) => {
           helperText={getErrorText()}
           error={getErrorText() !== ''}
         />
+
+        {/* Parent folder dropdown - only show for test cases */}
+        {type === 'testcase' && (
+          <FormControl fullWidth margin="normal">
+            <InputLabel id="parent-folder-label">
+              Parent Folder (Optional)
+            </InputLabel>
+            <Select
+              labelId="parent-folder-label"
+              value={selectedParentId}
+              label="Parent Folder (Optional)"
+              onChange={(e) => setSelectedParentId(e.target.value)}
+            >
+              <MenuItem value="">
+                <em>Root Level (No Folder)</em>
+              </MenuItem>
+              {getAvailableFolders().map((folder) => (
+                <MenuItem key={folder.id} value={folder.id}>
+                  📁 {folder.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
+
         <Button
           type="submit"
           variant="contained"
@@ -88,7 +177,7 @@ const TestCaseCreator = ({ onClose, selectedTest }) => {
           sx={{ mt: 2 }}
           disabled={getErrorText() !== ''}
         >
-          {selectedTest ? 'Update Test Case' : 'Create Test Case'}
+          {getButtonText()}
         </Button>
       </form>
     </Box>

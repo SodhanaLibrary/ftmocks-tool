@@ -7,6 +7,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ListItemIcon from '@mui/material/ListItemIcon';
 
 const DraggableMockList = ({
+  draggable,
   selectedTest,
   selectedMockItem,
   handleMockItemClick,
@@ -43,6 +44,7 @@ const DraggableMockList = ({
             >
               {selectedTest.filteredMockData.map((mockItem, index) => (
                 <Draggable
+                  isDragDisabled={!draggable}
                   key={mockItem.id}
                   draggableId={mockItem.id}
                   index={index}
