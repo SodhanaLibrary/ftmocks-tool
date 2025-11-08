@@ -25,7 +25,13 @@ const EnvTable = ({ data }) => {
           {Object.entries(data).map(([key, value]) => (
             <TableRow key={key}>
               <TableCell>{key}</TableCell>
-              <TableCell>{String(value)}</TableCell>
+              <TableCell>
+                <pre>
+                  {typeof value === 'string'
+                    ? value
+                    : JSON.stringify(value, null, 2)}
+                </pre>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

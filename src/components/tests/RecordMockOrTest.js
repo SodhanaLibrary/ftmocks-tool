@@ -150,12 +150,25 @@ const RecordMockOrTest = ({
             flexDirection="column"
             gap={1}
           >
-            <TextField
-              label="URL"
-              fullWidth
-              margin="normal"
+            <Autocomplete
+              freeSolo
+              options={envDetails?.MetaData?.urls || []}
               value={config.url}
-              onChange={onUrlChange}
+              onChange={(event, newValue) => {
+                if (typeof newValue === 'string') {
+                  onUrlChange({ target: { value: newValue } });
+                } else if (newValue && newValue.inputValue) {
+                  onUrlChange({ target: { value: newValue.inputValue } });
+                } else {
+                  onUrlChange({ target: { value: newValue || '' } });
+                }
+              }}
+              onInputChange={(event, newInputValue) => {
+                onUrlChange({ target: { value: newInputValue } });
+              }}
+              renderInput={(params) => (
+                <TextField {...params} label="URL" fullWidth margin="normal" />
+              )}
             />
             <Autocomplete
               multiple

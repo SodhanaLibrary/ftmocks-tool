@@ -868,7 +868,10 @@ export default function Tests({ envDetails }) {
               </IconButton>
             </Tooltip>
             <Tooltip title="Create New Test Case">
-              <IconButton onClick={handleCreateTestCase} aria-label="add">
+              <IconButton
+                onClick={() => handleCreateTestCase(null)}
+                aria-label="add"
+              >
                 <AddIcon />
               </IconButton>
             </Tooltip>

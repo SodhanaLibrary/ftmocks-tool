@@ -102,15 +102,6 @@ export function generatePlaywrightCode(
   const testCodes = [];
 
   const getLocator = (action) => {
-    if (
-      action?.target?.split('/').length > 6 &&
-      action?.selectors?.length > 0
-    ) {
-      const locators = action.selectors.filter(
-        (selector) => selector.type === 'locator'
-      );
-      return locators.length > 0 ? locators[0].value : action.target;
-    }
     return action?.target;
   };
 
@@ -128,7 +119,10 @@ export function generatePlaywrightCode(
               testActions[testName].actions?.[index + 1]?.type !== 'input'))
       )
       .map((action) => {
-        const locator = getLocator(action);
+        let locator = getLocator(action);
+        if (locator.startsWith('/')) {
+          locator = `xpath=${locator}`;
+        }
         const nth = getNth(action, locator) - 1;
         switch (action.type) {
           case 'click':
