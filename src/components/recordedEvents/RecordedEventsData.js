@@ -7,7 +7,6 @@ import {
   Typography,
   TextField,
   Drawer,
-  Chip,
   Tooltip,
   IconButton,
   Divider,
@@ -33,6 +32,7 @@ import AnsiToHtml from 'ansi-to-html';
 
 import {
   generatePlaywrightCode,
+  generatePlaywrightCodeForMockMode,
   generateRTLCode,
   nameToFolder,
 } from './CodeUtils';
@@ -440,6 +440,53 @@ export default function RecordedEventsData({
     setDragOverIndex(null);
   };
 
+  const runInMockMode = async () => {
+    setRunningTest(true);
+    setTestOutput(''); // Clear previous output
+
+    try {
+      const response = await fetch(`/api/v1/code/runTest`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          withUI: false,
+          testName: selectedTest.name,
+          generatedCode: generatePlaywrightCodeForMockMode(
+            recordedEvents,
+            testsSummary,
+            selectedTest,
+            envDetails
+          ),
+          fileName: `ftmocks-mock-mode-ignore-me.spec.js`,
+        }),
+      });
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          setTestOutput((prev) => prev + chunk);
+        }
+      } catch (streamError) {
+        console.error('Error reading stream:', streamError);
+        setTestOutput(
+          (prev) => prev + `\nError reading stream: ${streamError.message}`
+        );
+      } finally {
+        reader.releaseLock();
+      }
+    } catch (error) {
+      console.error('Error running test:', error);
+    }
+  };
+
   const convert = new AnsiToHtml();
 
   const htmlOutput = convert.toHtml(testOutput).replace(/\n/g, '<br/>');
@@ -475,6 +522,13 @@ export default function RecordedEventsData({
                   Generate Playwright Code
                 </MenuItem>
               </Menu> */}
+              {recordedEvents.length > 0 && (
+                <Tooltip title="Run in mock mode">
+                  <IconButton onClick={runInMockMode}>
+                    <PlayArrowIcon />
+                  </IconButton>
+                </Tooltip>
+              )}
               <Button
                 variant="contained"
                 onClick={genPlayWriteCode}
@@ -613,6 +667,7 @@ export default function RecordedEventsData({
                         deleteEvent(re);
                       }}
                       aria-label="delete"
+                      disabled={index === 0 && re.type === 'url'}
                     >
                       <DeleteIcon />
                     </IconButton>
