@@ -284,7 +284,7 @@ export function generatePlaywrightCodeForMockMode(
     let testCode = [
       `// ${selectedTest?.name || testName} test case in mock mode`,
       `import { test, expect } from '@playwright/test';
-import { initiatePlaywrightRoutes } from 'ftmocks-utils';
+import { initiatePlaywrightRoutes, injectEventRecordingScript } from 'ftmocks-utils';
 
 test('${selectedTest?.name || testName}', async ({ page }) => {`,
       ` await initiatePlaywrightRoutes(
@@ -295,8 +295,16 @@ test('${selectedTest?.name || testName}', async ({ page }) => {`,
         },
         '${selectedTest.name}'
       );`,
+      ` await injectEventRecordingScript(
+        page,
+        '${url}',
+        {
+          MOCK_DIR: '${envDetails.RELATIVE_MOCK_DIR_FROM_PLAYWRIGHT_DIR || './ftmocks'}',
+          FALLBACK_DIR: '${envDetails.RELATIVE_FALLBACK_DIR_FROM_PLAYWRIGHT_DIR || './public'}',
+        },
+        '${selectedTest.name}'
+      );`,
       `  await page.goto('${url}');`,
-      '',
       `  await page.waitForTimeout(360000);`,
       `  await page.close();`,
       `});`,

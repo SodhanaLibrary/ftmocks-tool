@@ -459,7 +459,7 @@ export default function RecordedEventsData({
             selectedTest,
             envDetails
           ),
-          fileName: `ftmocks-mock-mode-ignore-me.spec.js`,
+          fileName: `__ftmocks-mock-mode-ignore-me.spec.js`,
         }),
       });
 
@@ -523,8 +523,8 @@ export default function RecordedEventsData({
                 </MenuItem>
               </Menu> */}
               {recordedEvents.length > 0 && (
-                <Tooltip title="Run in mock mode">
-                  <IconButton onClick={runInMockMode}>
+                <Tooltip title="Run in mock mode and record events again">
+                  <IconButton color="primary" onClick={runInMockMode}>
                     <PlayArrowIcon />
                   </IconButton>
                 </Tooltip>
@@ -679,16 +679,6 @@ export default function RecordedEventsData({
           <Box sx={{ textAlign: 'center' }}>
             {!recordedEvents.length ? 'No events recorded' : null}
           </Box>
-          {recordedEvents.length > 0 && (
-            <Box sx={{ textAlign: 'center', mt: 2 }}>
-              <Button
-                onClick={() => recordEvents(currentUrl)}
-                variant="contained"
-              >
-                Record Events Again
-              </Button>
-            </Box>
-          )}
         </Box>
       )}
       {!showEvents && (
