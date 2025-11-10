@@ -15,8 +15,6 @@ import AddIcon from '@mui/icons-material/Add';
 import CreateNewFolderIcon from '@mui/icons-material/CreateNewFolder';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import FolderIcon from '@mui/icons-material/Folder';
-import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import Tooltip from '@mui/material/Tooltip';
 import Button from '@mui/material/Button';
 import TestCaseCreator from './TestCaseCreator';
@@ -340,8 +338,9 @@ export default function Tests({ envDetails }) {
     }
   };
 
-  const handleEditTestName = (type = 'testcase') => {
-    setCurrentTestCaseType(type);
+  const handleEditTestName = (test) => {
+    setSelectedTest(test);
+    setCurrentTestCaseType(test.type);
     setTestCaseEditorOpen(true);
     setTestCaseCreatorOpen(false);
   };
@@ -353,7 +352,8 @@ export default function Tests({ envDetails }) {
     setTestCaseEditorOpen(false);
   };
 
-  const handleCreateFolder = () => {
+  const handleCreateFolder = (parentId = null) => {
+    setCurrentParentId(parentId);
     setCurrentTestCaseType('folder');
     setTestCaseCreatorOpen(true);
     setTestCaseEditorOpen(false);
@@ -404,9 +404,7 @@ export default function Tests({ envDetails }) {
       <React.Fragment key={test.id}>
         <ListItem
           button
-          draggable={
-            testSearchTerm.trim() === '' && !isTestFolder ? true : false
-          }
+          draggable={testSearchTerm.trim() === ''}
           onDragStart={(e) => handleTestDragStart(e, test.id)}
           onDragOver={(e) => handleTestDragOver(e, test.id)}
           onDragLeave={(e) => handleTestDragLeave(e, test.id)}
@@ -444,10 +442,10 @@ export default function Tests({ envDetails }) {
             justifyContent: 'space-between',
             alignItems: 'center',
             transition: 'all 0.2s ease',
-            '& .delete-icon': {
+            '& .hover-icon': {
               display: 'none',
             },
-            '&:hover .delete-icon': {
+            '&:hover .hover-icon': {
               display: 'block',
             },
             // Add drag handle visual indicator only for non-folder items when not searching
@@ -472,11 +470,6 @@ export default function Tests({ envDetails }) {
           {isTestFolder && (
             <Box sx={{ display: 'flex', alignItems: 'center', mr: 1 }}>
               {isExpanded ? <ExpandMoreIcon /> : <ChevronRightIcon />}
-              {isExpanded ? (
-                <FolderOpenIcon sx={{ ml: 0.5 }} />
-              ) : (
-                <FolderIcon sx={{ ml: 0.5 }} />
-              )}
             </Box>
           )}
 
@@ -491,12 +484,14 @@ export default function Tests({ envDetails }) {
           />
 
           <Box display="flex" gap={0}>
-            <Tooltip title="Edit Test Name">
+            <Tooltip
+              title={isTestFolder ? 'Edit Folder Name' : 'Edit Test Name'}
+            >
               <IconButton
-                className="delete-icon"
+                className="hover-icon"
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleEditTestName(test.type);
+                  handleEditTestName(test);
                 }}
                 aria-label="edit"
                 size="small"
@@ -504,9 +499,9 @@ export default function Tests({ envDetails }) {
                 <EditIcon />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Delete Test">
+            <Tooltip title={isTestFolder ? 'Delete Folder' : 'Delete Test'}>
               <IconButton
-                className="delete-icon"
+                className="hover-icon"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleDeleteTest(test);
@@ -518,9 +513,23 @@ export default function Tests({ envDetails }) {
               </IconButton>
             </Tooltip>
             {isTestFolder && (
+              <Tooltip title="Create New Folder">
+                <IconButton
+                  className="hover-icon"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCreateFolder(test.id);
+                  }}
+                  aria-label="create folder"
+                >
+                  <CreateNewFolderIcon />
+                </IconButton>
+              </Tooltip>
+            )}
+            {isTestFolder && (
               <Tooltip title="Add New Test Case">
                 <IconButton
-                  className="add-icon"
+                  className="hover-icon"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleCreateTestCase(test.id);
@@ -713,7 +722,7 @@ export default function Tests({ envDetails }) {
       return;
     }
 
-    if (dropTargetTest.type === 'folder') {
+    if (dropTargetTest.type === 'folder' && draggedTest.type !== 'folder') {
       draggedTest.parentId = dropTargetTest.id;
       setTestCases([...testCases]);
       setFilteredTestCases([...filteredTestCases]);
@@ -835,7 +844,7 @@ export default function Tests({ envDetails }) {
           borderColor: 'divider',
           boxShadow: 1,
           minWidth: '30%',
-          width: '30%',
+          width: '450px',
         }}
       >
         <Box
@@ -861,7 +870,7 @@ export default function Tests({ envDetails }) {
           <Box sx={{ display: 'flex', gap: 0.5 }}>
             <Tooltip title="Create New Folder">
               <IconButton
-                onClick={handleCreateFolder}
+                onClick={() => handleCreateFolder(null)}
                 aria-label="create folder"
               >
                 <CreateNewFolderIcon />
@@ -929,7 +938,7 @@ export default function Tests({ envDetails }) {
                   className="edit-icon"
                   sx={{ ml: 0.5, cursor: 'pointer' }}
                   size="small"
-                  onClick={handleEditTestName}
+                  onClick={() => handleEditTestName(selectedTest)}
                   aria-label="edit test"
                 >
                   <EditIcon fontSize="small" />
@@ -937,7 +946,7 @@ export default function Tests({ envDetails }) {
               </Tooltip>
             )}
           </Box>
-          {selectedTest ? (
+          {selectedTest?.type !== 'folder' ? (
             <Box>
               <Tooltip title="Duplicate Test">
                 <IconButton onClick={duplicateTest} aria-label="duplicate test">
@@ -971,7 +980,7 @@ export default function Tests({ envDetails }) {
             </Box>
           ) : null}
         </Box>
-        {selectedTest?.filteredMockData ? (
+        {selectedTest?.filteredMockData && selectedTest.type !== 'folder' ? (
           <Box>
             <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 2 }}>
               <Button

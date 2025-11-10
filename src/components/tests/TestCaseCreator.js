@@ -145,29 +145,28 @@ const TestCaseCreator = ({
           error={getErrorText() !== ''}
         />
 
-        {/* Parent folder dropdown - only show for test cases */}
-        {type === 'testcase' && (
-          <FormControl fullWidth margin="normal">
-            <InputLabel id="parent-folder-label">
-              Parent Folder (Optional)
-            </InputLabel>
-            <Select
-              labelId="parent-folder-label"
-              value={selectedParentId}
-              label="Parent Folder (Optional)"
-              onChange={(e) => setSelectedParentId(e.target.value)}
-            >
-              <MenuItem value="">
-                <em>Root Level (No Folder)</em>
-              </MenuItem>
-              {getAvailableFolders().map((folder) => (
+        <FormControl fullWidth margin="normal">
+          <InputLabel id="parent-folder-label">
+            Parent Folder (Optional)
+          </InputLabel>
+          <Select
+            labelId="parent-folder-label"
+            value={selectedParentId}
+            label="Parent Folder (Optional)"
+            onChange={(e) => setSelectedParentId(e.target.value)}
+          >
+            <MenuItem value="">
+              <em>Root Level (No Folder)</em>
+            </MenuItem>
+            {getAvailableFolders()
+              .filter((folder) => folder.id !== selectedTest?.id)
+              .map((folder) => (
                 <MenuItem key={folder.id} value={folder.id}>
                   📁 {folder.name}
                 </MenuItem>
               ))}
-            </Select>
-          </FormControl>
-        )}
+          </Select>
+        </FormControl>
 
         <Button
           type="submit"
