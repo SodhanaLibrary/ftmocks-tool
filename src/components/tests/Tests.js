@@ -132,9 +132,18 @@ export default function Tests({ envDetails }) {
   };
 
   const onTestCaseSearch = (searchTerm) => {
-    const filteredTests = testCases.filter((test) =>
-      test.name.toLowerCase().includes(searchTerm)
-    );
+    const includedIds = new Set();
+    testCases.forEach((test) => {
+      if (test.name.toLowerCase().includes(searchTerm)) {
+        includedIds.add(test.id);
+        let parentId = test.parentId;
+        while (parentId) {
+          includedIds.add(parentId);
+          parentId = testCases.find((t) => t.id === parentId)?.parentId;
+        }
+      }
+    });
+    const filteredTests = testCases.filter((test) => includedIds.has(test.id));
     setFilteredTestCases(filteredTests);
   };
 
@@ -153,6 +162,13 @@ export default function Tests({ envDetails }) {
         fetchMockData(test, {
           testClick: true,
         });
+        let parentId = test.parentId;
+        const expanded = new Set(expandedFolders);
+        while (parentId) {
+          expanded.add(parentId);
+          parentId = testCases.find((t) => t.id === parentId)?.parentId;
+        }
+        setExpandedFolders(expanded);
       }
     } else if (!testId && selectedTest) {
       // If no testId in URL, clear selection
@@ -804,6 +820,8 @@ export default function Tests({ envDetails }) {
     }
 
     setDragOverTestId(null);
+    setDraggedTestId(null);
+    setIsDragging(false);
   };
 
   const handleTestDragEnd = () => {
@@ -946,7 +964,7 @@ export default function Tests({ envDetails }) {
               </Tooltip>
             )}
           </Box>
-          {selectedTest?.type !== 'folder' ? (
+          {selectedTest && selectedTest?.type !== 'folder' ? (
             <Box>
               <Tooltip title="Duplicate Test">
                 <IconButton onClick={duplicateTest} aria-label="duplicate test">
