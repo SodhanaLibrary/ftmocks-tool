@@ -15,6 +15,7 @@ import {
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import FiberSmartRecordIcon from '@mui/icons-material/FiberSmartRecord';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import Autocomplete from '@mui/material/Autocomplete';
@@ -525,7 +526,7 @@ export default function RecordedEventsData({
               {recordedEvents.length > 0 && (
                 <Tooltip title="Run in mock mode and record events again">
                   <IconButton color="primary" onClick={runInMockMode}>
-                    <PlayArrowIcon />
+                    <FiberSmartRecordIcon />
                   </IconButton>
                 </Tooltip>
               )}
