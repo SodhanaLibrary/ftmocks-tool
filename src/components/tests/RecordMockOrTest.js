@@ -130,7 +130,10 @@ const RecordMockOrTest = ({
 
   useEffect(() => {
     setConfig(Object.assign({}, config, { testName: selectedTest.name }));
-    setTimeout(fetchRecordingStatus, 1000);
+    fetchRecordingStatus();
+    // Call fetchRecordingStatus on interval and cleanup on unmount
+    const intervalId = setInterval(fetchRecordingStatus, 10000);
+    return () => clearInterval(intervalId);
   }, [selectedTest]);
 
   return (
