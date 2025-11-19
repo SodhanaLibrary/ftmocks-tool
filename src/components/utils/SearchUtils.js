@@ -30,8 +30,10 @@ const getValidUrl = (url) => {
 
 export const sortUrlsByMatch = (url, mockData) => {
   if (url.split('/').length === 1 && url.split('?').length === 1) {
-    return mockData.filter((mockItem) =>
-      mockItem.url.toLowerCase().includes(url.toLowerCase())
+    return mockData.filter(
+      (mockItem) =>
+        mockItem.url.toLowerCase().includes(url.toLowerCase()) ||
+        mockItem.response?.content?.toLowerCase().includes(url.toLowerCase())
     );
   }
   const baseUrl = new URL(getValidUrl(url));
