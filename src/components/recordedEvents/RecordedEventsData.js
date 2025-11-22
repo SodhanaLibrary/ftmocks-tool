@@ -34,6 +34,8 @@ import AnsiToHtml from 'ansi-to-html';
 import {
   generatePlaywrightCode,
   generatePlaywrightCodeForMockMode,
+  generatePlaywrightCodeForRunEvents,
+  generatePlaywrightCodeForRunEventsInPresentationMode,
   generateRTLCode,
   nameToFolder,
 } from './CodeUtils';
@@ -53,6 +55,7 @@ export default function RecordedEventsData({
   const [genCodeType, setGenCodeType] = useState(null);
   const [currentUrl, setCurrentUrl] = useState('');
   const [generateCodeAnchorEl, setGenerateCodeAnchorEl] = useState(null);
+  const [mockModeAnchorEl, setMockModeAnchorEl] = useState(null);
   const [showEvents, setShowEvents] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [testOutput, setTestOutput] = useState('');
@@ -197,6 +200,14 @@ export default function RecordedEventsData({
 
   const handleGenerateCodeClose = () => {
     setGenerateCodeAnchorEl(null);
+  };
+
+  const handleMockModeClick = (event) => {
+    setMockModeAnchorEl(event.currentTarget);
+  };
+
+  const handleMockModeClose = () => {
+    setMockModeAnchorEl(null);
   };
 
   const deleteEvent = async (recordedEvent) => {
@@ -441,7 +452,148 @@ export default function RecordedEventsData({
     setDragOverIndex(null);
   };
 
-  const runInMockMode = async () => {
+  const recordEventsAgainInMockMode = async () => {
+    setRunningTest(true);
+    setTestOutput(''); // Clear previous output
+
+    try {
+      const response = await fetch(`/api/v1/code/runTest`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          withUI: false,
+          testName: selectedTest.name,
+          generatedCode: generatePlaywrightCodeForMockMode(
+            recordedEvents,
+            testsSummary,
+            selectedTest,
+            envDetails
+          ),
+          fileName: `__ftmocks-mock-mode-ignore-me.spec.js`,
+        }),
+      });
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          setTestOutput((prev) => prev + chunk);
+        }
+      } catch (streamError) {
+        console.error('Error reading stream:', streamError);
+        setTestOutput(
+          (prev) => prev + `\nError reading stream: ${streamError.message}`
+        );
+      } finally {
+        reader.releaseLock();
+      }
+    } catch (error) {
+      console.error('Error running test:', error);
+    }
+  };
+
+  const playAllEventsInMockMode = async () => {
+    setRunningTest(true);
+    setTestOutput(''); // Clear previous output
+
+    try {
+      const response = await fetch(`/api/v1/code/runTest`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          withUI: false,
+          testName: selectedTest.name,
+          generatedCode: generatePlaywrightCodeForRunEvents(
+            recordedEvents,
+            testsSummary,
+            selectedTest,
+            envDetails
+          ),
+          fileName: `__ftmocks-mock-mode-ignore-me.spec.js`,
+        }),
+      });
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          setTestOutput((prev) => prev + chunk);
+        }
+      } catch (streamError) {
+        console.error('Error reading stream:', streamError);
+        setTestOutput(
+          (prev) => prev + `\nError reading stream: ${streamError.message}`
+        );
+      } finally {
+        reader.releaseLock();
+      }
+    } catch (error) {
+      console.error('Error running test:', error);
+    }
+  };
+
+  const runInPresentationMode = async () => {
+    setRunningTest(true);
+    setTestOutput(''); // Clear previous output
+
+    try {
+      const response = await fetch(`/api/v1/code/runTest`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          withUI: false,
+          testName: selectedTest.name,
+          generatedCode: generatePlaywrightCodeForRunEventsInPresentationMode(
+            recordedEvents,
+            testsSummary,
+            selectedTest,
+            envDetails
+          ),
+          fileName: `__ftmocks-mock-mode-ignore-me.spec.js`,
+        }),
+      });
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          setTestOutput((prev) => prev + chunk);
+        }
+      } catch (streamError) {
+        console.error('Error reading stream:', streamError);
+        setTestOutput(
+          (prev) => prev + `\nError reading stream: ${streamError.message}`
+        );
+      } finally {
+        reader.releaseLock();
+      }
+    } catch (error) {
+      console.error('Error running test:', error);
+    }
+  };
+
+  const runInTrainingMode = async () => {
     setRunningTest(true);
     setTestOutput(''); // Clear previous output
 
@@ -524,11 +676,31 @@ export default function RecordedEventsData({
                 </MenuItem>
               </Menu> */}
               {recordedEvents.length > 0 && (
-                <Tooltip title="Run in mock mode and record events again">
-                  <IconButton color="primary" onClick={runInMockMode}>
-                    <FiberSmartRecordIcon />
-                  </IconButton>
-                </Tooltip>
+                <Box>
+                  <Tooltip title="Run in mock mode">
+                    <IconButton color="primary" onClick={handleMockModeClick}>
+                      <FiberSmartRecordIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Menu
+                    anchorEl={mockModeAnchorEl}
+                    open={Boolean(mockModeAnchorEl)}
+                    onClose={handleMockModeClose}
+                  >
+                    <MenuItem onClick={recordEventsAgainInMockMode}>
+                      Record events again
+                    </MenuItem>
+                    <MenuItem onClick={playAllEventsInMockMode}>
+                      Play all events
+                    </MenuItem>
+                    <MenuItem onClick={runInPresentationMode}>
+                      Run in presentation mode
+                    </MenuItem>
+                    <MenuItem onClick={runInTrainingMode}>
+                      Run in training mode
+                    </MenuItem>
+                  </Menu>
+                </Box>
               )}
               <Button
                 variant="contained"

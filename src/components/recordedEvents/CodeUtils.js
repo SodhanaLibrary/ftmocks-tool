@@ -287,6 +287,7 @@ export function generatePlaywrightCodeForMockMode(
 import { initiatePlaywrightRoutes, injectEventRecordingScript } from 'ftmocks-utils';
 
 test('${selectedTest?.name || testName}', async ({ page }) => {`,
+      ` await test.setTimeout(360000);`,
       ` await initiatePlaywrightRoutes(
         page,
         {
@@ -305,6 +306,114 @@ test('${selectedTest?.name || testName}', async ({ page }) => {`,
         '${selectedTest.name}'
       );`,
       `  await page.goto('${url}');`,
+      `  await page.waitForTimeout(360000);`,
+      `  await page.close();`,
+      `});`,
+      ``,
+    ].join('\n');
+    testCodes.push(testCode);
+  });
+
+  return testCodes.join('\n');
+}
+
+export function generatePlaywrightCodeForRunEvents(
+  actions,
+  tests = [],
+  selectedTest,
+  envDetails
+) {
+  const testActions = {
+    [selectedTest?.name]: {
+      actions: actions,
+    },
+  };
+
+  const testCodes = [];
+
+  Object.keys(testActions).forEach((testName) => {
+    const url =
+      testActions[testName].actions[0]?.type === 'url'
+        ? testActions[testName].actions[0].value
+        : 'http://your-app-url';
+
+    let testCode = [
+      `// ${selectedTest?.name || testName} test case in mock mode`,
+      `import { test, expect } from '@playwright/test';
+import { initiatePlaywrightRoutes, runEventsForTest } from 'ftmocks-utils';
+
+test('${selectedTest?.name || testName}', async ({ page }) => {`,
+      ` await test.setTimeout(360000);`,
+      ` await initiatePlaywrightRoutes(
+        page,
+        {
+          MOCK_DIR: '${envDetails.RELATIVE_MOCK_DIR_FROM_PLAYWRIGHT_DIR || './ftmocks'}',
+          FALLBACK_DIR: '${envDetails.RELATIVE_FALLBACK_DIR_FROM_PLAYWRIGHT_DIR || './public'}',
+        },
+        '${selectedTest.name}'
+      );`,
+      ` await runEventsForTest(
+        page,
+        {
+          MOCK_DIR: '${envDetails.RELATIVE_MOCK_DIR_FROM_PLAYWRIGHT_DIR || './ftmocks'}',
+          FALLBACK_DIR: '${envDetails.RELATIVE_FALLBACK_DIR_FROM_PLAYWRIGHT_DIR || './public'}',
+        },
+        '${selectedTest.name}'
+      );`,
+      `  await page.waitForTimeout(2000);`,
+      `  await page.close();`,
+      `});`,
+      ``,
+    ].join('\n');
+    testCodes.push(testCode);
+  });
+
+  return testCodes.join('\n');
+}
+
+export function generatePlaywrightCodeForRunEventsInPresentationMode(
+  actions,
+  tests = [],
+  selectedTest,
+  envDetails
+) {
+  const testActions = {
+    [selectedTest?.name]: {
+      actions: actions,
+    },
+  };
+
+  const testCodes = [];
+
+  Object.keys(testActions).forEach((testName) => {
+    const url =
+      testActions[testName].actions[0]?.type === 'url'
+        ? testActions[testName].actions[0].value
+        : 'http://your-app-url';
+
+    let testCode = [
+      `// ${selectedTest?.name || testName} test case in mock mode`,
+      `import { test, expect } from '@playwright/test';
+import { initiatePlaywrightRoutes, runEventsInPresentationMode } from 'ftmocks-utils';
+
+test('${selectedTest?.name || testName}', async ({ page }) => {`,
+      ` await test.setTimeout(360000);`,
+      ` await initiatePlaywrightRoutes(
+        page,
+        {
+          MOCK_DIR: '${envDetails.RELATIVE_MOCK_DIR_FROM_PLAYWRIGHT_DIR || './ftmocks'}',
+          FALLBACK_DIR: '${envDetails.RELATIVE_FALLBACK_DIR_FROM_PLAYWRIGHT_DIR || './public'}',
+        },
+        '${selectedTest.name}'
+      );`,
+      ` await runEventsInPresentationMode(
+        page,
+        {
+          MOCK_DIR: '${envDetails.RELATIVE_MOCK_DIR_FROM_PLAYWRIGHT_DIR || './ftmocks'}',
+          FALLBACK_DIR: '${envDetails.RELATIVE_FALLBACK_DIR_FROM_PLAYWRIGHT_DIR || './public'}',
+        },
+        '${selectedTest.name}'
+      );`,
       `  await page.waitForTimeout(360000);`,
       `  await page.close();`,
       `});`,
