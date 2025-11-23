@@ -36,6 +36,7 @@ import {
   generatePlaywrightCodeForMockMode,
   generatePlaywrightCodeForRunEvents,
   generatePlaywrightCodeForRunEventsInPresentationMode,
+  generatePlaywrightCodeForRunEventsInTrainingMode,
   generateRTLCode,
   nameToFolder,
 } from './CodeUtils';
@@ -606,7 +607,7 @@ export default function RecordedEventsData({
         body: JSON.stringify({
           withUI: false,
           testName: selectedTest.name,
-          generatedCode: generatePlaywrightCodeForMockMode(
+          generatedCode: generatePlaywrightCodeForRunEventsInTrainingMode(
             recordedEvents,
             testsSummary,
             selectedTest,
