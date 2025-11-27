@@ -33,13 +33,18 @@ import AnsiToHtml from 'ansi-to-html';
 
 import {
   generatePlaywrightCode,
-  generatePlaywrightCodeForMockMode,
+  generatePlaywrightCodeForEventsMockMode,
   generatePlaywrightCodeForRunEvents,
   generatePlaywrightCodeForRunEventsInPresentationMode,
   generatePlaywrightCodeForRunEventsInTrainingMode,
+  generatePlaywrightCodeForRunEventsForScreenshots,
+  generatePlaywrightCodeForRunEventsForHealingSelectors,
+  generatePlaywrightCodeForMockMode,
   generateRTLCode,
   nameToFolder,
 } from './CodeUtils';
+
+const eventTypesWithValues = ['input', 'change', 'keypress', 'url'];
 
 export default function RecordedEventsData({
   selectedTest,
@@ -454,6 +459,55 @@ export default function RecordedEventsData({
   };
 
   const recordEventsAgainInMockMode = async () => {
+    setMockModeAnchorEl(null);
+    setRunningTest(true);
+    setTestOutput(''); // Clear previous output
+
+    try {
+      const response = await fetch(`/api/v1/code/runTest`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          withUI: false,
+          testName: selectedTest.name,
+          generatedCode: generatePlaywrightCodeForEventsMockMode(
+            recordedEvents,
+            testsSummary,
+            selectedTest,
+            envDetails
+          ),
+          fileName: `__ftmocks-mock-mode-ignore-me.spec.js`,
+        }),
+      });
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          setTestOutput((prev) => prev + chunk);
+        }
+      } catch (streamError) {
+        console.error('Error reading stream:', streamError);
+        setTestOutput(
+          (prev) => prev + `\nError reading stream: ${streamError.message}`
+        );
+      } finally {
+        reader.releaseLock();
+      }
+    } catch (error) {
+      console.error('Error running test:', error);
+    }
+  };
+
+  const runInMockMode = async () => {
+    setMockModeAnchorEl(null);
     setRunningTest(true);
     setTestOutput(''); // Clear previous output
 
@@ -501,6 +555,7 @@ export default function RecordedEventsData({
   };
 
   const playAllEventsInMockMode = async () => {
+    setMockModeAnchorEl(null);
     setRunningTest(true);
     setTestOutput(''); // Clear previous output
 
@@ -548,6 +603,7 @@ export default function RecordedEventsData({
   };
 
   const runInPresentationMode = async () => {
+    setMockModeAnchorEl(null);
     setRunningTest(true);
     setTestOutput(''); // Clear previous output
 
@@ -595,6 +651,7 @@ export default function RecordedEventsData({
   };
 
   const runInTrainingMode = async () => {
+    setMockModeAnchorEl(null);
     setRunningTest(true);
     setTestOutput(''); // Clear previous output
 
@@ -608,6 +665,102 @@ export default function RecordedEventsData({
           withUI: false,
           testName: selectedTest.name,
           generatedCode: generatePlaywrightCodeForRunEventsInTrainingMode(
+            recordedEvents,
+            testsSummary,
+            selectedTest,
+            envDetails
+          ),
+          fileName: `__ftmocks-mock-mode-ignore-me.spec.js`,
+        }),
+      });
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          setTestOutput((prev) => prev + chunk);
+        }
+      } catch (streamError) {
+        console.error('Error reading stream:', streamError);
+        setTestOutput(
+          (prev) => prev + `\nError reading stream: ${streamError.message}`
+        );
+      } finally {
+        reader.releaseLock();
+      }
+    } catch (error) {
+      console.error('Error running test:', error);
+    }
+  };
+
+  const runEventsForScreenshots = async () => {
+    setMockModeAnchorEl(null);
+    setRunningTest(true);
+    setTestOutput(''); // Clear previous output
+
+    try {
+      const response = await fetch(`/api/v1/code/runTest`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          withUI: false,
+          testName: selectedTest.name,
+          generatedCode: generatePlaywrightCodeForRunEventsForScreenshots(
+            recordedEvents,
+            testsSummary,
+            selectedTest,
+            envDetails
+          ),
+          fileName: `__ftmocks-mock-mode-ignore-me.spec.js`,
+        }),
+      });
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          setTestOutput((prev) => prev + chunk);
+        }
+      } catch (streamError) {
+        console.error('Error reading stream:', streamError);
+        setTestOutput(
+          (prev) => prev + `\nError reading stream: ${streamError.message}`
+        );
+      } finally {
+        reader.releaseLock();
+      }
+    } catch (error) {
+      console.error('Error running test:', error);
+    }
+  };
+
+  const runForHealingSelectors = async () => {
+    setMockModeAnchorEl(null);
+    setRunningTest(true);
+    setTestOutput(''); // Clear previous output
+
+    try {
+      const response = await fetch(`/api/v1/code/runTest`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          withUI: false,
+          testName: selectedTest.name,
+          generatedCode: generatePlaywrightCodeForRunEventsForHealingSelectors(
             recordedEvents,
             testsSummary,
             selectedTest,
@@ -688,6 +841,9 @@ export default function RecordedEventsData({
                     open={Boolean(mockModeAnchorEl)}
                     onClose={handleMockModeClose}
                   >
+                    <MenuItem onClick={runInMockMode}>
+                      Run in mock mode
+                    </MenuItem>
                     <MenuItem onClick={recordEventsAgainInMockMode}>
                       Record events again
                     </MenuItem>
@@ -699,6 +855,12 @@ export default function RecordedEventsData({
                     </MenuItem>
                     <MenuItem onClick={runInTrainingMode}>
                       Run in training mode
+                    </MenuItem>
+                    <MenuItem onClick={runEventsForScreenshots}>
+                      Run for screenshots
+                    </MenuItem>
+                    <MenuItem onClick={runForHealingSelectors}>
+                      Run for healing selectors
                     </MenuItem>
                   </Menu>
                 </Box>
@@ -1070,7 +1232,8 @@ export default function RecordedEventsData({
                 fullWidth
               /> */}
 
-              {typeof selectedEvent.value === 'string' && (
+              {(typeof selectedEvent.value === 'string' ||
+                eventTypesWithValues.includes(selectedEvent.type)) && (
                 <TextField
                   label="Value"
                   value={selectedEvent.value || ''}
@@ -1083,6 +1246,17 @@ export default function RecordedEventsData({
                   fullWidth
                 />
               )}
+              <TextField
+                label="Description"
+                value={selectedEvent.description || ''}
+                onChange={(e) =>
+                  setSelectedEvent({
+                    ...selectedEvent,
+                    description: e.target.value,
+                  })
+                }
+                fullWidth
+              />
 
               <Box display="flex" mt={2}>
                 <Box display="flex" gap={1} width="50%">

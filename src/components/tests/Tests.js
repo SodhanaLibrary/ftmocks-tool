@@ -30,6 +30,7 @@ import Snaps from './Snaps';
 import LogViewer from './LogViewer';
 import RecordMockOrTest from './RecordMockOrTest';
 import TestOptimizer from './TestOptimizer';
+import Documentator from './Documentator';
 import { markDuplicateMocks } from '../utils/CommonUtils';
 
 export default function Tests({ envDetails }) {
@@ -1046,6 +1047,15 @@ export default function Tests({ envDetails }) {
               >
                 Optimize
               </Button>
+              <Button
+                sx={buttonStyle(5)}
+                variant="text"
+                color="info"
+                size="small"
+                onClick={() => setSelectedTab(5)}
+              >
+                Documentation
+              </Button>
             </Box>
             <Box sx={{ height: 'calc(100vh - 200px)', overflowY: 'scroll' }}>
               {selectedTab === 0 && (
@@ -1083,6 +1093,15 @@ export default function Tests({ envDetails }) {
               )}
               {selectedTab === 4 && (
                 <TestOptimizer
+                  selectedTest={selectedTest}
+                  fetchMockData={fetchMockData}
+                  envDetails={envDetails}
+                  resetMockData={resetMockData}
+                  fetchTestData={fetchTestData}
+                />
+              )}
+              {selectedTab === 5 && (
+                <Documentator
                   selectedTest={selectedTest}
                   fetchMockData={fetchMockData}
                   envDetails={envDetails}
