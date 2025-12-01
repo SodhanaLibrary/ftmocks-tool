@@ -1,25 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Typography,
-  List,
-  ListItem,
-  Card,
-  CardMedia,
-} from '@mui/material';
+import { Box, Typography, List, ListItem } from '@mui/material';
 
 const Documentator = ({ selectedTest }) => {
   const [events, setEvents] = useState([]);
 
-  const fetchEvents = async () => {
-    const response = await fetch(
-      `/api/v1/recordedEvents?name=${selectedTest.name}`
-    );
-    const data = await response.json();
-    setEvents(data.filter((event) => event.screenshotInfo));
-  };
-
   useEffect(() => {
+    const fetchEvents = async () => {
+      const response = await fetch(
+        `/api/v1/recordedEvents?name=${selectedTest.name}`
+      );
+      const data = await response.json();
+      setEvents(data.filter((event) => event.screenshotInfo));
+    };
+
     if (selectedTest) {
       fetchEvents();
     }
@@ -53,14 +46,58 @@ const Documentator = ({ selectedTest }) => {
                 {event.label || event.text || `Step ${idx + 1}`}
               </Typography>
               {event.screenshotInfo && (
-                <Card sx={{ maxWidth: 600, my: 1 }}>
-                  <CardMedia
-                    component="img"
-                    image={`/api/v1/screenshots?file=${event.screenshotInfo.name}&testName=${selectedTest.name}`}
-                    alt={event.description || `Screenshot ${idx + 1}`}
-                    sx={{ objectFit: 'contain' }}
-                  />
-                </Card>
+                <Box>
+                  {(() => {
+                    const displayWidth = 600;
+                    const scale =
+                      displayWidth / event.screenshotInfo.position.windowWidth;
+                    const displayHeight =
+                      event.screenshotInfo.position.windowHeight * scale;
+
+                    return (
+                      <Box
+                        sx={{
+                          position: 'relative',
+                          width: displayWidth,
+                          height: displayHeight,
+                        }}
+                      >
+                        <img
+                          src={`/api/v1/screenshots?file=${event.screenshotInfo.name}&testName=${selectedTest.name}`}
+                          alt={event.description || `Screenshot ${idx + 1}`}
+                          style={{
+                            width: displayWidth,
+                            height: displayHeight,
+                            display: 'block',
+                          }}
+                        />
+                        <svg
+                          width={displayWidth}
+                          height={displayHeight}
+                          style={{
+                            position: 'absolute',
+                            left: 0,
+                            top: 0,
+                            pointerEvents: 'none',
+                          }}
+                        >
+                          <rect
+                            x={event.screenshotInfo.position.x * scale}
+                            y={event.screenshotInfo.position.y * scale}
+                            width={event.screenshotInfo.position.width * scale}
+                            height={
+                              event.screenshotInfo.position.height * scale
+                            }
+                            fill="rgba(255, 215, 0, 0.3)"
+                            stroke="orange"
+                            strokeWidth="3"
+                            rx="4"
+                          />
+                        </svg>
+                      </Box>
+                    );
+                  })()}
+                </Box>
               )}
             </Box>
           </ListItem>
