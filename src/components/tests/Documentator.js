@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, List, ListItem, Button } from '@mui/material';
 import { ButtonGroup, IconButton, Tooltip } from '@mui/material';
+import BlurOnIcon from '@mui/icons-material/BlurOn';
 
 import ListIcon from '@mui/icons-material/List';
 import TrainIcon from '@mui/icons-material/Train';
@@ -17,7 +18,8 @@ const Documentator = ({ selectedTest }) => {
         `/api/v1/recordedEvents?name=${selectedTest.name}`
       );
       const data = await response.json();
-      setEvents(data.filter((event) => event.screenshotInfo));
+      const screenshotData = data.filter((event) => event.screenshotInfo);
+      setEvents(screenshotData);
     };
 
     if (selectedTest) {
@@ -41,7 +43,9 @@ const Documentator = ({ selectedTest }) => {
     <Box p={2}>
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Typography variant="h6" gutterBottom>
-          Test Walkthrough with Screenshots
+          {mode === 'list' && 'Test Walkthrough'}
+          {mode === 'training' && 'Test Training'}
+          {mode === 'differentiate' && 'Test Differentiate'}
         </Typography>
         <Box sx={{ display: 'flex', gap: 2 }}>
           <ButtonGroup variant="outlined" aria-label="screenshot navigation">
@@ -59,6 +63,14 @@ const Documentator = ({ selectedTest }) => {
                 onClick={() => setMode('training')}
               >
                 <TrainIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Differentiate Mode">
+              <IconButton
+                color={mode === 'differentiate' ? 'primary' : 'default'}
+                onClick={() => setMode('differentiate')}
+              >
+                <BlurOnIcon />
               </IconButton>
             </Tooltip>
           </ButtonGroup>
@@ -243,6 +255,48 @@ const Documentator = ({ selectedTest }) => {
             </Button>
           </Box>
         </Box>
+      )}
+      {mode === 'differentiate' && (
+        <List>
+          {events.map((event, idx) => {
+            if (!event.screenshotInfo?.diffPath) {
+              return null;
+            }
+            return (
+              <ListItem
+                key={idx}
+                alignItems="flex-start"
+                sx={{ mb: 2, display: 'block' }}
+              >
+                <Box>
+                  <Typography variant="subtitle2">
+                    {event.description || `Step ${idx + 1}`}
+                  </Typography>
+                  {event.screenshotInfo && (
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        gap: 2,
+                      }}
+                    >
+                      <img
+                        src={`/api/v1/screenshots?file=${event.screenshotInfo.name}&testName=${selectedTest.name}`}
+                        alt={event.description || `Screenshot ${idx + 1}`}
+                        style={{ width: '50%', height: 'auto' }}
+                      />
+                      <img
+                        src={`/api/v1/screenshots?file=${event.screenshotInfo.diffPath}&testName=${selectedTest.name}`}
+                        alt={event.description || `Screenshot ${idx + 1}`}
+                        style={{ width: '50%', height: 'auto' }}
+                      />
+                    </Box>
+                  )}
+                </Box>
+              </ListItem>
+            );
+          })}
+        </List>
       )}
     </Box>
   );
