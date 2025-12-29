@@ -44,7 +44,13 @@ import {
   nameToFolder,
 } from './CodeUtils';
 
-const eventTypesWithValues = ['input', 'change', 'keypress', 'url'];
+const eventTypesWithValues = [
+  'input',
+  'change',
+  'keypress',
+  'url',
+  'waitForTimeout',
+];
 
 export default function RecordedEventsData({
   selectedTest,
@@ -953,7 +959,7 @@ export default function RecordedEventsData({
                   </Box>
                   <Box sx={{ textAlign: 'left' }}>
                     <Typography variant="body1">
-                      {re.type} ({re.target})
+                      {re.type} ({re.target || re.value})
                     </Typography>
                     <Typography variant="body2">{re.time}</Typography>
                   </Box>
@@ -1197,6 +1203,7 @@ export default function RecordedEventsData({
                 <MenuItem value="url">URL</MenuItem>
                 <MenuItem value="keydown">Key Down</MenuItem>
                 <MenuItem value="change">Change</MenuItem>
+                <MenuItem value="waitForTimeout">Wait For Timeout</MenuItem>
               </TextField>
 
               <Autocomplete

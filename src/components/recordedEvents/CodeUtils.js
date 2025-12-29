@@ -113,7 +113,7 @@ export function generatePlaywrightCode(
     let testCode = testActions[testName].actions
       .filter(
         (action, index) =>
-          action.target &&
+          (action.target || action.type === 'waitForTimeout') &&
           (action.type !== 'input' ||
             (action.type === 'input' &&
               testActions[testName].actions?.[index + 1]?.type !== 'input'))
@@ -224,6 +224,12 @@ export function generatePlaywrightCode(
               return `  await page.locator("${locator}").nth(${nth}).keyboard.press('${action.key}');`;
             }
             return `  await page.keyboard.press('${action.key}');`;
+          case 'waitForTimeout':
+            // action.value is expected to be the timeout in ms
+            if (action.value && !isNaN(action.value)) {
+              return `  await page.waitForTimeout(${action.value});`;
+            }
+            return '';
           default:
             return null;
         }

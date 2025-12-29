@@ -30,7 +30,10 @@ const MockDataCreator = ({ selectedTest, onClose }) => {
   const { getRootProps, getInputProps, isDragActive, isDragReject } =
     useDropzone({
       onDrop,
-      accept: { '.har': [] }, // Accept only images
+      accept: {
+        '.har': [],
+        '.json': [], // Accept Postman collections (typically .json)
+      }, // Accept HAR and Postman collection files
       multiple: false, // Allow only single file
     });
 
@@ -40,7 +43,7 @@ const MockDataCreator = ({ selectedTest, onClose }) => {
 
   const handleUpload = async () => {
     if (!file) {
-      setUploadStatus('Please select a HAR file first.');
+      setUploadStatus('Please select a HAR or Postman collection file first.');
       return;
     }
 
@@ -48,14 +51,27 @@ const MockDataCreator = ({ selectedTest, onClose }) => {
     setUploadStatus('Uploading...');
 
     const formData = new FormData();
-    formData.append('harFile', file);
+    formData.append(
+      file.type === 'application/json' ? 'postmanFile' : 'harFile',
+      file
+    );
     formData.append('avoidDuplicates', avoidDuplicates);
     if (selectedTest?.name) {
       formData.append('testName', selectedTest?.name);
     }
-    let endpoint = selectedTest
-      ? `/api/v1/tests/${selectedTest.id}/harMockdata`
-      : '/api/v1/defaultHarMocks';
+    let endpoint = null;
+
+    if (file.type === 'application/json') {
+      if (selectedTest) {
+        endpoint = `/api/v1/tests/${selectedTest.id}/postmanMockdata`;
+      } else {
+        endpoint = '/api/v1/defaultPostmanMocks';
+      }
+    } else {
+      endpoint = selectedTest
+        ? `/api/v1/tests/${selectedTest.id}/harMockdata`
+        : '/api/v1/defaultHarMocks';
+    }
 
     try {
       const response = await fetch(endpoint, {
@@ -64,7 +80,9 @@ const MockDataCreator = ({ selectedTest, onClose }) => {
       });
 
       if (response.ok) {
-        setUploadStatus('HAR file uploaded and processed successfully!');
+        setUploadStatus(
+          'HAR file or Postman collection file uploaded and processed successfully!'
+        );
       } else {
         const errorData = await response.json();
         setUploadStatus(`Upload failed: ${errorData.error}`);
@@ -86,7 +104,9 @@ const MockDataCreator = ({ selectedTest, onClose }) => {
         pt: 6,
       }}
     >
-      <Typography variant="h6">Upload HAR File</Typography>
+      <Typography variant="h6">
+        Upload HAR or Postman Collection File
+      </Typography>
       {selectedTest && (
         <FormControlLabel
           control={
@@ -114,15 +134,16 @@ const MockDataCreator = ({ selectedTest, onClose }) => {
         <input {...getInputProps()} />
         {isDragActive ? (
           <Typography variant="h6" color="primary">
-            Drop the HAR file here...
+            Drop the the file here...
           </Typography>
         ) : (
           <Typography variant="h6">
-            Drag & drop a HAR file here, or click to select one
+            Drag & drop a HAR file or Postman collection file here, or click to
+            select one
           </Typography>
         )}
         <Button variant="outlined" sx={{ mt: 2 }}>
-          Choose HAR File
+          Choose the file
         </Button>
       </Box>
       {file && <Typography variant="body2">{file.name}</Typography>}
@@ -176,7 +197,7 @@ const MockDataCreator = ({ selectedTest, onClose }) => {
         onChange={(e, val) => setSelectedTab(val)}
         aria-label="basic tabs example"
       >
-        <Tab label="HAR Uploader" />
+        <Tab label="Uploader" />
         <Tab label="By User Input" />
         {selectedTest && <Tab label="From Default Mocks" />}
       </Tabs>
