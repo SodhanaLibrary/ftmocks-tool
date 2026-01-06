@@ -11,14 +11,13 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import PropTypes from 'prop-types';
 import DeleteIcon from '@mui/icons-material/Delete';
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import Tooltip from '@mui/material/Tooltip';
 import Snackbar from '@mui/material/Snackbar';
-import UploadIcon from '@mui/icons-material/Upload';
 import Alert from '@mui/material/Alert';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import Autocomplete from '@mui/material/Autocomplete';
-import Popover from '@mui/material/Popover';
 import {
   getDuplicateMocks,
   isMockInDefaultMocks,
@@ -26,6 +25,7 @@ import {
   isValidJSON,
 } from './utils/CommonUtils';
 import { FtJSON } from './utils/FtJSON';
+import AiEditDialog from './AiEditDialog';
 
 const MockDataView = ({
   envDetails,
@@ -40,6 +40,7 @@ const MockDataView = ({
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [ipInputValue, setIpInputValue] = useState('');
+  const [aiDialogOpen, setAiDialogOpen] = useState(false);
 
   useEffect(() => {
     setMockDataString(FtJSON.stringify(mockData, null, 2));
@@ -182,6 +183,13 @@ const MockDataView = ({
 
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
+  };
+
+  const handleAiSuccess = (updatedContent) => {
+    setMockData({
+      ...mockData,
+      response: { ...mockData.response, content: updatedContent },
+    });
   };
 
   const handleDelete = (chipToDelete) => () => {
@@ -521,6 +529,15 @@ const MockDataView = ({
             : 'Valid JSON'
         }
       />
+      <Button
+        variant="outlined"
+        color="primary"
+        startIcon={<AutoFixHighIcon />}
+        onClick={() => setAiDialogOpen(true)}
+        sx={{ mb: 2 }}
+      >
+        Edit with AI
+      </Button>
       {mockData?.request?.postData?.text && (
         <TextField
           label="Post Data"
@@ -607,6 +624,12 @@ const MockDataView = ({
           )}
         </Box>
       </Box>
+      <AiEditDialog
+        open={aiDialogOpen}
+        onClose={() => setAiDialogOpen(false)}
+        mockData={mockData.response.content}
+        onSuccess={handleAiSuccess}
+      />
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}

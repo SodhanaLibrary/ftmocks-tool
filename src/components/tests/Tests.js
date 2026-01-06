@@ -97,6 +97,9 @@ export default function Tests({ envDetails }) {
 
   const fetchMockData = async (test, options) => {
     try {
+      if (!test?.id) {
+        return;
+      }
       const response = await fetch(
         `/api/v1/tests/${test.id}/mockdata?name=${test.name}`
       );

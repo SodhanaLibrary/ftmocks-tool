@@ -804,6 +804,16 @@ export default function RecordedEventsData({
 
   const htmlOutput = convert.toHtml(testOutput).replace(/\n/g, '<br/>');
 
+  const renderedTarget = (event) => {
+    if (event.target) {
+      return event.target;
+    }
+    if (typeof event.value === 'string') {
+      return event.value;
+    }
+    return '';
+  };
+
   return (
     <Box width="100%">
       {showEvents && (
@@ -959,7 +969,7 @@ export default function RecordedEventsData({
                   </Box>
                   <Box sx={{ textAlign: 'left' }}>
                     <Typography variant="body1">
-                      {re.type} ({re.target || re.value})
+                      {re.type} ({renderedTarget(re)})
                     </Typography>
                     <Typography variant="body2">{re.time}</Typography>
                   </Box>
