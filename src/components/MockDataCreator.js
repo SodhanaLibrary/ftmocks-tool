@@ -32,6 +32,7 @@ const MockDataCreator = ({ selectedTest, onClose }) => {
       onDrop,
       accept: {
         '.har': [],
+        '.zip': [],
         '.json': [], // Accept Postman collections (typically .json)
       }, // Accept HAR and Postman collection files
       multiple: false, // Allow only single file
@@ -51,26 +52,30 @@ const MockDataCreator = ({ selectedTest, onClose }) => {
     setUploadStatus('Uploading...');
 
     const formData = new FormData();
-    formData.append(
-      file.type === 'application/json' ? 'postmanFile' : 'harFile',
-      file
-    );
     formData.append('avoidDuplicates', avoidDuplicates);
     if (selectedTest?.name) {
       formData.append('testName', selectedTest?.name);
     }
     let endpoint = null;
 
-    if (file.type === 'application/json') {
+    if (file.type === 'application/zip' || file.name.endsWith('.zip')) {
+      // Playwright trace zip files
+      endpoint = selectedTest
+        ? `/api/v1/tests/${selectedTest.id}/playwrightMockdata`
+        : '/api/v1/defaultMocks/playwrightUpload';
+      formData.append('traceFile', file);
+    } else if (file.type === 'application/json') {
       if (selectedTest) {
         endpoint = `/api/v1/tests/${selectedTest.id}/postmanMockdata`;
       } else {
         endpoint = '/api/v1/defaultPostmanMocks';
       }
+      formData.append('postmanFile', file);
     } else {
       endpoint = selectedTest
         ? `/api/v1/tests/${selectedTest.id}/harMockdata`
         : '/api/v1/defaultHarMocks';
+      formData.append('harFile', file);
     }
 
     try {
@@ -138,8 +143,8 @@ const MockDataCreator = ({ selectedTest, onClose }) => {
           </Typography>
         ) : (
           <Typography variant="h6">
-            Drag & drop a HAR file or Postman collection file here, or click to
-            select one
+            Drag & drop a HAR file or Postman collection file or Playwright
+            trace zip file here, or click to select one
           </Typography>
         )}
         <Button variant="outlined" sx={{ mt: 2 }}>
