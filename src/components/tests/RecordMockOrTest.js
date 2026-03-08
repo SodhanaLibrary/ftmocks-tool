@@ -11,6 +11,7 @@ import Chip from '@mui/material/Chip';
 import RecordedEventsData from '../recordedEvents/RecordedEventsData';
 
 const RecordMockOrTest = ({
+  testCases,
   selectedTest,
   fetchMockData,
   envDetails,
@@ -288,6 +289,7 @@ const RecordMockOrTest = ({
         sx={{ textAlign: 'center', border: '1px solid #333' }}
       >
         <RecordedEventsData
+          testCases={testCases}
           recordingStatus={isRecordingMockData}
           selectedTest={selectedTest}
           envDetails={envDetails}

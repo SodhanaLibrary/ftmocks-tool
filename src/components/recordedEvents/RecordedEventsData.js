@@ -34,6 +34,7 @@ import AnsiToHtml from 'ansi-to-html';
 import {
   generatePlaywrightCode,
   generatePlaywrightCodeForEventsMockMode,
+  generatePlaywrightCodeForContinueEventsMockMode,
   generatePlaywrightCodeForRunEvents,
   generatePlaywrightCodeForRunEventsInPresentationMode,
   generatePlaywrightCodeForRunEventsInTrainingMode,
@@ -53,6 +54,7 @@ const eventTypesWithValues = [
 ];
 
 export default function RecordedEventsData({
+  testCases,
   selectedTest,
   recordingStatus,
   envDetails,
@@ -218,6 +220,21 @@ export default function RecordedEventsData({
     setMockModeAnchorEl(event.currentTarget);
   };
 
+  const getParentFolder = () => {
+    const parents = [];
+    let parentFolder = null;
+    let currentParentId = selectedTest.parentId;
+    while (currentParentId) {
+      parentFolder = testCases.find(
+        (testCase) => testCase.id === currentParentId
+      );
+      if (!parentFolder) break;
+      parents.push(parentFolder.name);
+      currentParentId = parentFolder.parentId;
+    }
+    return parents;
+  };
+
   const handleMockModeClose = () => {
     setMockModeAnchorEl(null);
   };
@@ -249,6 +266,7 @@ export default function RecordedEventsData({
     const saveData = {
       generatedCode: genCode,
       fileName: `${nameToFolder(selectedTest?.name).toLowerCase()}.${genCodeType === 'playwright' ? 'spec.js' : 'test.js'}`,
+      parents: getParentFolder(),
     };
 
     try {
@@ -287,6 +305,7 @@ export default function RecordedEventsData({
           testName: selectedTest.name,
           generatedCode: genCode,
           fileName: `${nameToFolder(selectedTest?.name).toLowerCase()}.${genCodeType === 'playwright' ? 'spec.js' : 'test.js'}`,
+          parents: getParentFolder(),
         }),
       });
 
@@ -479,6 +498,54 @@ export default function RecordedEventsData({
           withUI: false,
           testName: selectedTest.name,
           generatedCode: generatePlaywrightCodeForEventsMockMode(
+            recordedEvents,
+            testsSummary,
+            selectedTest,
+            envDetails
+          ),
+          fileName: `__ftmocks-mock-mode-ignore-me.spec.js`,
+        }),
+      });
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          setTestOutput((prev) => prev + chunk);
+        }
+      } catch (streamError) {
+        console.error('Error reading stream:', streamError);
+        setTestOutput(
+          (prev) => prev + `\nError reading stream: ${streamError.message}`
+        );
+      } finally {
+        reader.releaseLock();
+      }
+    } catch (error) {
+      console.error('Error running test:', error);
+    }
+  };
+
+  const recordContinueEventsFromLastEventInMockMode = async () => {
+    setMockModeAnchorEl(null);
+    setRunningTest(true);
+    setTestOutput(''); // Clear previous output
+
+    try {
+      const response = await fetch(`/api/v1/code/runTest`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          withUI: false,
+          testName: selectedTest.name,
+          generatedCode: generatePlaywrightCodeForContinueEventsMockMode(
             recordedEvents,
             testsSummary,
             selectedTest,
@@ -862,6 +929,11 @@ export default function RecordedEventsData({
                     </MenuItem>
                     <MenuItem onClick={recordEventsAgainInMockMode}>
                       Record events again
+                    </MenuItem>
+                    <MenuItem
+                      onClick={recordContinueEventsFromLastEventInMockMode}
+                    >
+                      Record events from last event
                     </MenuItem>
                     <MenuItem onClick={playAllEventsInMockMode}>
                       Play all events

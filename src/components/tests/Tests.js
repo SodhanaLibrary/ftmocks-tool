@@ -1088,6 +1088,7 @@ export default function Tests({ envDetails }) {
               {selectedTab === 2 && <LogViewer selectedTest={selectedTest} />}
               {selectedTab === 3 && (
                 <RecordMockOrTest
+                  testCases={testCases}
                   selectedTest={selectedTest}
                   fetchMockData={fetchMockData}
                   envDetails={envDetails}
