@@ -26,6 +26,7 @@ import {
 } from './utils/CommonUtils';
 import { FtJSON } from './utils/FtJSON';
 import AiEditDialog from './AiEditDialog';
+import ResponseVariantsDialog from './ResponseVariantsDialog';
 
 const MockDataView = ({
   envDetails,
@@ -41,6 +42,10 @@ const MockDataView = ({
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [ipInputValue, setIpInputValue] = useState('');
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
+  const [variantsDialogOpen, setVariantsDialogOpen] = useState(false);
+  const [variants, setVariants] = useState([]);
+  const [variantsLoading, setVariantsLoading] = useState(false);
+  const [variantsError, setVariantsError] = useState('');
 
   useEffect(() => {
     setMockDataString(FtJSON.stringify(mockData, null, 2));
@@ -190,6 +195,250 @@ const MockDataView = ({
       ...mockData,
       response: { ...mockData.response, content: updatedContent },
     });
+  };
+
+  const fetchVariants = async () => {
+    if (!mockItem?.id) return;
+    setVariantsLoading(true);
+    setVariantsError('');
+    try {
+      const endpoint = selectedTest
+        ? `/api/v1/tests/${selectedTest.id}/mockdata/${mockItem.id}/variants?name=${encodeURIComponent(selectedTest.name)}`
+        : `/api/v1/defaultmocks/${mockItem.id}/variants`;
+      const response = await fetch(endpoint, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setVariants(Array.isArray(data) ? data : []);
+      } else {
+        setVariantsError('Failed to load variants');
+        setVariants([]);
+      }
+    } catch (err) {
+      setVariantsError(err.message || 'Failed to load variants');
+      setVariants([]);
+    } finally {
+      setVariantsLoading(false);
+    }
+  };
+
+  const handleOpenVariantsDialog = () => {
+    setVariantsDialogOpen(true);
+    fetchVariants();
+  };
+
+  const handleEnableVariants = async () => {
+    if (!mockItem?.id) return;
+    const responseContent = mockData?.response?.content ?? '';
+    const variantId = `variant-${Date.now()}`;
+    const initialVariants = [
+      {
+        id: variantId,
+        name: 'Default',
+        response: responseContent,
+      },
+    ];
+
+    const endpoint = selectedTest
+      ? `/api/v1/tests/${selectedTest.id}/mockdata/${mockItem.id}/variants?name=${encodeURIComponent(selectedTest.name)}`
+      : `/api/v1/defaultmocks/${mockItem.id}/variants`;
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: FtJSON.stringify({ variants: initialVariants }),
+      });
+      if (response.ok) {
+        const updatedMock = {
+          ...mockData,
+          current_variant_id: variantId,
+        };
+        setMockData(updatedMock);
+
+        const updateEndpoint = selectedTest
+          ? `/api/v1/tests/${selectedTest.id}/mockdata/${mockItem.id}?name=${encodeURIComponent(selectedTest.name)}`
+          : `/api/v1/defaultmocks/${mockItem.id}`;
+        await fetch(updateEndpoint, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: FtJSON.stringify(updatedMock),
+        });
+
+        await fetchVariants();
+        setSnackbarMessage('Variants enabled. Current response saved as Default variant.');
+        setSnackbarOpen(true);
+      } else {
+        setVariantsError('Failed to enable variants');
+      }
+    } catch (err) {
+      setVariantsError(err.message || 'Failed to enable variants');
+    }
+  };
+
+  const handleAddVariant = async (variantName, responseContent) => {
+    if (!mockItem?.id || !variantName?.trim()) return;
+    const content =
+      responseContent !== undefined && responseContent !== null
+        ? (typeof responseContent === 'string'
+            ? responseContent
+            : FtJSON.stringify(responseContent))
+        : typeof mockData?.response?.content === 'string'
+          ? mockData.response.content
+          : FtJSON.stringify(mockData?.response?.content ?? '');
+    const variantId = `variant-${Date.now()}`;
+    const newVariant = {
+      id: variantId,
+      name: variantName.trim(),
+      response: content,
+    };
+    const updatedVariants = [...variants, newVariant];
+
+    const endpoint = selectedTest
+      ? `/api/v1/tests/${selectedTest.id}/mockdata/${mockItem.id}/variants?name=${encodeURIComponent(selectedTest.name)}`
+      : `/api/v1/defaultmocks/${mockItem.id}/variants`;
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: FtJSON.stringify({ variants: updatedVariants }),
+      });
+      if (response.ok) {
+        await fetchVariants();
+        setSnackbarMessage('Variant added successfully');
+        setSnackbarOpen(true);
+      } else {
+        setVariantsError('Failed to add variant');
+      }
+    } catch (err) {
+      setVariantsError(err.message || 'Failed to add variant');
+    }
+  };
+
+  const handleUpdateVariant = async (updatedVariant) => {
+    if (!mockItem?.id || !updatedVariant?.id) return;
+    const updatedVariants = variants.map((v) =>
+      v.id === updatedVariant.id ? updatedVariant : v
+    );
+
+    const endpoint = selectedTest
+      ? `/api/v1/tests/${selectedTest.id}/mockdata/${mockItem.id}/variants?name=${encodeURIComponent(selectedTest.name)}`
+      : `/api/v1/defaultmocks/${mockItem.id}/variants`;
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: FtJSON.stringify({ variants: updatedVariants }),
+      });
+      if (response.ok) {
+        await fetchVariants();
+        setSnackbarMessage('Variant updated successfully');
+        setSnackbarOpen(true);
+      } else {
+        setVariantsError('Failed to update variant');
+      }
+    } catch (err) {
+      setVariantsError(err.message || 'Failed to update variant');
+    }
+  };
+
+  const handleDeleteVariant = async (variant) => {
+    if (!mockItem?.id || !variant?.id) return;
+    const updatedVariants = variants.filter((v) => v.id !== variant.id);
+
+    const endpoint = selectedTest
+      ? `/api/v1/tests/${selectedTest.id}/mockdata/${mockItem.id}/variants?name=${encodeURIComponent(selectedTest.name)}`
+      : `/api/v1/defaultmocks/${mockItem.id}/variants`;
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: FtJSON.stringify({ variants: updatedVariants }),
+      });
+      if (response.ok) {
+        if (mockData.current_variant_id === variant.id) {
+          const updatedMock = { ...mockData, current_variant_id: undefined };
+          setMockData(updatedMock);
+          const updateEndpoint = selectedTest
+            ? `/api/v1/tests/${selectedTest.id}/mockdata/${mockItem.id}?name=${encodeURIComponent(selectedTest.name)}`
+            : `/api/v1/defaultmocks/${mockItem.id}`;
+          await fetch(updateEndpoint, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+            body: FtJSON.stringify(updatedMock),
+          });
+        }
+        await fetchVariants();
+        setSnackbarMessage('Variant deleted successfully');
+        setSnackbarOpen(true);
+      } else {
+        setVariantsError('Failed to delete variant');
+      }
+    } catch (err) {
+      setVariantsError(err.message || 'Failed to delete variant');
+    }
+  };
+
+  const handleSelectVariant = async (variant) => {
+    const responseContent =
+      typeof variant.response === 'string'
+        ? variant.response
+        : FtJSON.stringify(variant.response);
+    const updatedMock = {
+      ...mockData,
+      response: { ...mockData.response, content: responseContent },
+      current_variant_id: variant.id,
+    };
+    setMockData(updatedMock);
+
+    const endpoint = selectedTest
+      ? `/api/v1/tests/${selectedTest.id}/mockdata/${mockItem.id}?name=${encodeURIComponent(selectedTest.name)}`
+      : `/api/v1/defaultmocks/${mockItem.id}`;
+    try {
+      const response = await fetch(endpoint, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: FtJSON.stringify(updatedMock),
+      });
+      if (response.ok) {
+        setSnackbarMessage('Response variant applied successfully');
+        setSnackbarOpen(true);
+      } else {
+        setSnackbarMessage('Failed to update mock with variant');
+        setSnackbarOpen(true);
+      }
+    } catch (error) {
+      setSnackbarMessage('Error updating mock with variant');
+      setSnackbarOpen(true);
+    }
+    setVariantsDialogOpen(false);
   };
 
   const handleDelete = (chipToDelete) => () => {
@@ -529,15 +778,25 @@ const MockDataView = ({
             : 'Valid JSON'
         }
       />
-      <Button
-        variant="outlined"
-        color="primary"
-        startIcon={<AutoFixHighIcon />}
-        onClick={() => setAiDialogOpen(true)}
-        sx={{ mb: 2 }}
-      >
-        Edit with AI
-      </Button>
+      <Box display="flex" gap={1} mb={2}>
+        <Button
+          variant="outlined"
+          color="primary"
+          startIcon={<AutoFixHighIcon />}
+          onClick={() => setAiDialogOpen(true)}
+        >
+          Edit with AI
+        </Button>
+        <Button
+          variant="outlined"
+          color="primary"
+          startIcon={<AutoFixHighIcon />}
+          onClick={handleOpenVariantsDialog}
+        >
+          Response Variants
+        </Button>
+      </Box>
+
       {mockData?.request?.postData?.text && (
         <TextField
           label="Post Data"
@@ -629,6 +888,21 @@ const MockDataView = ({
         onClose={() => setAiDialogOpen(false)}
         mockData={mockData.response.content}
         onSuccess={handleAiSuccess}
+      />
+      <ResponseVariantsDialog
+        open={variantsDialogOpen}
+        onClose={() => setVariantsDialogOpen(false)}
+        mockItem={mockData}
+        selectedTest={selectedTest}
+        variants={variants}
+        loading={variantsLoading}
+        error={variantsError}
+        onSelectVariant={handleSelectVariant}
+        onRefresh={fetchVariants}
+        onEnableVariants={handleEnableVariants}
+        onAddVariant={handleAddVariant}
+        onUpdateVariant={handleUpdateVariant}
+        onDeleteVariant={handleDeleteVariant}
       />
       <Snackbar
         open={snackbarOpen}
