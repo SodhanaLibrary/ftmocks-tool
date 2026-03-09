@@ -907,15 +907,15 @@ export default function RecordedEventsData({
                 open={Boolean(generateCodeAnchorEl)}
                 onClose={handleGenerateCodeClose}
               >
-                <MenuItem onClick={genRTLCode}>Generate RTL Code</MenuItem>
-                <MenuItem onClick={genPlayWriteCode}>
+                <MenuItem id="recorded-events-gen-rtl-code" onClick={genRTLCode}>Generate RTL Code</MenuItem>
+                <MenuItem id="recorded-events-gen-playwright-code" onClick={genPlayWriteCode}>
                   Generate Playwright Code
                 </MenuItem>
               </Menu> */}
               {recordedEvents.length > 0 && (
                 <Box>
                   <Tooltip title="Run in mock mode">
-                    <IconButton color="primary" onClick={handleMockModeClick}>
+                    <IconButton id="recorded-events-mock-mode-btn" color="primary" onClick={handleMockModeClick}>
                       <FiberSmartRecordIcon />
                     </IconButton>
                   </Tooltip>
@@ -924,36 +924,38 @@ export default function RecordedEventsData({
                     open={Boolean(mockModeAnchorEl)}
                     onClose={handleMockModeClose}
                   >
-                    <MenuItem onClick={runInMockMode}>
+                    <MenuItem id="recorded-events-run-mock-mode" onClick={runInMockMode}>
                       Run in mock mode
                     </MenuItem>
-                    <MenuItem onClick={recordEventsAgainInMockMode}>
+                    <MenuItem id="recorded-events-record-again" onClick={recordEventsAgainInMockMode}>
                       Record events again
                     </MenuItem>
                     <MenuItem
+                      id="recorded-events-record-from-last"
                       onClick={recordContinueEventsFromLastEventInMockMode}
                     >
                       Record events from last event
                     </MenuItem>
-                    <MenuItem onClick={playAllEventsInMockMode}>
+                    <MenuItem id="recorded-events-play-all" onClick={playAllEventsInMockMode}>
                       Play all events
                     </MenuItem>
-                    <MenuItem onClick={runInPresentationMode}>
+                    <MenuItem id="recorded-events-presentation-mode" onClick={runInPresentationMode}>
                       Run in presentation mode
                     </MenuItem>
-                    <MenuItem onClick={runInTrainingMode}>
+                    <MenuItem id="recorded-events-training-mode" onClick={runInTrainingMode}>
                       Run in training mode
                     </MenuItem>
-                    <MenuItem onClick={runEventsForScreenshots}>
+                    <MenuItem id="recorded-events-screenshots" onClick={runEventsForScreenshots}>
                       Run for screenshots
                     </MenuItem>
-                    <MenuItem onClick={runForHealingSelectors}>
+                    <MenuItem id="recorded-events-healing-selectors" onClick={runForHealingSelectors}>
                       Run for healing selectors
                     </MenuItem>
                   </Menu>
                 </Box>
               )}
               <Button
+                id="recorded-events-gen-playwright-btn"
                 variant="contained"
                 onClick={genPlayWriteCode}
                 sx={{ ml: 2 }}
@@ -963,12 +965,12 @@ export default function RecordedEventsData({
             </Box>
             <Box>
               <Tooltip title="Download as file">
-                <IconButton onClick={downloadTextAsFile}>
+                <IconButton id="recorded-events-download-btn" onClick={downloadTextAsFile}>
                   <CloudDownloadIcon />
                 </IconButton>
               </Tooltip>
               <Tooltip title="Delete all events">
-                <IconButton onClick={deleteAll}>
+                <IconButton id="recorded-events-delete-all-btn" onClick={deleteAll}>
                   <DeleteSweepIcon />
                 </IconButton>
               </Tooltip>
@@ -1020,6 +1022,7 @@ export default function RecordedEventsData({
                   borderRadius: 1,
                 }}
                 p={1}
+                id={`recorded-events-item-${re.id}`}
                 onClick={() => editEvent(re)}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -1049,6 +1052,7 @@ export default function RecordedEventsData({
                 <Box className="action-buttons">
                   <Tooltip title="Duplicate Event">
                     <IconButton
+                      id={`recorded-events-duplicate-${re.id}`}
                       size="small"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1061,6 +1065,7 @@ export default function RecordedEventsData({
                   </Tooltip>
                   <Tooltip title="Create New Event">
                     <IconButton
+                      id={`recorded-events-add-empty-${re.id}`}
                       size="small"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1073,6 +1078,7 @@ export default function RecordedEventsData({
                   </Tooltip>
                   <Tooltip title="Edit Event">
                     <IconButton
+                      id={`recorded-events-edit-${re.id}`}
                       size="small"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1085,6 +1091,7 @@ export default function RecordedEventsData({
                   </Tooltip>
                   <Tooltip title="Delete Event">
                     <IconButton
+                      id={`recorded-events-delete-${re.id}`}
                       size="small"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1118,7 +1125,7 @@ export default function RecordedEventsData({
             justifyContent="space-between"
           >
             <Box display="flex" alignItems="center" gap={1}>
-              <IconButton color="primary" onClick={onBackClick}>
+              <IconButton id="recorded-events-back-btn" color="primary" onClick={onBackClick}>
                 <ArrowBackIcon />
               </IconButton>
               <Typography variant="h5">
@@ -1127,22 +1134,22 @@ export default function RecordedEventsData({
             </Box>
             <Box>
               <Tooltip title="Save and Run Test">
-                <IconButton onClick={() => playTest(false)} sx={{ mr: 1 }}>
+                <IconButton id="recorded-events-play-test-btn" onClick={() => playTest(false)} sx={{ mr: 1 }}>
                   <PlayArrowIcon />
                 </IconButton>
               </Tooltip>
               <Tooltip title="Save and Run Test With Playwright UI">
-                <IconButton onClick={() => playTest(true)} sx={{ mr: 1 }}>
+                <IconButton id="recorded-events-play-ui-btn" onClick={() => playTest(true)} sx={{ mr: 1 }}>
                   <GavelOutlined />
                 </IconButton>
               </Tooltip>
               <Tooltip title="Save File">
-                <IconButton onClick={saveFile} sx={{ mr: 1 }}>
+                <IconButton id="recorded-events-save-file-btn" onClick={saveFile} sx={{ mr: 1 }}>
                   <SaveIcon />
                 </IconButton>
               </Tooltip>
               <Tooltip title="Copy to Clipboard">
-                <IconButton onClick={copyToClipboard}>
+                <IconButton id="recorded-events-copy-btn" onClick={copyToClipboard}>
                   <ContentCopyIcon />
                 </IconButton>
               </Tooltip>
@@ -1165,6 +1172,7 @@ export default function RecordedEventsData({
                 }}
               >
                 <TextField
+                  id="recorded-events-gen-code-input"
                   multiline
                   fullWidth
                   value={genCode}
@@ -1195,6 +1203,7 @@ export default function RecordedEventsData({
                     to generate the code
                   </Typography>
                   <Button
+                    id="recorded-events-playwright-codegen-btn"
                     sx={{ mt: 1 }}
                     onClick={playwrightCodeGen}
                     variant="outlined"
@@ -1259,7 +1268,7 @@ export default function RecordedEventsData({
               mb={2}
             >
               <Typography variant="h6">Edit Event</Typography>
-              <IconButton onClick={() => setSelectedEvent(null)}>
+              <IconButton id="recorded-events-edit-close-btn" onClick={() => setSelectedEvent(null)}>
                 <CloseIcon />
               </IconButton>
             </Box>
@@ -1270,6 +1279,7 @@ export default function RecordedEventsData({
               sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
             >
               <TextField
+                id="recorded-events-edit-type"
                 select
                 label="Type"
                 value={selectedEvent.type || ''}
@@ -1304,6 +1314,7 @@ export default function RecordedEventsData({
                 }}
                 renderInput={(params) => (
                   <TextField
+                    id="recorded-events-edit-target"
                     {...params}
                     label="Target"
                     variant="outlined"
@@ -1324,6 +1335,7 @@ export default function RecordedEventsData({
               {(typeof selectedEvent.value === 'string' ||
                 eventTypesWithValues.includes(selectedEvent.type)) && (
                 <TextField
+                  id="recorded-events-edit-value"
                   label="Value"
                   value={selectedEvent.value || ''}
                   onChange={(e) =>
@@ -1336,6 +1348,7 @@ export default function RecordedEventsData({
                 />
               )}
               <TextField
+                id="recorded-events-edit-description"
                 label="Description"
                 value={selectedEvent.description || ''}
                 onChange={(e) =>
@@ -1350,6 +1363,7 @@ export default function RecordedEventsData({
               <Box display="flex" mt={2}>
                 <Box display="flex" gap={1} width="50%">
                   <Button
+                    id="recorded-events-edit-save-btn"
                     variant="contained"
                     onClick={async () => {
                       try {
@@ -1386,6 +1400,7 @@ export default function RecordedEventsData({
                     Save Changes
                   </Button>
                   <Button
+                    id="recorded-events-edit-cancel-btn"
                     variant="outlined"
                     onClick={() => setSelectedEvent(null)}
                     fullWidth

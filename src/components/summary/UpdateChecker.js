@@ -50,6 +50,7 @@ export default function UpdateChecker() {
           Local: {versions.localVersion} | Remote: {versions.remoteVersion}
         </Typography>
         <Button
+          id="update-checker-update-btn"
           variant="contained"
           color="primary"
           onClick={handleUpdate}

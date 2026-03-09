@@ -137,6 +137,7 @@ const ResponseVariantsDialog = ({
             </Typography>
             <Box display="flex" gap={1}>
               <Button
+                id="response-variants-dialog-enable-btn"
                 variant="contained"
                 color="primary"
                 onClick={onEnableVariants}
@@ -151,6 +152,7 @@ const ResponseVariantsDialog = ({
           <>
             <Box sx={{ display: 'flex', gap: 1, mb: 2, alignItems: 'center' }}>
               <Button
+                id="response-variants-dialog-add-variant-btn"
                 variant="outlined"
                 color="primary"
                 size="small"
@@ -164,6 +166,7 @@ const ResponseVariantsDialog = ({
             {variants.map((variant) => (
               <Box key={variant.id}>
                 <ListItemButton
+                  id={`response-variants-dialog-variant-${variant.id}`}
                   selected={currentVariantId === variant.id}
                   onClick={() => handleSelect(variant)}
                   sx={{
@@ -192,6 +195,7 @@ const ResponseVariantsDialog = ({
                     }
                   />
                   <Button
+                    id={`response-variants-dialog-edit-variant-${variant.id}`}
                     size="small"
                     variant="outlined"
                     onClick={(e) => {
@@ -202,6 +206,7 @@ const ResponseVariantsDialog = ({
                     <EditIcon fontSize="small" />
                   </Button>
                   <Button
+                    id={`response-variants-dialog-delete-variant-${variant.id}`}
                     size="small"
                     variant="outlined"
                     color="error"
@@ -227,6 +232,7 @@ const ResponseVariantsDialog = ({
         {!loading && variants && variants.length > 0 && showAddForm && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 2 }}>
             <TextField
+              id="response-variants-dialog-new-variant-name"
               label="Variant name"
               fullWidth
               value={newVariantName}
@@ -237,6 +243,7 @@ const ResponseVariantsDialog = ({
               autoFocus
             />
             <TextField
+              id="response-variants-dialog-new-variant-response"
               label="Response"
               fullWidth
               multiline
@@ -250,6 +257,7 @@ const ResponseVariantsDialog = ({
             />
             <Box display="flex" gap={1}>
               <Button
+                id="response-variants-dialog-add-submit-btn"
                 variant="contained"
                 color="primary"
                 onClick={handleAddVariant}
@@ -257,7 +265,7 @@ const ResponseVariantsDialog = ({
               >
                 Add
               </Button>
-              <Button variant="outlined" onClick={closeAddForm}>
+              <Button id="response-variants-dialog-add-cancel-btn" variant="outlined" onClick={closeAddForm}>
                 Cancel
               </Button>
             </Box>
@@ -266,6 +274,7 @@ const ResponseVariantsDialog = ({
         {!loading && variants && variants.length > 0 && editingVariant && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 2 }}>
             <TextField
+              id="response-variants-dialog-edit-variant-name"
               label="Variant name"
               fullWidth
               value={editVariantName}
@@ -276,6 +285,7 @@ const ResponseVariantsDialog = ({
               autoFocus
             />
             <TextField
+              id="response-variants-dialog-edit-variant-response"
               label="Response"
               fullWidth
               multiline
@@ -289,6 +299,7 @@ const ResponseVariantsDialog = ({
             />
             <Box display="flex" gap={1}>
               <Button
+                id="response-variants-dialog-update-btn"
                 variant="contained"
                 color="primary"
                 onClick={handleUpdateVariant}
@@ -296,7 +307,7 @@ const ResponseVariantsDialog = ({
               >
                 Update
               </Button>
-              <Button variant="outlined" onClick={closeEditForm}>
+              <Button id="response-variants-dialog-edit-cancel-btn" variant="outlined" onClick={closeEditForm}>
                 Cancel
               </Button>
             </Box>
@@ -304,9 +315,9 @@ const ResponseVariantsDialog = ({
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button id="response-variants-dialog-close-btn" onClick={onClose}>Cancel</Button>
         {variants?.length > 0 && (
-          <Button onClick={onRefresh} disabled={loading}>
+          <Button id="response-variants-dialog-refresh-btn" onClick={onRefresh} disabled={loading}>
             Refresh
           </Button>
         )}

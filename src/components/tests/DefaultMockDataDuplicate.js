@@ -102,6 +102,7 @@ const DefaultMockDataDuplicate = ({ selectedTest }) => {
       )}
 
       <Button
+        id="default-mock-data-duplicate-import-btn"
         variant="contained"
         color="primary"
         onClick={handleDuplicate}

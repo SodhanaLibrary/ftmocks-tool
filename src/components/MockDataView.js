@@ -616,12 +616,12 @@ const MockDataView = ({
         </Typography>
         <Box>
           {selectedTest && (
-            <IconButton onClick={onClose} aria-label="close">
+            <IconButton id="mock-data-view-close-btn" onClick={onClose} aria-label="close">
               <CloseIcon />
             </IconButton>
           )}
           <Tooltip title="Delete">
-            <IconButton onClick={onDelete} aria-label="delete">
+            <IconButton id="mock-data-view-delete-btn" onClick={onDelete} aria-label="delete">
               <DeleteIcon color="secondary" />
             </IconButton>
           </Tooltip>
@@ -629,6 +629,7 @@ const MockDataView = ({
       </Box>
       <Divider />
       <TextField
+        id="mock-data-view-url"
         label="URL"
         fullWidth
         margin="normal"
@@ -638,6 +639,7 @@ const MockDataView = ({
         }}
       />
       <TextField
+        id="mock-data-view-method"
         label="Method"
         fullWidth
         margin="normal"
@@ -647,6 +649,7 @@ const MockDataView = ({
         }}
       />
       <TextField
+        id="mock-data-view-response-type"
         label="Response Type"
         fullWidth
         margin="normal"
@@ -656,6 +659,7 @@ const MockDataView = ({
         }}
       />
       <TextField
+        id="mock-data-view-delay"
         label="Delay (in milliseconds)"
         fullWidth
         margin="normal"
@@ -668,6 +672,7 @@ const MockDataView = ({
         <FormControlLabel
           control={
             <Checkbox
+              id="mock-data-view-wait-for-previous"
               checked={mockItem.waitForPrevious}
               name="waitForPrevious"
               onChange={onInputChange}
@@ -707,6 +712,7 @@ const MockDataView = ({
           }
           renderInput={(params) => (
             <TextField
+              id="mock-data-view-wait-for"
               name="waitFor"
               {...params}
               label="Wait for Mocks to be served"
@@ -731,6 +737,7 @@ const MockDataView = ({
                   requests
                   <Box p={2}>
                     <Button
+                      id={`mock-data-view-ignore-for-all-${chip}`}
                       variant="contained"
                       onClick={() => ignoreForAll(chip)}
                       size="small"
@@ -754,6 +761,7 @@ const MockDataView = ({
         </Box>
 
         <TextField
+          id="mock-data-view-ignore-params"
           value={ipInputValue}
           fullWidth
           onChange={(e) => setIpInputValue(e.target.value)}
@@ -764,6 +772,7 @@ const MockDataView = ({
         />
       </Box>
       <TextField
+        id="mock-data-view-mock-data"
         label="Mock Data"
         fullWidth
         multiline
@@ -780,6 +789,7 @@ const MockDataView = ({
       />
       <Box display="flex" gap={1} mb={2}>
         <Button
+          id="mock-data-view-edit-with-ai-btn"
           variant="outlined"
           color="primary"
           startIcon={<AutoFixHighIcon />}
@@ -788,6 +798,7 @@ const MockDataView = ({
           Edit with AI
         </Button>
         <Button
+          id="mock-data-view-response-variants-btn"
           variant="outlined"
           color="primary"
           startIcon={<AutoFixHighIcon />}
@@ -799,6 +810,7 @@ const MockDataView = ({
 
       {mockData?.request?.postData?.text && (
         <TextField
+          id="mock-data-view-post-data"
           label="Post Data"
           fullWidth
           multiline
@@ -817,6 +829,7 @@ const MockDataView = ({
         />
       )}
       <TextField
+        id="mock-data-view-full-mock-data"
         label="Full Mock Data"
         fullWidth
         multiline
@@ -832,6 +845,7 @@ const MockDataView = ({
       <Box display="flex" gap={1} justifyContent="space-between">
         <Box display="flex" gap={1}>
           <Button
+            id="mock-data-view-update-btn"
             variant="contained"
             color="primary"
             onClick={onUpdate}
@@ -841,6 +855,7 @@ const MockDataView = ({
             Update Mock Data
           </Button>
           <Button
+            id="mock-data-view-duplicate-btn"
             variant="contained"
             color="primary"
             onClick={duplicateMockData}
@@ -853,6 +868,7 @@ const MockDataView = ({
         <Box display="flex" gap={1}>
           {mockItem.isDuplicate && (
             <Button
+              id="mock-data-view-delete-all-duplicates-btn"
               variant="contained"
               color="secondary"
               onClick={deleteAllDuplicates}
@@ -863,6 +879,7 @@ const MockDataView = ({
           )}
           {enableSendToDefaultMockData && (
             <Button
+              id="mock-data-view-copy-to-default-btn"
               variant="contained"
               color="secondary"
               onClick={copyToDefaultMockData}
@@ -873,6 +890,7 @@ const MockDataView = ({
           )}
           {!enableSendToDefaultMockData && (
             <Button
+              id="mock-data-view-copy-to-all-tests-btn"
               variant="contained"
               color="secondary"
               onClick={copyDefaultMockToAllTests}

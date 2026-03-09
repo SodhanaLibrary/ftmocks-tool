@@ -145,6 +145,7 @@ export default function DefaultMockData() {
           <Box>
             <Tooltip title="Add Mock Data">
               <IconButton
+                id="default-mock-data-add-btn"
                 color="primary"
                 aria-label="add mock data"
                 onClick={handleOpenNewMockDrawer}
@@ -154,6 +155,7 @@ export default function DefaultMockData() {
             </Tooltip>
             <Tooltip title="Record mock data">
               <IconButton
+                id="default-mock-data-record-btn"
                 color="secondary"
                 aria-label="record mock data"
                 onClick={handleOpenRecordMockDrawer}
@@ -163,6 +165,7 @@ export default function DefaultMockData() {
             </Tooltip>
             <Tooltip title="Optimize mock data">
               <IconButton
+                id="default-mock-data-optimize-btn"
                 color="info"
                 aria-label="optimize mock data"
                 onClick={handleOpenOptimizerDrawer}
@@ -173,6 +176,7 @@ export default function DefaultMockData() {
           </Box>
         </Box>
         <TextField
+          id="default-mock-data-search-input"
           hiddenLabel
           fullWidth
           variant="outlined"
@@ -186,6 +190,7 @@ export default function DefaultMockData() {
         <List sx={{ height: 'calc(100vh - 200px)', overflowY: 'scroll' }}>
           {filteredMockData.map((mockItem, index) => (
             <ListItem
+              id={`default-mock-data-item-${mockItem.id}`}
               button
               key={index}
               onClick={() => handleMockItemClick(mockItem)}

@@ -280,6 +280,7 @@ const TestOptimizer = ({
           </List>
 
           <Button
+            id="test-optimizer-delete-unused-btn"
             variant="contained"
             color="error"
             startIcon={<DeleteIcon />}
@@ -309,6 +310,7 @@ const TestOptimizer = ({
             ))}
           </List>
           <Button
+            id="test-optimizer-update-duplicate-ids-btn"
             variant="contained"
             color="secondary"
             startIcon={<UpdateIcon />}

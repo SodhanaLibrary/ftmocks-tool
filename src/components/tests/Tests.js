@@ -423,6 +423,7 @@ export default function Tests({ envDetails }) {
     return (
       <React.Fragment key={test.id}>
         <ListItem
+          id={`tests-list-item-${test.id}`}
           button
           draggable={testSearchTerm.trim() === ''}
           onDragStart={(e) => handleTestDragStart(e, test.id)}
@@ -508,6 +509,7 @@ export default function Tests({ envDetails }) {
               title={isTestFolder ? 'Edit Folder Name' : 'Edit Test Name'}
             >
               <IconButton
+                id={`tests-edit-${test.id}`}
                 className="hover-icon"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -521,6 +523,7 @@ export default function Tests({ envDetails }) {
             </Tooltip>
             <Tooltip title={isTestFolder ? 'Delete Folder' : 'Delete Test'}>
               <IconButton
+                id={`tests-delete-${test.id}`}
                 className="hover-icon"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -535,6 +538,7 @@ export default function Tests({ envDetails }) {
             {isTestFolder && (
               <Tooltip title="Create New Folder">
                 <IconButton
+                  id={`tests-create-folder-${test.id}`}
                   className="hover-icon"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -549,6 +553,7 @@ export default function Tests({ envDetails }) {
             {isTestFolder && (
               <Tooltip title="Add New Test Case">
                 <IconButton
+                  id={`tests-add-test-${test.id}`}
                   className="hover-icon"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -892,6 +897,7 @@ export default function Tests({ envDetails }) {
           <Box sx={{ display: 'flex', gap: 0.5 }}>
             <Tooltip title="Create New Folder">
               <IconButton
+                id="tests-create-folder-btn"
                 onClick={() => handleCreateFolder(null)}
                 aria-label="create folder"
               >
@@ -900,6 +906,7 @@ export default function Tests({ envDetails }) {
             </Tooltip>
             <Tooltip title="Create New Test Case">
               <IconButton
+                id="tests-create-test-btn"
                 onClick={() => handleCreateTestCase(null)}
                 aria-label="add"
               >
@@ -909,6 +916,7 @@ export default function Tests({ envDetails }) {
           </Box>
         </Box>
         <TextField
+          id="tests-search-input"
           hiddenLabel
           fullWidth
           variant="outlined"
@@ -957,6 +965,7 @@ export default function Tests({ envDetails }) {
             {selectedTest && (
               <Tooltip title="Edit Test name">
                 <IconButton
+                  id="tests-edit-selected-name-btn"
                   className="edit-icon"
                   sx={{ ml: 0.5, cursor: 'pointer' }}
                   size="small"
@@ -971,12 +980,13 @@ export default function Tests({ envDetails }) {
           {selectedTest && selectedTest?.type !== 'folder' ? (
             <Box>
               <Tooltip title="Duplicate Test">
-                <IconButton onClick={duplicateTest} aria-label="duplicate test">
+                <IconButton id="tests-duplicate-btn" onClick={duplicateTest} aria-label="duplicate test">
                   <ContentCopyIcon />
                 </IconButton>
               </Tooltip>
               <Tooltip title="Reset Mock Data">
                 <IconButton
+                  id="tests-reset-mock-data-btn"
                   onClick={resetMockData}
                   aria-label="reset mock data"
                 >
@@ -985,6 +995,7 @@ export default function Tests({ envDetails }) {
               </Tooltip>
               <Tooltip title="Add Mock Data">
                 <IconButton
+                  id="tests-add-mock-data-btn"
                   onClick={() => setMockDataCreatorOpen(true)}
                   aria-label="add mock data"
                 >
@@ -993,6 +1004,7 @@ export default function Tests({ envDetails }) {
               </Tooltip>
               <Tooltip title="Delete All Mock Data">
                 <IconButton
+                  id="tests-delete-all-mock-data-btn"
                   onClick={() => deleteAllMockData()}
                   aria-label="delete all mock data"
                 >
@@ -1006,6 +1018,7 @@ export default function Tests({ envDetails }) {
           <Box>
             <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 2 }}>
               <Button
+                id="tests-tab-record"
                 sx={buttonStyle(3)}
                 variant="text"
                 color="info"
@@ -1015,6 +1028,7 @@ export default function Tests({ envDetails }) {
                 Record
               </Button>
               <Button
+                id="tests-tab-mocks"
                 sx={buttonStyle(0)}
                 variant="text"
                 color="info"
@@ -1033,6 +1047,7 @@ export default function Tests({ envDetails }) {
                 Snaps
               </Button> */}
               <Button
+                id="tests-tab-logs"
                 sx={buttonStyle(2)}
                 variant="text"
                 color="info"
@@ -1042,6 +1057,7 @@ export default function Tests({ envDetails }) {
                 Logs
               </Button>
               <Button
+                id="tests-tab-optimize"
                 sx={buttonStyle(4)}
                 variant="text"
                 color="info"
@@ -1051,6 +1067,7 @@ export default function Tests({ envDetails }) {
                 Optimize
               </Button>
               <Button
+                id="tests-tab-documentation"
                 sx={buttonStyle(5)}
                 variant="text"
                 color="info"

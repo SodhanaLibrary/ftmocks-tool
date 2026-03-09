@@ -135,7 +135,7 @@ export default function AppAppBar() {
             </Button> */}
         </Box>
         <Box sx={{ display: { sm: 'flex', md: 'none' } }}>
-          <IconButton aria-label="Menu button" onClick={toggleDrawer(true)}>
+          <IconButton id="app-bar-menu-btn" aria-label="Menu button" onClick={toggleDrawer(true)}>
             <MenuIcon />
           </IconButton>
           <Drawer anchor="top" open={open} onClose={toggleDrawer(false)}>
@@ -147,7 +147,7 @@ export default function AppAppBar() {
                   justifyContent: 'space-between',
                 }}
               >
-                <IconButton onClick={toggleDrawer(false)}>
+                <IconButton id="app-bar-drawer-close-btn" onClick={toggleDrawer(false)}>
                   <CloseRoundedIcon />
                 </IconButton>
               </Box>

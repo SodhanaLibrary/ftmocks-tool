@@ -48,6 +48,7 @@ const MockDataByUserInput = ({ selectedTest }) => {
       </Typography>
 
       <TextField
+        id="mock-data-by-user-input-text"
         label="Enter your text here"
         multiline
         rows={10}
@@ -58,7 +59,7 @@ const MockDataByUserInput = ({ selectedTest }) => {
         sx={{ mb: 2 }}
       />
 
-      <Button variant="contained" color="primary" onClick={handleSubmit}>
+      <Button id="mock-data-by-user-input-submit-btn" variant="contained" color="primary" onClick={handleSubmit}>
         Submit
       </Button>
       <Snackbar

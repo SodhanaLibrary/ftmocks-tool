@@ -92,6 +92,7 @@ const ProjectTable = ({
       >
         <Typography variant="h6">Projects</Typography>
         <Button
+          id="project-table-add-project-btn"
           variant="contained"
           color="primary"
           startIcon={<AddIcon />}
@@ -117,6 +118,7 @@ const ProjectTable = ({
             {data.map((project) => (
               <TableRow sx={{ cursor: 'pointer' }} key={project.env_file}>
                 <TableCell
+                  id={`project-table-row-${project.env_file}`}
                   onClick={() => onClickProject(project)}
                   sx={{ '&:hover': { color: 'primary.main' } }}
                 >
@@ -124,6 +126,7 @@ const ProjectTable = ({
                 </TableCell>
                 <TableCell>
                   <IconButton
+                    id={`project-table-delete-${project.env_file}`}
                     onClick={() => handleDeleteProject(project)}
                     title="Delete project"
                   >
@@ -146,6 +149,7 @@ const ProjectTable = ({
         <DialogTitle>Add New Project</DialogTitle>
         <DialogContent>
           <TextField
+            id="project-table-env-location-input"
             autoFocus
             margin="dense"
             label="Environment Location"
@@ -160,10 +164,11 @@ const ProjectTable = ({
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseModal} disabled={isSubmitting}>
+          <Button id="project-table-modal-cancel-btn" onClick={handleCloseModal} disabled={isSubmitting}>
             Cancel
           </Button>
           <Button
+            id="project-table-modal-create-btn"
             onClick={handleAddProject}
             variant="contained"
             disabled={isSubmitting || !envLocation.trim()}

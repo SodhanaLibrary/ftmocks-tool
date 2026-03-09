@@ -55,6 +55,7 @@ function TemplateFrame({
             }}
           >
             <Button
+              id="template-frame-back-btn"
               variant="text"
               size="small"
               aria-label="Back to templates"
@@ -66,6 +67,7 @@ function TemplateFrame({
               Back to templates
             </Button>
             <IconButton
+              id="template-frame-back-icon-btn"
               size="small"
               aria-label="Back to templates"
               component="a"

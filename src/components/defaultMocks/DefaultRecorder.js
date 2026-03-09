@@ -97,6 +97,7 @@ const DefaultRecorder = ({ onClose }) => {
           Record Mock Data
         </Typography>
         <IconButton
+          id="default-recorder-close-btn"
           color="primary"
           aria-label="record mock data"
           onClick={onCloseDrawer}
@@ -122,6 +123,7 @@ const DefaultRecorder = ({ onClose }) => {
             gap={1}
           >
             <TextField
+              id="default-recorder-url-input"
               label="URL"
               fullWidth
               margin="normal"
@@ -157,6 +159,7 @@ const DefaultRecorder = ({ onClose }) => {
               }
               renderInput={(params) => (
                 <TextField
+                  id="default-recorder-patterns-input"
                   {...params}
                   label="Patterns"
                   placeholder="Enter patterns separated by commas (e.g., ^/api/.*, ^/v1/.*)"
@@ -166,6 +169,7 @@ const DefaultRecorder = ({ onClose }) => {
               )}
             />
             <Button
+              id="default-recorder-record-btn"
               color="primary"
               onClick={recordMockData}
               variant="contained"
@@ -185,6 +189,7 @@ const DefaultRecorder = ({ onClose }) => {
           >
             <Typography>Recording in progress...</Typography>
             <Button
+              id="default-recorder-stop-btn"
               color="primary"
               onClick={stopRecordingMockData}
               variant="contained"

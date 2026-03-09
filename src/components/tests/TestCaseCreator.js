@@ -127,13 +127,14 @@ const TestCaseCreator = ({
         <Typography variant="h6" gutterBottom>
           {getHeaderText()}
         </Typography>
-        <IconButton onClick={onClose} aria-label="close">
+        <IconButton id="test-case-creator-close-btn" onClick={onClose} aria-label="close">
           <CloseIcon />
         </IconButton>
       </Box>
       <Divider sx={{ my: 2 }} />
       <form onSubmit={handleSubmit}>
         <TextField
+          id="test-case-creator-name-input"
           fullWidth
           label={type === 'folder' ? 'Folder Name' : 'Test Case Name'}
           variant="outlined"
@@ -169,6 +170,7 @@ const TestCaseCreator = ({
         </FormControl>
 
         <Button
+          id="test-case-creator-submit-btn"
           type="submit"
           variant="contained"
           color="primary"

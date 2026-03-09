@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Container, Paper } from '@mui/material';
+import { Box, Typography, Container, Paper, CircularProgress } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import SimpleJsonTable from './EnvTable';
 import ServerStatus from './ServerStatus';
@@ -11,6 +11,7 @@ export default function TestSummary({ envDetails, fetchEnvDetails }) {
   const [testCases, setTestCases] = useState([]);
   const [projects, setProjects] = useState([]);
   const [defaultMocks, setDefaultMocks] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const [serverStatus, setServerStatus] = useState({});
 
@@ -79,11 +80,18 @@ export default function TestSummary({ envDetails, fetchEnvDetails }) {
     }
   };
 
-  const loadAllData = () => {
-    fetchTestData();
-    fetchDefaultMocks();
-    fetchMockServerStatus();
-    fetchProjects();
+  const loadAllData = async () => {
+    setLoading(true);
+    try {
+      await Promise.all([
+        fetchTestData(),
+        fetchDefaultMocks(),
+        fetchMockServerStatus(),
+        fetchProjects(),
+      ]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const onClickProject = async (project) => {
@@ -111,12 +119,32 @@ export default function TestSummary({ envDetails, fetchEnvDetails }) {
     loadAllData();
   }, []);
 
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: 200,
+          width: '100%',
+        }}
+      >
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+          <CircularProgress />
+          <Typography color="text.secondary">Loading...</Typography>
+        </Box>
+      </Box>
+    );
+  }
+
   return (
     <Box
       sx={{ width: '100%', columnCount: 2, columnGap: 2, pl: 3, pr: 3, pt: 1 }}
     >
       <Paper sx={{ p: 2, display: 'flex', gap: 2 }}>
         <Box
+          id="test-summary-tests-card"
           sx={{
             p: 3,
             cursor: 'pointer',
@@ -126,6 +154,7 @@ export default function TestSummary({ envDetails, fetchEnvDetails }) {
           }}
         >
           <Box
+            id="test-summary-nav-tests"
             onClick={() => {
               navigate('/tests');
             }}
@@ -148,6 +177,7 @@ export default function TestSummary({ envDetails, fetchEnvDetails }) {
           </Box>
         </Box>
         <Box
+          id="test-summary-nav-default-mocks"
           onClick={() => {
             navigate('/default-mock-data');
           }}
@@ -183,6 +213,7 @@ export default function TestSummary({ envDetails, fetchEnvDetails }) {
       {serverStatus.testName && (
         <Paper sx={{ mt: 2, p: 2 }}>
           <ServerStatus
+            id="test-summary-server-status"
             testName={serverStatus.testName}
             port={serverStatus.port}
             onClick={() => {

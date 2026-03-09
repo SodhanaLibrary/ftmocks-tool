@@ -51,6 +51,7 @@ const DraggableMockList = ({
                 >
                   {(provided) => (
                     <ListItem
+                      id={`mock-data-list-item-${mockItem.id}`}
                       ref={provided.innerRef}
                       {...provided.draggableProps}
                       {...provided.dragHandleProps}

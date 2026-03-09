@@ -51,6 +51,7 @@ const Documentator = ({ selectedTest }) => {
           <ButtonGroup variant="outlined" aria-label="screenshot navigation">
             <Tooltip title="List Mode">
               <IconButton
+                id="documentator-mode-list-btn"
                 color={mode === 'list' ? 'primary' : 'default'}
                 onClick={() => setMode('list')}
               >
@@ -59,6 +60,7 @@ const Documentator = ({ selectedTest }) => {
             </Tooltip>
             <Tooltip title="Training Mode">
               <IconButton
+                id="documentator-mode-training-btn"
                 color={mode === 'training' ? 'primary' : 'default'}
                 onClick={() => setMode('training')}
               >
@@ -67,6 +69,7 @@ const Documentator = ({ selectedTest }) => {
             </Tooltip>
             <Tooltip title="Differentiate Mode">
               <IconButton
+                id="documentator-mode-differentiate-btn"
                 color={mode === 'differentiate' ? 'primary' : 'default'}
                 onClick={() => setMode('differentiate')}
               >
@@ -198,6 +201,7 @@ const Documentator = ({ selectedTest }) => {
                         }}
                       >
                         <rect
+                          id="documentator-training-next-area"
                           onClick={() => {
                             if (currentEventIndex < events.length - 1) {
                               setCurrentEventIndex(currentEventIndex + 1);
@@ -234,6 +238,7 @@ const Documentator = ({ selectedTest }) => {
           </Box>
           <Box pt={2} display="flex" justifyContent="space-between">
             <Button
+              id="documentator-training-prev-btn"
               variant="contained"
               color="primary"
               disabled={currentEventIndex === 0}
@@ -244,6 +249,7 @@ const Documentator = ({ selectedTest }) => {
               Previous
             </Button>
             <Button
+              id="documentator-training-next-btn"
               variant="contained"
               color="primary"
               disabled={currentEventIndex === events.length - 1}

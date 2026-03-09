@@ -197,7 +197,7 @@ const DefaultOptimizer = ({ onClose, mockData = [] }) => {
         <Typography variant="h6" gutterBottom>
           Default Optimizer
         </Typography>
-        <IconButton onClick={onClose}>
+        <IconButton id="default-optimizer-close-btn" onClick={onClose}>
           <CloseIcon />
         </IconButton>
       </Box>
@@ -214,6 +214,7 @@ const DefaultOptimizer = ({ onClose, mockData = [] }) => {
         )}
       </Box>
       <Button
+        id="default-optimizer-delete-unused-btn"
         variant="contained"
         color="secondary"
         onClick={deleteUnusedMocks}
@@ -226,6 +227,7 @@ const DefaultOptimizer = ({ onClose, mockData = [] }) => {
         Delete All Unused Mocks
       </Button>
       <Button
+        id="default-optimizer-reset-all-btn"
         variant="contained"
         color="secondary"
         onClick={resetAllMocks}
@@ -249,6 +251,7 @@ const DefaultOptimizer = ({ onClose, mockData = [] }) => {
             ))}
           </List>
           <Button
+            id="default-optimizer-update-duplicate-ids-btn"
             variant="contained"
             color="secondary"
             startIcon={<UpdateIcon />}
@@ -273,6 +276,7 @@ const DefaultOptimizer = ({ onClose, mockData = [] }) => {
         </Alert>
 
         <Button
+          id="default-optimizer-move-mocks-btn"
           variant="contained"
           color="primary"
           onClick={moveDefaultMocks}

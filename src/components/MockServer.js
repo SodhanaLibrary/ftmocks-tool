@@ -208,7 +208,7 @@ export default function MockServer() {
         >
           <Autocomplete
             fullWidth
-            options={tests}
+            options={tests.filter((test) => test.type !== 'folder')}
             getOptionLabel={(option) => option.name}
             value={tests.find((test) => test.name === selectedTest) || null}
             onChange={(event, newValue) => {
@@ -219,6 +219,7 @@ export default function MockServer() {
             )}
           />
           <TextField
+            id="mock-server-port-input"
             fullWidth
             label="Port"
             variant="outlined"
@@ -229,12 +230,18 @@ export default function MockServer() {
           <Box>Preferred Ports: {prefferedPorts.join(', ')}</Box>
           <Box sx={{ display: 'flex', gap: 2 }}>
             {!isRunning && (
-              <Button variant="contained" color="primary" onClick={handleRun}>
+              <Button
+                id="mock-server-run-btn"
+                variant="contained"
+                color="primary"
+                onClick={handleRun}
+              >
                 Run
               </Button>
             )}
             {isRunning && (
               <Button
+                id="mock-server-update-btn"
                 variant="contained"
                 color="primary"
                 onClick={handleUpdate}
@@ -243,6 +250,7 @@ export default function MockServer() {
               </Button>
             )}
             <Button
+              id="mock-server-stop-btn"
               variant="contained"
               color="secondary"
               onClick={handleStop}

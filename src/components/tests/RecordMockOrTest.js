@@ -252,6 +252,7 @@ const RecordMockOrTest = ({
               label="Record events"
             />
             <Button
+              id="record-mock-or-test-record-btn"
               color="primary"
               onClick={recordMockData}
               variant="contained"
@@ -271,6 +272,7 @@ const RecordMockOrTest = ({
           >
             <Typography>Recording in progress...</Typography>
             <Button
+              id="record-mock-or-test-stop-btn"
               color="primary"
               onClick={stopRecordingMockData}
               variant="contained"

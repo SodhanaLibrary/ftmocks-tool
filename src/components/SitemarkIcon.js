@@ -10,6 +10,7 @@ export default function SitemarkIcon() {
   };
   return (
     <Box
+      id="sitemark-icon-home-link"
       onClick={onClick}
       sx={{ cursor: 'pointer' }}
       display="flex"

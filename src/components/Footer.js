@@ -85,6 +85,7 @@ export default function Footer() {
                 sx={{ width: '250px' }}
               />
               <Button
+                id="footer-subscribe-btn"
                 variant="contained"
                 color="primary"
                 size="small"
@@ -191,6 +192,7 @@ export default function Footer() {
           sx={{ justifyContent: 'left', color: 'text.secondary' }}
         >
           <IconButton
+            id="footer-icon-github"
             color="inherit"
             size="small"
             href="https://github.com/mui"
@@ -200,6 +202,7 @@ export default function Footer() {
             <FacebookIcon />
           </IconButton>
           <IconButton
+            id="footer-icon-x"
             color="inherit"
             size="small"
             href="https://x.com/MaterialUI"
@@ -209,6 +212,7 @@ export default function Footer() {
             <TwitterIcon />
           </IconButton>
           <IconButton
+            id="footer-icon-linkedin"
             color="inherit"
             size="small"
             href="https://www.linkedin.com/company/mui/"

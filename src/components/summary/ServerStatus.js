@@ -3,9 +3,10 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import ServerIcon from '@mui/icons-material/Dns'; // Server icon from MUI Icons
 
-const ServerStatus = ({ testName, port, onClick }) => {
+const ServerStatus = ({ id, testName, port, onClick }) => {
   return (
     <Box
+      id={id}
       display="flex"
       alignItems="center"
       border="1px solid #ccc"

@@ -64,6 +64,7 @@ const EditableSpan = ({ value, color, onSave, type }) => {
   if (editing) {
     return (
       <input
+        id="ai-edit-dialog-editable-input"
         type="text"
         value={editValue}
         onChange={(e) => setEditValue(e.target.value)}
@@ -88,6 +89,7 @@ const EditableSpan = ({ value, color, onSave, type }) => {
 
   return (
     <span
+      id="ai-edit-dialog-editable-span"
       style={{
         color,
         cursor: 'text',
@@ -202,6 +204,7 @@ const JsonTreeNode = ({
           {comma}
         </Box>
         <IconButton
+          id="ai-edit-dialog-node-menu-btn"
           size="small"
           onClick={handleMenuOpen}
           className="action-btn"
@@ -210,8 +213,8 @@ const JsonTreeNode = ({
           <MoreVertIcon fontSize="small" />
         </IconButton>
         <Menu anchorEl={anchorEl} open={menuOpen} onClose={handleMenuClose}>
-          <MenuItem onClick={handleDuplicate}>Duplicate</MenuItem>
-          <MenuItem onClick={handleDelete}>Delete</MenuItem>
+          <MenuItem id="ai-edit-dialog-duplicate" onClick={handleDuplicate}>Duplicate</MenuItem>
+          <MenuItem id="ai-edit-dialog-delete" onClick={handleDelete}>Delete</MenuItem>
         </Menu>
       </Box>
     );
@@ -233,6 +236,7 @@ const JsonTreeNode = ({
         }}
       >
         <IconButton
+          id="ai-edit-dialog-expand-btn"
           size="small"
           onClick={() => setExpanded(!expanded)}
           sx={{ p: 0.25 }}
@@ -262,6 +266,7 @@ const JsonTreeNode = ({
             </>
           )}
           <span
+            id="ai-edit-dialog-bracket-open"
             style={{ cursor: 'pointer' }}
             onClick={() => setExpanded(!expanded)}
           >
@@ -269,6 +274,7 @@ const JsonTreeNode = ({
           </span>
           {!expanded && (
             <span
+              id="ai-edit-dialog-bracket-summary"
               style={{ color: '#999', cursor: 'pointer' }}
               onClick={() => setExpanded(!expanded)}
             >
@@ -280,6 +286,7 @@ const JsonTreeNode = ({
           )}
           {!expanded && (
             <span
+              id="ai-edit-dialog-bracket-close"
               style={{ cursor: 'pointer' }}
               onClick={() => setExpanded(!expanded)}
             >
@@ -289,6 +296,7 @@ const JsonTreeNode = ({
           )}
         </Box>
         <IconButton
+          id="ai-edit-dialog-node-menu-expanded-btn"
           size="small"
           onClick={handleMenuOpen}
           className="action-btn"
@@ -297,8 +305,8 @@ const JsonTreeNode = ({
           <MoreVertIcon fontSize="small" />
         </IconButton>
         <Menu anchorEl={anchorEl} open={menuOpen} onClose={handleMenuClose}>
-          <MenuItem onClick={handleDuplicate}>Duplicate</MenuItem>
-          <MenuItem onClick={handleDelete}>Delete</MenuItem>
+          <MenuItem id="ai-edit-dialog-duplicate-expanded" onClick={handleDuplicate}>Duplicate</MenuItem>
+          <MenuItem id="ai-edit-dialog-delete-expanded" onClick={handleDelete}>Delete</MenuItem>
         </Menu>
       </Box>
       {expanded && (
@@ -595,6 +603,7 @@ const AiEditDialog = ({ open, onClose, mockData, onSuccess }) => {
           ) : null}
           {tabValue === 'Text' && (
             <TextField
+              id="ai-edit-dialog-mock-data-input"
               label="Mock Data"
               fullWidth
               multiline
@@ -610,6 +619,7 @@ const AiEditDialog = ({ open, onClose, mockData, onSuccess }) => {
           )}
         </Box>
         <TextField
+          id="ai-edit-dialog-instructions-input"
           label="Instructions"
           fullWidth
           multiline
@@ -626,10 +636,11 @@ const AiEditDialog = ({ open, onClose, mockData, onSuccess }) => {
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose} disabled={aiLoading}>
+        <Button id="ai-edit-dialog-cancel-btn" onClick={handleClose} disabled={aiLoading}>
           Cancel
         </Button>
         <Button
+          id="ai-edit-dialog-submit-btn"
           variant="contained"
           color="primary"
           onClick={handleSubmit}
@@ -643,6 +654,7 @@ const AiEditDialog = ({ open, onClose, mockData, onSuccess }) => {
           {aiLoading ? 'Processing...' : 'Submit'}
         </Button>
         <Button
+          id="ai-edit-dialog-save-close-btn"
           variant="contained"
           color="primary"
           onClick={handleSaveMockData}

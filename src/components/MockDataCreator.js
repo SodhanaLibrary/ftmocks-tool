@@ -136,23 +136,32 @@ const MockDataCreator = ({ selectedTest, onClose }) => {
           cursor: 'pointer',
         }}
       >
-        <input {...getInputProps()} />
+        <input id="mock-data-creator-file-input" {...getInputProps()} />
         {isDragActive ? (
           <Typography variant="h6" color="primary">
             Drop the the file here...
           </Typography>
         ) : (
           <Typography variant="h6">
-            Drag & drop a HAR file or Postman collection file or Playwright
+            <ul style={{ margin: 0, paddingLeft: 20, textAlign: 'left' }}>
+              <li>HAR file</li>
+              <li>Postman collection file</li>
+              <li>Playwright trace zip</li>
+            </ul>
             trace zip file here, or click to select one
           </Typography>
         )}
-        <Button variant="outlined" sx={{ mt: 2 }}>
+        <Button
+          id="mock-data-creator-choose-file-btn"
+          variant="outlined"
+          sx={{ mt: 2 }}
+        >
           Choose the file
         </Button>
       </Box>
       {file && <Typography variant="body2">{file.name}</Typography>}
       <Button
+        id="mock-data-creator-upload-btn"
         variant="contained"
         color="primary"
         onClick={handleUpload}
@@ -192,7 +201,11 @@ const MockDataCreator = ({ selectedTest, onClose }) => {
         <Typography variant="h6" gutterBottom>
           Create New Mock Data
         </Typography>
-        <IconButton onClick={onClose} aria-label="close">
+        <IconButton
+          id="mock-data-creator-close-btn"
+          onClick={onClose}
+          aria-label="close"
+        >
           <CloseIcon />
         </IconButton>
       </Box>
