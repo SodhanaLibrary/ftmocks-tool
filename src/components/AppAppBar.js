@@ -118,6 +118,16 @@ export default function AppAppBar() {
             >
               Mock Server
             </Button>
+            <Button
+              sx={buttonStyle('/api-specs')}
+              component={RouterLink}
+              to="/api-specs"
+              variant="text"
+              color="info"
+              size="small"
+            >
+              API Specs
+            </Button>
           </Box>
         </Box>
         <Box
@@ -160,6 +170,9 @@ export default function AppAppBar() {
               </MenuItem>
               <MenuItem component={RouterLink} to="/mock-server">
                 Mock server
+              </MenuItem>
+              <MenuItem component={RouterLink} to="/api-specs">
+                API Specs
               </MenuItem>
             </Box>
           </Drawer>

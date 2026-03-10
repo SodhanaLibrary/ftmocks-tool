@@ -7,6 +7,7 @@ import TestSummary from './components/summary/TestSummary';
 import Tests from './components/tests/Tests';
 import DefaultMockData from './components/defaultMocks/DefaultMockData';
 import MockServer from './components/MockServer';
+import ApiSpecs from './components/ApiSpecs';
 import { Box } from '@mui/material';
 
 const darkTheme = createTheme({
@@ -82,6 +83,7 @@ export default function FtMocksTool() {
             />
             <Route path="/default-mock-data" element={<DefaultMockData />} />
             <Route path="/mock-server" element={<MockServer />} />
+            <Route path="/api-specs" element={<ApiSpecs />} />
           </Routes>
         </Box>
       </BrowserRouter>

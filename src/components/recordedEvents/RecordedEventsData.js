@@ -915,7 +915,11 @@ export default function RecordedEventsData({
               {recordedEvents.length > 0 && (
                 <Box>
                   <Tooltip title="Run in mock mode">
-                    <IconButton id="recorded-events-mock-mode-btn" color="primary" onClick={handleMockModeClick}>
+                    <IconButton
+                      id="recorded-events-mock-mode-btn"
+                      color="primary"
+                      onClick={handleMockModeClick}
+                    >
                       <FiberSmartRecordIcon />
                     </IconButton>
                   </Tooltip>
@@ -924,10 +928,16 @@ export default function RecordedEventsData({
                     open={Boolean(mockModeAnchorEl)}
                     onClose={handleMockModeClose}
                   >
-                    <MenuItem id="recorded-events-run-mock-mode" onClick={runInMockMode}>
+                    <MenuItem
+                      id="recorded-events-run-mock-mode"
+                      onClick={runInMockMode}
+                    >
                       Run in mock mode
                     </MenuItem>
-                    <MenuItem id="recorded-events-record-again" onClick={recordEventsAgainInMockMode}>
+                    <MenuItem
+                      id="recorded-events-record-again"
+                      onClick={recordEventsAgainInMockMode}
+                    >
                       Record events again
                     </MenuItem>
                     <MenuItem
@@ -936,19 +946,34 @@ export default function RecordedEventsData({
                     >
                       Record events from last event
                     </MenuItem>
-                    <MenuItem id="recorded-events-play-all" onClick={playAllEventsInMockMode}>
+                    <MenuItem
+                      id="recorded-events-play-all"
+                      onClick={playAllEventsInMockMode}
+                    >
                       Play all events
                     </MenuItem>
-                    <MenuItem id="recorded-events-presentation-mode" onClick={runInPresentationMode}>
+                    <MenuItem
+                      id="recorded-events-presentation-mode"
+                      onClick={runInPresentationMode}
+                    >
                       Run in presentation mode
                     </MenuItem>
-                    <MenuItem id="recorded-events-training-mode" onClick={runInTrainingMode}>
+                    <MenuItem
+                      id="recorded-events-training-mode"
+                      onClick={runInTrainingMode}
+                    >
                       Run in training mode
                     </MenuItem>
-                    <MenuItem id="recorded-events-screenshots" onClick={runEventsForScreenshots}>
+                    <MenuItem
+                      id="recorded-events-screenshots"
+                      onClick={runEventsForScreenshots}
+                    >
                       Run for screenshots
                     </MenuItem>
-                    <MenuItem id="recorded-events-healing-selectors" onClick={runForHealingSelectors}>
+                    <MenuItem
+                      id="recorded-events-healing-selectors"
+                      onClick={runForHealingSelectors}
+                    >
                       Run for healing selectors
                     </MenuItem>
                   </Menu>
@@ -965,12 +990,18 @@ export default function RecordedEventsData({
             </Box>
             <Box>
               <Tooltip title="Download as file">
-                <IconButton id="recorded-events-download-btn" onClick={downloadTextAsFile}>
+                <IconButton
+                  id="recorded-events-download-btn"
+                  onClick={downloadTextAsFile}
+                >
                   <CloudDownloadIcon />
                 </IconButton>
               </Tooltip>
               <Tooltip title="Delete all events">
-                <IconButton id="recorded-events-delete-all-btn" onClick={deleteAll}>
+                <IconButton
+                  id="recorded-events-delete-all-btn"
+                  onClick={deleteAll}
+                >
                   <DeleteSweepIcon />
                 </IconButton>
               </Tooltip>
@@ -1020,12 +1051,19 @@ export default function RecordedEventsData({
                       : '0px solid transparent',
                   borderColor: 'primary.main',
                   borderRadius: 1,
+                  borderLeft: `4px solid ${re.executed ? '#4CAF50' : undefined}`,
                 }}
                 p={1}
                 id={`recorded-events-item-${re.id}`}
                 onClick={() => editEvent(re)}
               >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                  }}
+                >
                   <Box
                     sx={{
                       display: 'flex',
@@ -1125,7 +1163,11 @@ export default function RecordedEventsData({
             justifyContent="space-between"
           >
             <Box display="flex" alignItems="center" gap={1}>
-              <IconButton id="recorded-events-back-btn" color="primary" onClick={onBackClick}>
+              <IconButton
+                id="recorded-events-back-btn"
+                color="primary"
+                onClick={onBackClick}
+              >
                 <ArrowBackIcon />
               </IconButton>
               <Typography variant="h5">
@@ -1134,22 +1176,37 @@ export default function RecordedEventsData({
             </Box>
             <Box>
               <Tooltip title="Save and Run Test">
-                <IconButton id="recorded-events-play-test-btn" onClick={() => playTest(false)} sx={{ mr: 1 }}>
+                <IconButton
+                  id="recorded-events-play-test-btn"
+                  onClick={() => playTest(false)}
+                  sx={{ mr: 1 }}
+                >
                   <PlayArrowIcon />
                 </IconButton>
               </Tooltip>
               <Tooltip title="Save and Run Test With Playwright UI">
-                <IconButton id="recorded-events-play-ui-btn" onClick={() => playTest(true)} sx={{ mr: 1 }}>
+                <IconButton
+                  id="recorded-events-play-ui-btn"
+                  onClick={() => playTest(true)}
+                  sx={{ mr: 1 }}
+                >
                   <GavelOutlined />
                 </IconButton>
               </Tooltip>
               <Tooltip title="Save File">
-                <IconButton id="recorded-events-save-file-btn" onClick={saveFile} sx={{ mr: 1 }}>
+                <IconButton
+                  id="recorded-events-save-file-btn"
+                  onClick={saveFile}
+                  sx={{ mr: 1 }}
+                >
                   <SaveIcon />
                 </IconButton>
               </Tooltip>
               <Tooltip title="Copy to Clipboard">
-                <IconButton id="recorded-events-copy-btn" onClick={copyToClipboard}>
+                <IconButton
+                  id="recorded-events-copy-btn"
+                  onClick={copyToClipboard}
+                >
                   <ContentCopyIcon />
                 </IconButton>
               </Tooltip>
@@ -1268,7 +1325,10 @@ export default function RecordedEventsData({
               mb={2}
             >
               <Typography variant="h6">Edit Event</Typography>
-              <IconButton id="recorded-events-edit-close-btn" onClick={() => setSelectedEvent(null)}>
+              <IconButton
+                id="recorded-events-edit-close-btn"
+                onClick={() => setSelectedEvent(null)}
+              >
                 <CloseIcon />
               </IconButton>
             </Box>
