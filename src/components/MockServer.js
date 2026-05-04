@@ -16,6 +16,7 @@ export default function MockServer() {
   const [isRunning, setIsRunning] = useState(false);
   const [tests, setTests] = useState([]);
   const [prefferedPorts, setPrefferedPorts] = useState([]);
+  const [matchHeaders, setMatchHeaders] = useState('');
 
   const fetchTests = async () => {
     try {
@@ -66,6 +67,9 @@ export default function MockServer() {
       } else {
         setPrefferedPorts([]);
       }
+      setMatchHeaders(
+        typeof data.MATCH_HEADERS === 'string' ? data.MATCH_HEADERS : ''
+      );
 
       return data;
     } catch (error) {
@@ -228,6 +232,7 @@ export default function MockServer() {
             type="number"
           />
           <Box>Preferred Ports: {prefferedPorts.join(', ')}</Box>
+          <Box>MATCH_HEADERS: {matchHeaders.trim() ? matchHeaders : '—'}</Box>
           <Box sx={{ display: 'flex', gap: 2 }}>
             {!isRunning && (
               <Button
