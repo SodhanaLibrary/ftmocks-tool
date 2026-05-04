@@ -11,11 +11,14 @@ import CloseIcon from '@mui/icons-material/Close';
 
 const DefaultRecorder = ({ onClose }) => {
   const [isRecordingMockData, setIsRecordingMockData] = useState(false);
+  const [isPlaywrightCodegenRunning, setIsPlaywrightCodegenRunning] =
+    useState(false);
   const [error, setError] = useState(null);
   const [config, setConfig] = useState({
     url: '',
     patterns: ['^/api/.*'],
     testName: null,
+    recordEvents: true,
   });
 
   const recordMockData = async () => {
@@ -34,6 +37,30 @@ const DefaultRecorder = ({ onClose }) => {
     } catch (err) {
       setError(err.message);
       setIsRecordingMockData(false);
+    }
+  };
+
+  const recordPlaywrightCodegenWithMocks = async () => {
+    try {
+      setIsPlaywrightCodegenRunning(true);
+      setError(null);
+      const response = await fetch(`/api/v1/record/playwright/mocks`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(config),
+      });
+      if (!response.ok) {
+        throw new Error('Playwright codegen with mock recording failed');
+      }
+      onClose(null, {
+        stopRecording: true,
+      });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsPlaywrightCodegenRunning(false);
     }
   };
 
@@ -76,6 +103,7 @@ const DefaultRecorder = ({ onClose }) => {
 
   const onCloseDrawer = () => {
     setIsRecordingMockData(false);
+    setIsPlaywrightCodegenRunning(false);
     onClose();
   };
 
@@ -113,7 +141,7 @@ const DefaultRecorder = ({ onClose }) => {
         gap={1}
         sx={{ mt: -2 }}
       >
-        {!isRecordingMockData && (
+        {!isRecordingMockData && !isPlaywrightCodegenRunning && (
           <Box
             p={3}
             sx={{ textAlign: 'center', border: '1px solid #333' }}
@@ -168,14 +196,45 @@ const DefaultRecorder = ({ onClose }) => {
                 />
               )}
             />
-            <Button
-              id="default-recorder-record-btn"
-              color="primary"
-              onClick={recordMockData}
-              variant="contained"
+            <Box
+              display="flex"
+              flexDirection="row"
+              gap={1}
+              flexWrap="wrap"
+              justifyContent="center"
             >
-              Record Mock Data
-            </Button>
+              <Button
+                id="default-recorder-record-btn"
+                color="primary"
+                onClick={recordMockData}
+                variant="contained"
+              >
+                Record Mock Data
+              </Button>
+              <Button
+                id="default-recorder-playwright-codegen-mocks-btn"
+                color="secondary"
+                onClick={recordPlaywrightCodegenWithMocks}
+                variant="outlined"
+              >
+                Playwright codegen + mocks
+              </Button>
+            </Box>
+          </Box>
+        )}
+        {isPlaywrightCodegenRunning && (
+          <Box
+            p={3}
+            minWidth="100%"
+            sx={{ textAlign: 'center', border: '1px solid #333' }}
+            display="flex"
+            flexDirection="column"
+            gap={1}
+          >
+            <Typography>
+              Playwright codegen with mock and event recording is running. Close
+              the browser when you are done.
+            </Typography>
           </Box>
         )}
         {isRecordingMockData && (

@@ -18,6 +18,8 @@ const RecordMockOrTest = ({
   resetMockData,
 }) => {
   const [isRecordingMockData, setIsRecordingMockData] = useState(false);
+  const [isPlaywrightCodegenRunning, setIsPlaywrightCodegenRunning] =
+    useState(false);
   const [error, setError] = useState(null);
   const [config, setConfig] = useState({
     url: envDetails?.MetaData?.urls?.[0] || '',
@@ -47,6 +49,31 @@ const RecordMockOrTest = ({
     } catch (err) {
       setError(err.message);
       setIsRecordingMockData(false);
+    }
+  };
+
+  const recordPlaywrightCodegenWithMocks = async () => {
+    try {
+      setIsPlaywrightCodegenRunning(true);
+      setError(null);
+      await resetMockData();
+      const response = await fetch(`/api/v1/record/playwright/mocks`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(config),
+      });
+      if (!response.ok) {
+        throw new Error('Playwright codegen with mock recording failed');
+      }
+      fetchMockData(selectedTest, {
+        stopRecording: true,
+      });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsPlaywrightCodegenRunning(false);
     }
   };
 
@@ -145,7 +172,7 @@ const RecordMockOrTest = ({
       sx={{ width: '100%', margin: '0 auto', textAlign: 'left', mt: 4 }}
     >
       <Box width="100%" display="flex" flexDirection="row" gap={1}>
-        {!isRecordingMockData && (
+        {!isRecordingMockData && !isPlaywrightCodegenRunning && (
           <Box
             p={3}
             sx={{ textAlign: 'center', border: '1px solid #333' }}
@@ -251,14 +278,47 @@ const RecordMockOrTest = ({
               }
               label="Record events"
             />
-            <Button
-              id="record-mock-or-test-record-btn"
-              color="primary"
-              onClick={recordMockData}
-              variant="contained"
+            <Box
+              display="flex"
+              flexDirection="row"
+              gap={1}
+              flexWrap="wrap"
+              justifyContent="center"
+              sx={{ mt: 1 }}
             >
-              Record Mock Data
-            </Button>
+              <Button
+                id="record-mock-or-test-record-btn"
+                color="primary"
+                onClick={recordMockData}
+                variant="contained"
+              >
+                Record Mock Data
+              </Button>
+              <Button
+                id="record-mock-or-test-playwright-codegen-mocks-btn"
+                color="secondary"
+                onClick={recordPlaywrightCodegenWithMocks}
+                variant="outlined"
+              >
+                Playwright codegen + mocks
+              </Button>
+            </Box>
+          </Box>
+        )}
+        {isPlaywrightCodegenRunning && (
+          <Box
+            p={3}
+            minWidth="100%"
+            sx={{ textAlign: 'center', border: '1px solid #333' }}
+            display="flex"
+            flexDirection="column"
+            gap={1}
+          >
+            <Typography>
+              Playwright codegen with mock and event recording is running. Close
+              the browser and inspector when you are done—this panel updates
+              when the session finishes.
+            </Typography>
           </Box>
         )}
         {isRecordingMockData && (
