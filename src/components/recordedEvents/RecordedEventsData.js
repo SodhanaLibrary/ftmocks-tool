@@ -1,35 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  List,
-  ListItem,
-  ListItemText,
-  Typography,
-  TextField,
-  Drawer,
-  Tooltip,
-  IconButton,
-  Divider,
-  Button,
-} from '@mui/material';
-import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import FiberSmartRecordIcon from '@mui/icons-material/FiberSmartRecord';
-import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import Autocomplete from '@mui/material/Autocomplete';
-import AddIcon from '@mui/icons-material/Add';
-import GavelOutlined from '@mui/icons-material/GavelOutlined';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import SaveIcon from '@mui/icons-material/Save';
-import CloseIcon from '@mui/icons-material/Close';
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
-import AnsiToHtml from 'ansi-to-html';
+import { Box } from '@mui/material';
 
 import {
   generatePlaywrightCode,
@@ -41,24 +11,19 @@ import {
   generatePlaywrightCodeForRunEventsForScreenshots,
   generatePlaywrightCodeForRunEventsForHealingSelectors,
   generatePlaywrightCodeForMockMode,
-  generateRTLCode,
   nameToFolder,
 } from './CodeUtils';
-
-const eventTypesWithValues = [
-  'input',
-  'change',
-  'keypress',
-  'url',
-  'waitForTimeout',
-];
+import RecordedEventsListPanel from './RecordedEventsListPanel';
+import GeneratedCodePanel from './GeneratedCodePanel';
+import EditRecordedEventDrawer from './EditRecordedEventDrawer';
+import { streamRunTestOutput } from './streamRunTestOutput';
 
 export default function RecordedEventsData({
   testCases,
   selectedTest,
   recordingStatus,
   envDetails,
-  recordEvents,
+  recordEvents: _recordEvents,
   playwrightCodeGen,
 }) {
   const [isLoading, setIsLoading] = useState(true);
@@ -68,7 +33,6 @@ export default function RecordedEventsData({
   const [genCode, setGenCode] = useState('');
   const [genCodeType, setGenCodeType] = useState(null);
   const [currentUrl, setCurrentUrl] = useState('');
-  const [generateCodeAnchorEl, setGenerateCodeAnchorEl] = useState(null);
   const [mockModeAnchorEl, setMockModeAnchorEl] = useState(null);
   const [showEvents, setShowEvents] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -108,29 +72,24 @@ export default function RecordedEventsData({
   };
 
   const downloadTextAsFile = () => {
-    // Create a Blob object with the text
     const blob = new Blob([JSON.stringify(recordedEvents, null, 2)], {
       type: 'text/plain',
     });
 
-    // Create a URL for the Blob object
     const url = URL.createObjectURL(blob);
 
-    // Create a temporary <a> element
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'ftmocks-events.json'; // Set the filename for the download
-    document.body.appendChild(a); // Append the <a> to the DOM
-    a.click(); // Trigger the download
-    document.body.removeChild(a); // Remove the <a> from the DOM
+    a.download = 'ftmocks-events.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 
-    // Revoke the Blob URL to free up memory
     URL.revokeObjectURL(url);
   };
 
   const deleteAll = async () => {
     try {
-      // Show confirmation dialog before proceeding
       if (
         !window.confirm(
           'Are you sure you want to delete all recorded events? This action cannot be undone.'
@@ -168,13 +127,6 @@ export default function RecordedEventsData({
       });
   }
 
-  const genRTLCode = () => {
-    setGenCode(generateRTLCode(recordedEvents, testsSummary, selectedTest));
-    setGenCodeType('rtl');
-    setShowEvents(false);
-    setGenerateCodeAnchorEl(null);
-  };
-
   const genPlayWriteCode = () => {
     setGenCode(
       generatePlaywrightCode(
@@ -186,7 +138,6 @@ export default function RecordedEventsData({
     );
     setGenCodeType('playwright');
     setShowEvents(false);
-    setGenerateCodeAnchorEl(null);
   };
 
   useEffect(() => {
@@ -207,14 +158,6 @@ export default function RecordedEventsData({
     fetchRecordedEvents();
     setShowEvents(true);
   }, [selectedTest]);
-
-  const handleGenerateCodeClick = (event) => {
-    setGenerateCodeAnchorEl(event.currentTarget);
-  };
-
-  const handleGenerateCodeClose = () => {
-    setGenerateCodeAnchorEl(null);
-  };
 
   const handleMockModeClick = (event) => {
     setMockModeAnchorEl(event.currentTarget);
@@ -292,45 +235,18 @@ export default function RecordedEventsData({
 
   const playTest = async (withUI = false) => {
     setRunningTest(true);
-    setTestOutput(''); // Clear previous output
+    setTestOutput('');
 
-    try {
-      const response = await fetch(`/api/v1/code/runTest`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          withUI,
-          testName: selectedTest.name,
-          generatedCode: genCode,
-          fileName: `${nameToFolder(selectedTest?.name).toLowerCase()}.${genCodeType === 'playwright' ? 'spec.js' : 'test.js'}`,
-          parents: getParentFolder(),
-        }),
-      });
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value, { stream: true });
-          setTestOutput((prev) => prev + chunk);
-        }
-      } catch (streamError) {
-        console.error('Error reading stream:', streamError);
-        setTestOutput(
-          (prev) => prev + `\nError reading stream: ${streamError.message}`
-        );
-      } finally {
-        reader.releaseLock();
-      }
-    } catch (error) {
-      console.error('Error running test:', error);
-    }
+    await streamRunTestOutput(
+      {
+        withUI,
+        testName: selectedTest.name,
+        generatedCode: genCode,
+        fileName: `${nameToFolder(selectedTest?.name).toLowerCase()}.${genCodeType === 'playwright' ? 'spec.js' : 'test.js'}`,
+        parents: getParentFolder(),
+      },
+      setTestOutput
+    );
   };
 
   const onBackClick = () => {
@@ -342,7 +258,6 @@ export default function RecordedEventsData({
     }
   };
 
-  // Duplicates a recorded event by calling the backend API and updating the local state
   const duplicateEvent = async (eventId) => {
     if (!selectedTest?.name || !eventId) return;
     try {
@@ -360,7 +275,6 @@ export default function RecordedEventsData({
         throw new Error(errorData.error || 'Failed to duplicate event');
       }
       const duplicatedEvent = await response.json();
-      // Insert the duplicated event after the original in the local state
       setRecordedEvents((prevEvents) => {
         const idx = prevEvents.findIndex((e) => e.id === eventId);
         if (idx === -1) return prevEvents;
@@ -373,7 +287,6 @@ export default function RecordedEventsData({
     }
   };
 
-  // Adds an empty event by calling the backend API and updating the local state
   const addEmptyEvent = async (eventId) => {
     if (!selectedTest?.name || !eventId) return;
     try {
@@ -391,7 +304,6 @@ export default function RecordedEventsData({
         throw new Error(errorData.error || 'Failed to add empty event');
       }
       const newEvent = await response.json();
-      // Insert the new empty event after the original in the local state
       setRecordedEvents((prevEvents) => {
         const idx = prevEvents.findIndex((e) => e.id === eventId);
         if (idx === -1) return prevEvents;
@@ -404,7 +316,6 @@ export default function RecordedEventsData({
     }
   };
 
-  // HTML5 Drag and Drop handlers
   const handleDragStart = (e, event, index) => {
     setDraggedItem({ event, index });
     e.dataTransfer.effectAllowed = 'move';
@@ -419,7 +330,6 @@ export default function RecordedEventsData({
   };
 
   const handleDragLeave = (e) => {
-    // Only clear if we're leaving the entire list area
     const rect = e.currentTarget.getBoundingClientRect();
     if (
       e.clientX < rect.left ||
@@ -445,11 +355,9 @@ export default function RecordedEventsData({
     const [reorderedItem] = newRecordedEvents.splice(sourceIndex, 1);
     newRecordedEvents.splice(targetIndex, 0, reorderedItem);
 
-    // Update local state immediately for better UX
     setRecordedEvents(newRecordedEvents);
     setDraggedItem(null);
 
-    // Update the backend with new order
     try {
       const response = await fetch(
         `/api/v1/reorderRecordedEvents?name=${encodeURIComponent(selectedTest.name)}`,
@@ -465,14 +373,12 @@ export default function RecordedEventsData({
       );
 
       if (!response.ok) {
-        // If backend update fails, revert local state
         setRecordedEvents(recordedEvents);
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to reorder events');
       }
     } catch (error) {
       console.error('Error reordering events:', error);
-      // Revert to original order on error
       setRecordedEvents(recordedEvents);
       setError('Failed to save new order. Changes have been reverted.');
     }
@@ -483,996 +389,195 @@ export default function RecordedEventsData({
     setDragOverIndex(null);
   };
 
-  const recordEventsAgainInMockMode = async () => {
+  const runMockGeneratedCode = async (generatedCode) => {
     setMockModeAnchorEl(null);
     setRunningTest(true);
-    setTestOutput(''); // Clear previous output
+    setTestOutput('');
 
-    try {
-      const response = await fetch(`/api/v1/code/runTest`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          withUI: false,
-          testName: selectedTest.name,
-          generatedCode: generatePlaywrightCodeForEventsMockMode(
-            recordedEvents,
-            testsSummary,
-            selectedTest,
-            envDetails
-          ),
-          fileName: `__ftmocks-mock-mode-ignore-me.spec.js`,
-        }),
-      });
+    await streamRunTestOutput(
+      {
+        withUI: false,
+        testName: selectedTest.name,
+        generatedCode,
+        fileName: `__ftmocks-mock-mode-ignore-me.spec.js`,
+      },
+      setTestOutput
+    );
+  };
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value, { stream: true });
-          setTestOutput((prev) => prev + chunk);
-        }
-      } catch (streamError) {
-        console.error('Error reading stream:', streamError);
-        setTestOutput(
-          (prev) => prev + `\nError reading stream: ${streamError.message}`
-        );
-      } finally {
-        reader.releaseLock();
-      }
-    } catch (error) {
-      console.error('Error running test:', error);
-    }
+  const recordEventsAgainInMockMode = async () => {
+    await runMockGeneratedCode(
+      generatePlaywrightCodeForEventsMockMode(
+        recordedEvents,
+        testsSummary,
+        selectedTest,
+        envDetails
+      )
+    );
   };
 
   const recordContinueEventsFromLastEventInMockMode = async () => {
-    setMockModeAnchorEl(null);
-    setRunningTest(true);
-    setTestOutput(''); // Clear previous output
-
-    try {
-      const response = await fetch(`/api/v1/code/runTest`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          withUI: false,
-          testName: selectedTest.name,
-          generatedCode: generatePlaywrightCodeForContinueEventsMockMode(
-            recordedEvents,
-            testsSummary,
-            selectedTest,
-            envDetails
-          ),
-          fileName: `__ftmocks-mock-mode-ignore-me.spec.js`,
-        }),
-      });
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value, { stream: true });
-          setTestOutput((prev) => prev + chunk);
-        }
-      } catch (streamError) {
-        console.error('Error reading stream:', streamError);
-        setTestOutput(
-          (prev) => prev + `\nError reading stream: ${streamError.message}`
-        );
-      } finally {
-        reader.releaseLock();
-      }
-    } catch (error) {
-      console.error('Error running test:', error);
-    }
+    await runMockGeneratedCode(
+      generatePlaywrightCodeForContinueEventsMockMode(
+        recordedEvents,
+        testsSummary,
+        selectedTest,
+        envDetails
+      )
+    );
   };
 
   const runInMockMode = async () => {
-    setMockModeAnchorEl(null);
-    setRunningTest(true);
-    setTestOutput(''); // Clear previous output
-
-    try {
-      const response = await fetch(`/api/v1/code/runTest`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          withUI: false,
-          testName: selectedTest.name,
-          generatedCode: generatePlaywrightCodeForMockMode(
-            recordedEvents,
-            testsSummary,
-            selectedTest,
-            envDetails
-          ),
-          fileName: `__ftmocks-mock-mode-ignore-me.spec.js`,
-        }),
-      });
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value, { stream: true });
-          setTestOutput((prev) => prev + chunk);
-        }
-      } catch (streamError) {
-        console.error('Error reading stream:', streamError);
-        setTestOutput(
-          (prev) => prev + `\nError reading stream: ${streamError.message}`
-        );
-      } finally {
-        reader.releaseLock();
-      }
-    } catch (error) {
-      console.error('Error running test:', error);
-    }
+    await runMockGeneratedCode(
+      generatePlaywrightCodeForMockMode(
+        recordedEvents,
+        testsSummary,
+        selectedTest,
+        envDetails
+      )
+    );
   };
 
   const playAllEventsInMockMode = async () => {
-    setMockModeAnchorEl(null);
-    setRunningTest(true);
-    setTestOutput(''); // Clear previous output
-
-    try {
-      const response = await fetch(`/api/v1/code/runTest`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          withUI: false,
-          testName: selectedTest.name,
-          generatedCode: generatePlaywrightCodeForRunEvents(
-            recordedEvents,
-            testsSummary,
-            selectedTest,
-            envDetails
-          ),
-          fileName: `__ftmocks-mock-mode-ignore-me.spec.js`,
-        }),
-      });
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value, { stream: true });
-          setTestOutput((prev) => prev + chunk);
-        }
-      } catch (streamError) {
-        console.error('Error reading stream:', streamError);
-        setTestOutput(
-          (prev) => prev + `\nError reading stream: ${streamError.message}`
-        );
-      } finally {
-        reader.releaseLock();
-      }
-    } catch (error) {
-      console.error('Error running test:', error);
-    }
+    await runMockGeneratedCode(
+      generatePlaywrightCodeForRunEvents(
+        recordedEvents,
+        testsSummary,
+        selectedTest,
+        envDetails
+      )
+    );
   };
 
   const runInPresentationMode = async () => {
-    setMockModeAnchorEl(null);
-    setRunningTest(true);
-    setTestOutput(''); // Clear previous output
-
-    try {
-      const response = await fetch(`/api/v1/code/runTest`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          withUI: false,
-          testName: selectedTest.name,
-          generatedCode: generatePlaywrightCodeForRunEventsInPresentationMode(
-            recordedEvents,
-            testsSummary,
-            selectedTest,
-            envDetails
-          ),
-          fileName: `__ftmocks-mock-mode-ignore-me.spec.js`,
-        }),
-      });
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value, { stream: true });
-          setTestOutput((prev) => prev + chunk);
-        }
-      } catch (streamError) {
-        console.error('Error reading stream:', streamError);
-        setTestOutput(
-          (prev) => prev + `\nError reading stream: ${streamError.message}`
-        );
-      } finally {
-        reader.releaseLock();
-      }
-    } catch (error) {
-      console.error('Error running test:', error);
-    }
+    await runMockGeneratedCode(
+      generatePlaywrightCodeForRunEventsInPresentationMode(
+        recordedEvents,
+        testsSummary,
+        selectedTest,
+        envDetails
+      )
+    );
   };
 
   const runInTrainingMode = async () => {
-    setMockModeAnchorEl(null);
-    setRunningTest(true);
-    setTestOutput(''); // Clear previous output
-
-    try {
-      const response = await fetch(`/api/v1/code/runTest`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          withUI: false,
-          testName: selectedTest.name,
-          generatedCode: generatePlaywrightCodeForRunEventsInTrainingMode(
-            recordedEvents,
-            testsSummary,
-            selectedTest,
-            envDetails
-          ),
-          fileName: `__ftmocks-mock-mode-ignore-me.spec.js`,
-        }),
-      });
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value, { stream: true });
-          setTestOutput((prev) => prev + chunk);
-        }
-      } catch (streamError) {
-        console.error('Error reading stream:', streamError);
-        setTestOutput(
-          (prev) => prev + `\nError reading stream: ${streamError.message}`
-        );
-      } finally {
-        reader.releaseLock();
-      }
-    } catch (error) {
-      console.error('Error running test:', error);
-    }
+    await runMockGeneratedCode(
+      generatePlaywrightCodeForRunEventsInTrainingMode(
+        recordedEvents,
+        testsSummary,
+        selectedTest,
+        envDetails
+      )
+    );
   };
 
   const runEventsForScreenshots = async () => {
-    setMockModeAnchorEl(null);
-    setRunningTest(true);
-    setTestOutput(''); // Clear previous output
-
-    try {
-      const response = await fetch(`/api/v1/code/runTest`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          withUI: false,
-          testName: selectedTest.name,
-          generatedCode: generatePlaywrightCodeForRunEventsForScreenshots(
-            recordedEvents,
-            testsSummary,
-            selectedTest,
-            envDetails
-          ),
-          fileName: `__ftmocks-mock-mode-ignore-me.spec.js`,
-        }),
-      });
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value, { stream: true });
-          setTestOutput((prev) => prev + chunk);
-        }
-      } catch (streamError) {
-        console.error('Error reading stream:', streamError);
-        setTestOutput(
-          (prev) => prev + `\nError reading stream: ${streamError.message}`
-        );
-      } finally {
-        reader.releaseLock();
-      }
-    } catch (error) {
-      console.error('Error running test:', error);
-    }
+    await runMockGeneratedCode(
+      generatePlaywrightCodeForRunEventsForScreenshots(
+        recordedEvents,
+        testsSummary,
+        selectedTest,
+        envDetails
+      )
+    );
   };
 
   const runForHealingSelectors = async () => {
-    setMockModeAnchorEl(null);
-    setRunningTest(true);
-    setTestOutput(''); // Clear previous output
-
-    try {
-      const response = await fetch(`/api/v1/code/runTest`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          withUI: false,
-          testName: selectedTest.name,
-          generatedCode: generatePlaywrightCodeForRunEventsForHealingSelectors(
-            recordedEvents,
-            testsSummary,
-            selectedTest,
-            envDetails
-          ),
-          fileName: `__ftmocks-mock-mode-ignore-me.spec.js`,
-        }),
-      });
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value, { stream: true });
-          setTestOutput((prev) => prev + chunk);
-        }
-      } catch (streamError) {
-        console.error('Error reading stream:', streamError);
-        setTestOutput(
-          (prev) => prev + `\nError reading stream: ${streamError.message}`
-        );
-      } finally {
-        reader.releaseLock();
-      }
-    } catch (error) {
-      console.error('Error running test:', error);
-    }
+    await runMockGeneratedCode(
+      generatePlaywrightCodeForRunEventsForHealingSelectors(
+        recordedEvents,
+        testsSummary,
+        selectedTest,
+        envDetails
+      )
+    );
   };
 
-  const convert = new AnsiToHtml();
-
-  const htmlOutput = convert.toHtml(testOutput).replace(/\n/g, '<br/>');
-
-  const renderedTarget = (event) => {
-    if (event.target) {
-      return event.target;
+  const saveEditedEvent = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(
+        `/api/v1/recordedEvents/${selectedEvent.id}?name=${selectedTest.name}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ...selectedEvent,
+            type: selectedEvent.type,
+            target: selectedEvent.target,
+            value: selectedEvent.value,
+          }),
+        }
+      );
+      if (!response.ok) {
+        throw new Error('Failed to update event');
+      }
+      await response.json();
+      fetchRecordedEvents();
+      setSelectedEvent(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
     }
-    if (typeof event.value === 'string') {
-      return event.value;
-    }
-    return '';
   };
 
   return (
     <Box width="100%">
       {showEvents && (
-        <Box p={2}>
-          <Box
-            p={1}
-            display="flex"
-            alignItems="center"
-            justifyContent="space-between"
-            width="100%"
-          >
-            <Box display="flex" alignItems="center" gap={1}>
-              <Typography variant="h5">Events Data</Typography>
-              {/* <Button
-                variant="contained"
-                onClick={handleGenerateCodeClick}
-                endIcon={<ArrowDropDownIcon />}
-                sx={{ ml: 2 }}
-              >
-                Generate Code
-              </Button>
-              <Menu
-                anchorEl={generateCodeAnchorEl}
-                open={Boolean(generateCodeAnchorEl)}
-                onClose={handleGenerateCodeClose}
-              >
-                <MenuItem id="recorded-events-gen-rtl-code" onClick={genRTLCode}>Generate RTL Code</MenuItem>
-                <MenuItem id="recorded-events-gen-playwright-code" onClick={genPlayWriteCode}>
-                  Generate Playwright Code
-                </MenuItem>
-              </Menu> */}
-              {recordedEvents.length > 0 && (
-                <Box>
-                  <Tooltip title="Run in mock mode">
-                    <IconButton
-                      id="recorded-events-mock-mode-btn"
-                      color="primary"
-                      onClick={handleMockModeClick}
-                    >
-                      <FiberSmartRecordIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <Menu
-                    anchorEl={mockModeAnchorEl}
-                    open={Boolean(mockModeAnchorEl)}
-                    onClose={handleMockModeClose}
-                  >
-                    <MenuItem
-                      id="recorded-events-run-mock-mode"
-                      onClick={runInMockMode}
-                    >
-                      Run in mock mode
-                    </MenuItem>
-                    <MenuItem
-                      id="recorded-events-record-again"
-                      onClick={recordEventsAgainInMockMode}
-                    >
-                      Record events again
-                    </MenuItem>
-                    <MenuItem
-                      id="recorded-events-record-from-last"
-                      onClick={recordContinueEventsFromLastEventInMockMode}
-                    >
-                      Record events from last event
-                    </MenuItem>
-                    <MenuItem
-                      id="recorded-events-play-all"
-                      onClick={playAllEventsInMockMode}
-                    >
-                      Play all events
-                    </MenuItem>
-                    <MenuItem
-                      id="recorded-events-presentation-mode"
-                      onClick={runInPresentationMode}
-                    >
-                      Run in presentation mode
-                    </MenuItem>
-                    <MenuItem
-                      id="recorded-events-training-mode"
-                      onClick={runInTrainingMode}
-                    >
-                      Run in training mode
-                    </MenuItem>
-                    <MenuItem
-                      id="recorded-events-screenshots"
-                      onClick={runEventsForScreenshots}
-                    >
-                      Run for screenshots
-                    </MenuItem>
-                    <MenuItem
-                      id="recorded-events-healing-selectors"
-                      onClick={runForHealingSelectors}
-                    >
-                      Run for healing selectors
-                    </MenuItem>
-                  </Menu>
-                </Box>
-              )}
-              <Button
-                id="recorded-events-gen-playwright-btn"
-                variant="contained"
-                onClick={genPlayWriteCode}
-                sx={{ ml: 2 }}
-              >
-                Generate Playwright Code
-              </Button>
-            </Box>
-            <Box>
-              <Tooltip title="Download as file">
-                <IconButton
-                  id="recorded-events-download-btn"
-                  onClick={downloadTextAsFile}
-                >
-                  <CloudDownloadIcon />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Delete all events">
-                <IconButton
-                  id="recorded-events-delete-all-btn"
-                  onClick={deleteAll}
-                >
-                  <DeleteSweepIcon />
-                </IconButton>
-              </Tooltip>
-            </Box>
-          </Box>
-          <Divider />
-          <List>
-            {recordedEvents.map((re, index) => (
-              <Box
-                key={re.id}
-                draggable
-                onDragStart={(e) => handleDragStart(e, re, index)}
-                onDragOver={(e) => handleDragOver(e, index)}
-                onDragLeave={handleDragLeave}
-                onDrop={(e) => handleDrop(e, index)}
-                onDragEnd={handleDragEnd}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  '&:hover': {
-                    backgroundColor: 'action.hover',
-                  },
-                  backgroundColor:
-                    draggedItem?.index === index
-                      ? 'action.selected'
-                      : dragOverIndex === index
-                        ? 'background.light'
-                        : 'transparent',
-                  gap: 1,
-                  '& .action-buttons': {
-                    display: 'none',
-                  },
-                  '&:hover .action-buttons': {
-                    display: 'flex',
-                  },
-                  transition: 'all 0.2s ease',
-                  transform:
-                    draggedItem?.index === index
-                      ? 'rotate(3deg) scale(1.02)'
-                      : 'none',
-                  opacity: draggedItem?.index === index ? 0.7 : 1,
-                  cursor: 'grab',
-                  border:
-                    dragOverIndex === index && draggedItem?.index !== index
-                      ? '1px dashed'
-                      : '0px solid transparent',
-                  borderColor: 'primary.main',
-                  borderRadius: 1,
-                  borderLeft: `4px solid ${re.executed ? '#4CAF50' : undefined}`,
-                }}
-                p={1}
-                id={`recorded-events-item-${re.id}`}
-                onClick={() => editEvent(re)}
-              >
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                  }}
-                >
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      color: 'text.secondary',
-                      '&:hover': {
-                        color: 'primary.main',
-                      },
-                      cursor: 'grab',
-                      '&:active': {
-                        cursor: 'grabbing',
-                      },
-                    }}
-                  >
-                    <DragIndicatorIcon />
-                  </Box>
-                  <Box sx={{ textAlign: 'left' }}>
-                    <Typography variant="body1">
-                      {re.type} ({renderedTarget(re)})
-                    </Typography>
-                    <Typography variant="body2">{re.time}</Typography>
-                  </Box>
-                </Box>
-                <Box className="action-buttons">
-                  <Tooltip title="Duplicate Event">
-                    <IconButton
-                      id={`recorded-events-duplicate-${re.id}`}
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        duplicateEvent(re.id);
-                      }}
-                      aria-label="duplicate"
-                    >
-                      <ContentCopyIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Create New Event">
-                    <IconButton
-                      id={`recorded-events-add-empty-${re.id}`}
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        addEmptyEvent(re.id);
-                      }}
-                      aria-label="create new event"
-                    >
-                      <AddIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Edit Event">
-                    <IconButton
-                      id={`recorded-events-edit-${re.id}`}
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        editEvent(re);
-                      }}
-                      aria-label="edit"
-                    >
-                      <EditIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Delete Event">
-                    <IconButton
-                      id={`recorded-events-delete-${re.id}`}
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteEvent(re);
-                      }}
-                      aria-label="delete"
-                      disabled={index === 0 && re.type === 'url'}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Tooltip>
-                </Box>
-              </Box>
-            ))}
-          </List>
-          <Box sx={{ textAlign: 'center' }}>
-            {!recordedEvents.length ? 'No events recorded' : null}
-          </Box>
-        </Box>
+        <RecordedEventsListPanel
+          recordedEvents={recordedEvents}
+          mockModeAnchorEl={mockModeAnchorEl}
+          onMockModeClick={handleMockModeClick}
+          onMockModeClose={handleMockModeClose}
+          runInMockMode={runInMockMode}
+          recordEventsAgainInMockMode={recordEventsAgainInMockMode}
+          recordContinueEventsFromLastEventInMockMode={
+            recordContinueEventsFromLastEventInMockMode
+          }
+          playAllEventsInMockMode={playAllEventsInMockMode}
+          runInPresentationMode={runInPresentationMode}
+          runInTrainingMode={runInTrainingMode}
+          runEventsForScreenshots={runEventsForScreenshots}
+          runForHealingSelectors={runForHealingSelectors}
+          onGenPlaywrightCode={genPlayWriteCode}
+          onDownload={downloadTextAsFile}
+          onDeleteAll={deleteAll}
+          draggedItem={draggedItem}
+          dragOverIndex={dragOverIndex}
+          onDragStart={handleDragStart}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onDragEnd={handleDragEnd}
+          onEditEvent={editEvent}
+          onDuplicateEvent={duplicateEvent}
+          onAddEmptyEvent={addEmptyEvent}
+          onDeleteEvent={deleteEvent}
+        />
       )}
       {!showEvents && (
-        <Box
-          width="100%"
-          p={2}
-          sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}
-        >
-          <Box
-            p={1}
-            display="flex"
-            alignItems="center"
-            justifyContent="space-between"
-          >
-            <Box display="flex" alignItems="center" gap={1}>
-              <IconButton
-                id="recorded-events-back-btn"
-                color="primary"
-                onClick={onBackClick}
-              >
-                <ArrowBackIcon />
-              </IconButton>
-              <Typography variant="h5">
-                {runningTest ? 'Test Output' : 'Generated Code'}
-              </Typography>
-            </Box>
-            <Box>
-              <Tooltip title="Save and Run Test">
-                <IconButton
-                  id="recorded-events-play-test-btn"
-                  onClick={() => playTest(false)}
-                  sx={{ mr: 1 }}
-                >
-                  <PlayArrowIcon />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Save and Run Test With Playwright UI">
-                <IconButton
-                  id="recorded-events-play-ui-btn"
-                  onClick={() => playTest(true)}
-                  sx={{ mr: 1 }}
-                >
-                  <GavelOutlined />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Save File">
-                <IconButton
-                  id="recorded-events-save-file-btn"
-                  onClick={saveFile}
-                  sx={{ mr: 1 }}
-                >
-                  <SaveIcon />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Copy to Clipboard">
-                <IconButton
-                  id="recorded-events-copy-btn"
-                  onClick={copyToClipboard}
-                >
-                  <ContentCopyIcon />
-                </IconButton>
-              </Tooltip>
-            </Box>
-          </Box>
-          <Divider />
-          {!runningTest && (
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-              }}
-            >
-              <Box
-                p={2}
-                sx={{
-                  textAlign: 'left',
-                  width: '100%',
-                  overflowX: 'scroll',
-                }}
-              >
-                <TextField
-                  id="recorded-events-gen-code-input"
-                  multiline
-                  fullWidth
-                  value={genCode}
-                  onChange={(e) => setGenCode(e.target.value)}
-                  variant="outlined"
-                  sx={{
-                    '& .MuiInputBase-input': {
-                      fontFamily: 'monospace',
-                      fontSize: '0.875rem',
-                    },
-                    mb: 2,
-                  }}
-                  rows={25}
-                />
-              </Box>
-              {genCodeType === 'playwright' && playwrightCodeGen && (
-                <Box
-                  sx={{
-                    textAlign: 'center',
-                    display: 'flex',
-                    gap: 2,
-                    alignItems: 'center',
-                    pl: 2,
-                  }}
-                >
-                  <Typography variant="body2" color="text.secondary">
-                    Find generated code above or you can Run playwright codegen
-                    to generate the code
-                  </Typography>
-                  <Button
-                    id="recorded-events-playwright-codegen-btn"
-                    sx={{ mt: 1 }}
-                    onClick={playwrightCodeGen}
-                    variant="outlined"
-                  >
-                    Run playwright codegen
-                  </Button>
-                </Box>
-              )}
-            </Box>
-          )}
-          {runningTest && (
-            <Box
-              p={2}
-              sx={{
-                textAlign: 'left',
-                width: 'calc(100vw - 500px)',
-                overflowX: 'scroll',
-              }}
-            >
-              {/* <TextField
-                multiline
-                fullWidth
-                value={testOutput}
-                readOnly
-                variant="outlined"
-                rows={25}
-              /> */}
-              <div
-                style={{
-                  background: 'black',
-                  color: 'white',
-                  fontFamily: 'monospace',
-                  padding: '10px',
-                  borderRadius: '8px',
-                  overflowY: 'auto',
-                  height: '700px',
-                }}
-                dangerouslySetInnerHTML={{ __html: htmlOutput }}
-              />
-            </Box>
-          )}
-        </Box>
+        <GeneratedCodePanel
+          runningTest={runningTest}
+          genCode={genCode}
+          onGenCodeChange={setGenCode}
+          genCodeType={genCodeType}
+          playwrightCodeGen={playwrightCodeGen}
+          onBack={onBackClick}
+          onPlayTest={playTest}
+          onSaveFile={saveFile}
+          onCopy={copyToClipboard}
+          testOutput={testOutput}
+        />
       )}
-      {/* Edit Event Modal */}
-      <Drawer
-        anchor="right"
-        open={Boolean(selectedEvent)}
+      <EditRecordedEventDrawer
+        selectedEvent={selectedEvent}
         onClose={() => setSelectedEvent(null)}
-        sx={{
-          '& .MuiDrawer-paper': {
-            width: '50%',
-            p: 2,
-          },
-        }}
-      >
-        {selectedEvent && (
-          <Box>
-            <Box
-              display="flex"
-              alignItems="center"
-              justifyContent="space-between"
-              mb={2}
-            >
-              <Typography variant="h6">Edit Event</Typography>
-              <IconButton
-                id="recorded-events-edit-close-btn"
-                onClick={() => setSelectedEvent(null)}
-              >
-                <CloseIcon />
-              </IconButton>
-            </Box>
-            <Divider sx={{ mb: 2 }} />
-
-            <Box
-              component="form"
-              sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
-            >
-              <TextField
-                id="recorded-events-edit-type"
-                select
-                label="Type"
-                value={selectedEvent.type || ''}
-                onChange={(e) =>
-                  setSelectedEvent({ ...selectedEvent, type: e.target.value })
-                }
-                fullWidth
-              >
-                <MenuItem value="click">Click</MenuItem>
-                <MenuItem value="hover">Hover</MenuItem>
-                <MenuItem value="input">Input</MenuItem>
-                <MenuItem value="submit">Submit</MenuItem>
-                <MenuItem value="url">URL</MenuItem>
-                <MenuItem value="keydown">Key Down</MenuItem>
-                <MenuItem value="change">Change</MenuItem>
-                <MenuItem value="waitForTimeout">Wait For Timeout</MenuItem>
-              </TextField>
-
-              <Autocomplete
-                freeSolo
-                options={
-                  selectedEvent.selectors
-                    ?.filter((s) => s.type === 'locator')
-                    .map((s) => s.value || '') || []
-                }
-                value={selectedEvent.target || ''}
-                onInputChange={(_, value) => {
-                  setSelectedEvent({
-                    ...selectedEvent,
-                    target: value,
-                  });
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    id="recorded-events-edit-target"
-                    {...params}
-                    label="Target"
-                    variant="outlined"
-                    fullWidth
-                    sx={{ mb: 1 }}
-                  />
-                )}
-              />
-              {/* <TextField
-                label="Target"
-                value={selectedEvent.target || ''}
-                onChange={(e) =>
-                  setSelectedEvent({ ...selectedEvent, target: e.target.value })
-                }
-                fullWidth
-              /> */}
-
-              {(typeof selectedEvent.value === 'string' ||
-                eventTypesWithValues.includes(selectedEvent.type)) && (
-                <TextField
-                  id="recorded-events-edit-value"
-                  label="Value"
-                  value={selectedEvent.value || ''}
-                  onChange={(e) =>
-                    setSelectedEvent({
-                      ...selectedEvent,
-                      value: e.target.value,
-                    })
-                  }
-                  fullWidth
-                />
-              )}
-              <TextField
-                id="recorded-events-edit-description"
-                label="Description"
-                value={selectedEvent.description || ''}
-                onChange={(e) =>
-                  setSelectedEvent({
-                    ...selectedEvent,
-                    description: e.target.value,
-                  })
-                }
-                fullWidth
-              />
-
-              <Box display="flex" mt={2}>
-                <Box display="flex" gap={1} width="50%">
-                  <Button
-                    id="recorded-events-edit-save-btn"
-                    variant="contained"
-                    onClick={async () => {
-                      try {
-                        setIsLoading(true);
-                        const response = await fetch(
-                          `/api/v1/recordedEvents/${selectedEvent.id}?name=${selectedTest.name}`,
-                          {
-                            method: 'PUT',
-                            headers: {
-                              'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                              ...selectedEvent,
-                              type: selectedEvent.type,
-                              target: selectedEvent.target,
-                              value: selectedEvent.value,
-                            }),
-                          }
-                        );
-                        if (!response.ok) {
-                          throw new Error('Failed to update event');
-                        }
-                        await response.json();
-                        fetchRecordedEvents();
-                        setSelectedEvent(null);
-                      } catch (err) {
-                        setError(err.message);
-                      } finally {
-                        setIsLoading(false);
-                      }
-                    }}
-                    fullWidth
-                  >
-                    Save Changes
-                  </Button>
-                  <Button
-                    id="recorded-events-edit-cancel-btn"
-                    variant="outlined"
-                    onClick={() => setSelectedEvent(null)}
-                    fullWidth
-                  >
-                    Cancel
-                  </Button>
-                </Box>
-              </Box>
-            </Box>
-          </Box>
-        )}
-      </Drawer>
+        onEventChange={setSelectedEvent}
+        onSave={saveEditedEvent}
+      />
     </Box>
   );
 }

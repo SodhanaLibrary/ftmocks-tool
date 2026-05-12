@@ -8,7 +8,13 @@ import Checkbox from '@mui/material/Checkbox';
 import Typography from '@mui/material/Typography';
 import Autocomplete from '@mui/material/Autocomplete';
 import Chip from '@mui/material/Chip';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
+import CircularProgress from '@mui/material/CircularProgress';
 import RecordedEventsData from '../recordedEvents/RecordedEventsData';
+import GeneratedCodePanel from '../recordedEvents/GeneratedCodePanel';
+import { streamRunTestOutput } from '../recordedEvents/streamRunTestOutput';
+import { nameToFolder } from '../recordedEvents/CodeUtils';
 
 const RecordMockOrTest = ({
   testCases,
@@ -21,6 +27,12 @@ const RecordMockOrTest = ({
   const [isPlaywrightCodegenRunning, setIsPlaywrightCodegenRunning] =
     useState(false);
   const [error, setError] = useState(null);
+  const [detailTab, setDetailTab] = useState('events');
+  const [diskSpecCode, setDiskSpecCode] = useState('');
+  const [specFetchLoading, setSpecFetchLoading] = useState(false);
+  const [specFetchNotice, setSpecFetchNotice] = useState(null);
+  const [codeTabRunningTest, setCodeTabRunningTest] = useState(false);
+  const [codeTabTestOutput, setCodeTabTestOutput] = useState('');
   const [config, setConfig] = useState({
     url: envDetails?.MetaData?.urls?.[0] || '',
     patterns: envDetails?.MetaData?.patterns || ['^/api/.*'],
@@ -156,13 +168,123 @@ const RecordMockOrTest = ({
     setIsRecordingMockData(data.status === 'running');
   };
 
+  const getParentFolder = () => {
+    const parents = [];
+    let currentParentId = selectedTest.parentId;
+    while (currentParentId) {
+      const parentIdForLookup = currentParentId;
+      const parentFolder = testCases.find(
+        (testCase) => testCase.id === parentIdForLookup
+      );
+      if (!parentFolder) break;
+      parents.push(parentFolder.name);
+      currentParentId = parentFolder.parentId;
+    }
+    return parents;
+  };
+
   useEffect(() => {
-    setConfig(Object.assign({}, config, { testName: selectedTest.name }));
+    setConfig((prev) => ({ ...prev, testName: selectedTest.name }));
     fetchRecordingStatus();
     // Call fetchRecordingStatus on interval and cleanup on unmount
     const intervalId = setInterval(fetchRecordingStatus, 10000);
     return () => clearInterval(intervalId);
   }, [selectedTest]);
+
+  useEffect(() => {
+    if (detailTab !== 'code' || !selectedTest?.name) return undefined;
+    let cancelled = false;
+    (async () => {
+      setSpecFetchLoading(true);
+      setSpecFetchNotice(null);
+      try {
+        const response = await fetch(
+          `/api/v1/code/spec?name=${encodeURIComponent(selectedTest.name)}`
+        );
+        if (cancelled) return;
+        if (response.ok) {
+          const data = await response.json();
+          setDiskSpecCode(data.content ?? '');
+          setSpecFetchNotice(null);
+        } else if (response.status === 404) {
+          setDiskSpecCode('');
+          setSpecFetchNotice(
+            'No saved Playwright spec found for this test yet. Save from the Events tab or record codegen output.'
+          );
+        } else {
+          const errBody = await response.json().catch(() => ({}));
+          setDiskSpecCode('');
+          setSpecFetchNotice(
+            errBody.error || `Could not load spec (HTTP ${response.status}).`
+          );
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setDiskSpecCode('');
+          setSpecFetchNotice(e.message || 'Failed to load spec from server.');
+        }
+      } finally {
+        if (!cancelled) setSpecFetchLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [detailTab, selectedTest?.name]);
+
+  useEffect(() => {
+    setDetailTab('events');
+    setCodeTabRunningTest(false);
+    setCodeTabTestOutput('');
+  }, [selectedTest?.id]);
+
+  const saveDiskSpecFile = async () => {
+    const saveData = {
+      generatedCode: diskSpecCode,
+      fileName: `${nameToFolder(selectedTest?.name).toLowerCase()}.spec.js`,
+      parents: getParentFolder(),
+    };
+    try {
+      const response = await fetch('/api/v1/code/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(saveData),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to save file');
+      }
+    } catch (e) {
+      setError(e.message);
+    }
+  };
+
+  const playDiskSpecTest = async (withUI = false) => {
+    setCodeTabRunningTest(true);
+    setCodeTabTestOutput('');
+    await streamRunTestOutput(
+      {
+        withUI,
+        testName: selectedTest.name,
+        generatedCode: diskSpecCode,
+        fileName: `${nameToFolder(selectedTest?.name).toLowerCase()}.spec.js`,
+        parents: getParentFolder(),
+      },
+      setCodeTabTestOutput
+    );
+  };
+
+  const copyDiskSpecToClipboard = () => {
+    navigator.clipboard.writeText(diskSpecCode).catch(() => {});
+  };
+
+  const onCodePanelBack = () => {
+    if (codeTabRunningTest) {
+      setCodeTabRunningTest(false);
+      setCodeTabTestOutput('');
+    } else {
+      setDetailTab('events');
+    }
+  };
 
   return (
     <Box
@@ -345,21 +467,91 @@ const RecordMockOrTest = ({
       {error && <Typography color="error">{error}</Typography>}
       <Box
         width="100%"
-        display="flex"
-        flexDirection="row"
-        gap={1}
-        sx={{ textAlign: 'center', border: '1px solid #333' }}
+        sx={{
+          border: '1px solid #333',
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: 0,
+        }}
       >
-        <RecordedEventsData
-          testCases={testCases}
-          recordingStatus={isRecordingMockData}
-          selectedTest={selectedTest}
-          envDetails={envDetails}
-          recordEvents={recordTest}
-          playwrightCodeGen={
-            envDetails.PLAYWRIGHT_DIR ? generatePlaywrightCode : null
-          }
-        />
+        <Tabs
+          value={detailTab}
+          onChange={(_, next) => setDetailTab(next)}
+          sx={{
+            px: 1,
+            pt: 1,
+            borderBottom: 1,
+            borderColor: 'divider',
+          }}
+        >
+          <Tab label="Events" value="events" id="record-mock-or-test-tab-events" />
+          <Tab label="Code" value="code" id="record-mock-or-test-tab-code" />
+        </Tabs>
+
+        <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
+          {detailTab === 'events' && (
+            <RecordedEventsData
+              testCases={testCases}
+              recordingStatus={isRecordingMockData}
+              selectedTest={selectedTest}
+              envDetails={envDetails}
+              recordEvents={recordTest}
+              playwrightCodeGen={
+                envDetails?.PLAYWRIGHT_DIR ? generatePlaywrightCode : null
+              }
+            />
+          )}
+          {detailTab === 'code' && (
+            <Box sx={{ position: 'relative' }}>
+              {specFetchLoading && (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 1,
+                    py: 2,
+                  }}
+                >
+                  <CircularProgress size={22} />
+                  <Typography variant="body2" color="text.secondary">
+                    Loading spec from disk…
+                  </Typography>
+                </Box>
+              )}
+              {specFetchNotice && !specFetchLoading && (
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ px: 2, py: 1 }}
+                >
+                  {specFetchNotice}
+                </Typography>
+              )}
+              <Box
+                sx={{
+                  '& > div': { height: 'auto !important', minHeight: 520 },
+                }}
+              >
+                <GeneratedCodePanel
+                  runningTest={codeTabRunningTest}
+                  genCode={diskSpecCode}
+                  onGenCodeChange={setDiskSpecCode}
+                  genCodeType="playwright"
+                  playwrightCodeGen={
+                    envDetails?.PLAYWRIGHT_DIR ? generatePlaywrightCode : null
+                  }
+                  onBack={onCodePanelBack}
+                  onPlayTest={playDiskSpecTest}
+                  onSaveFile={saveDiskSpecFile}
+                  onCopy={copyDiskSpecToClipboard}
+                  testOutput={codeTabTestOutput}
+                />
+              </Box>
+            </Box>
+          )}
+        </Box>
       </Box>
     </Box>
   );

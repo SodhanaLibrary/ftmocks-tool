@@ -28,6 +28,27 @@ import { FtJSON } from './utils/FtJSON';
 import AiEditDialog from './AiEditDialog';
 import ResponseVariantsDialog from './ResponseVariantsDialog';
 
+function parseMatchHeaderNames(raw) {
+  if (!raw || typeof raw !== 'string') {
+    return [];
+  }
+  const names = raw.split(',').map((h) => h.trim()).filter(Boolean);
+  return [...new Set(names)];
+}
+
+function getHeaderValueCaseInsensitive(headers, headerName) {
+  if (!headers || !headerName) {
+    return undefined;
+  }
+  const lower = headerName.toLowerCase();
+  for (const key of Object.keys(headers)) {
+    if (key.toLowerCase() === lower) {
+      return headers[key];
+    }
+  }
+  return undefined;
+}
+
 const MockDataView = ({
   envDetails,
   mockItem,
@@ -594,6 +615,13 @@ const MockDataView = ({
     !mockItem.isDuplicate &&
     selectedTest &&
     !isMockInDefaultMocks(defaultMocks, mockItem);
+
+  const matchHeaderNames = parseMatchHeaderNames(envDetails?.MATCH_HEADERS);
+  const mockRequestHeaders = mockData?.request?.headers || {};
+  const missingMatchHeaders = matchHeaderNames.filter(
+    (name) => getHeaderValueCaseInsensitive(mockRequestHeaders, name) === undefined
+  );
+
   return (
     <Box
       sx={{
@@ -628,6 +656,13 @@ const MockDataView = ({
         </Box>
       </Box>
       <Divider />
+      {matchHeaderNames.length > 0 && missingMatchHeaders.length > 0 && (
+        <Alert severity="warning" sx={{ mt: 2, mb: 1 }}>
+          Project MATCH_HEADERS requires these request headers on recordings:{' '}
+          <strong>{missingMatchHeaders.join(', ')}</strong>. This mock does not
+          include them in request headers, so it may never match live traffic.
+        </Alert>
+      )}
       <TextField
         id="mock-data-view-url"
         label="URL"
