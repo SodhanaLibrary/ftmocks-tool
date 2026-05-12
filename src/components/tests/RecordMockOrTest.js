@@ -1,5 +1,5 @@
 /* eslint-disable jsx-a11y/iframe-has-title */
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Box } from '@mui/material';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
@@ -74,7 +74,9 @@ const RecordMockOrTest = ({
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(config),
+        body: JSON.stringify(
+          Object.assign({}, config, { parents: getParentFolder() })
+        ),
       });
       if (!response.ok) {
         throw new Error('Playwright codegen with mock recording failed');
@@ -191,8 +193,56 @@ const RecordMockOrTest = ({
     return () => clearInterval(intervalId);
   }, [selectedTest]);
 
+  const applySpecFetchResponse = useCallback(async (response) => {
+    if (response.ok) {
+      const data = await response.json();
+      setDiskSpecCode(data.content ?? '');
+      setSpecFetchNotice(null);
+      return;
+    }
+    if (response.status === 404) {
+      setDiskSpecCode('');
+      setSpecFetchNotice(
+        'No saved Playwright spec found for this test yet. Save from the Events tab or record codegen output.'
+      );
+      return;
+    }
+    const errBody = await response.json().catch(() => ({}));
+    setDiskSpecCode('');
+    setSpecFetchNotice(
+      errBody.error || `Could not load spec (HTTP ${response.status}).`
+    );
+  }, []);
+
+  const refetchDiskSpec = useCallback(async () => {
+    if (!selectedTest?.name) return;
+    setSpecFetchLoading(true);
+    setSpecFetchNotice(null);
+    try {
+      const response = await fetch(
+        `/api/v1/code/spec?name=${encodeURIComponent(selectedTest.name)}`
+      );
+      await applySpecFetchResponse(response);
+    } catch (e) {
+      setDiskSpecCode('');
+      setSpecFetchNotice(e.message || 'Failed to load spec from server.');
+    } finally {
+      setSpecFetchLoading(false);
+    }
+  }, [selectedTest?.name, applySpecFetchResponse]);
+
   useEffect(() => {
-    if (detailTab !== 'code' || !selectedTest?.name) return undefined;
+    setCodeTabRunningTest(false);
+    setCodeTabTestOutput('');
+
+    if (!selectedTest?.id || !selectedTest?.name) {
+      setDetailTab('events');
+      setDiskSpecCode('');
+      setSpecFetchNotice(null);
+      setSpecFetchLoading(false);
+      return undefined;
+    }
+
     let cancelled = false;
     (async () => {
       setSpecFetchLoading(true);
@@ -202,26 +252,22 @@ const RecordMockOrTest = ({
           `/api/v1/code/spec?name=${encodeURIComponent(selectedTest.name)}`
         );
         if (cancelled) return;
+
         if (response.ok) {
           const data = await response.json();
-          setDiskSpecCode(data.content ?? '');
+          const content = data.content ?? '';
+          setDiskSpecCode(content);
           setSpecFetchNotice(null);
-        } else if (response.status === 404) {
-          setDiskSpecCode('');
-          setSpecFetchNotice(
-            'No saved Playwright spec found for this test yet. Save from the Events tab or record codegen output.'
-          );
+          setDetailTab(content.trim() ? 'code' : 'events');
         } else {
-          const errBody = await response.json().catch(() => ({}));
-          setDiskSpecCode('');
-          setSpecFetchNotice(
-            errBody.error || `Could not load spec (HTTP ${response.status}).`
-          );
+          await applySpecFetchResponse(response);
+          if (!cancelled) setDetailTab('events');
         }
       } catch (e) {
         if (!cancelled) {
           setDiskSpecCode('');
           setSpecFetchNotice(e.message || 'Failed to load spec from server.');
+          setDetailTab('events');
         }
       } finally {
         if (!cancelled) setSpecFetchLoading(false);
@@ -230,13 +276,14 @@ const RecordMockOrTest = ({
     return () => {
       cancelled = true;
     };
-  }, [detailTab, selectedTest?.name]);
+  }, [selectedTest?.id, selectedTest?.name, applySpecFetchResponse]);
 
-  useEffect(() => {
-    setDetailTab('events');
-    setCodeTabRunningTest(false);
-    setCodeTabTestOutput('');
-  }, [selectedTest?.id]);
+  const onDetailTabChange = (_, next) => {
+    setDetailTab(next);
+    if (next === 'code') {
+      refetchDiskSpec();
+    }
+  };
 
   const saveDiskSpecFile = async () => {
     const saveData = {
@@ -477,7 +524,7 @@ const RecordMockOrTest = ({
       >
         <Tabs
           value={detailTab}
-          onChange={(_, next) => setDetailTab(next)}
+          onChange={onDetailTabChange}
           sx={{
             px: 1,
             pt: 1,
@@ -485,7 +532,11 @@ const RecordMockOrTest = ({
             borderColor: 'divider',
           }}
         >
-          <Tab label="Events" value="events" id="record-mock-or-test-tab-events" />
+          <Tab
+            label="Events"
+            value="events"
+            id="record-mock-or-test-tab-events"
+          />
           <Tab label="Code" value="code" id="record-mock-or-test-tab-code" />
         </Tabs>
 
