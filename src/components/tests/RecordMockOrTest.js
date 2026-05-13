@@ -75,7 +75,15 @@ const RecordMockOrTest = ({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(
-          Object.assign({}, config, { parents: getParentFolder() })
+          Object.assign({}, config, {
+            parents: getParentFolder(),
+            testCases,
+            selectedTest: {
+              id: selectedTest?.id,
+              parentId: selectedTest?.parentId,
+              name: selectedTest?.name,
+            },
+          })
         ),
       });
       if (!response.ok) {
@@ -84,6 +92,8 @@ const RecordMockOrTest = ({
       fetchMockData(selectedTest, {
         stopRecording: true,
       });
+      setDetailTab('code');
+      await refetchDiskSpec();
     } catch (err) {
       setError(err.message);
     } finally {
