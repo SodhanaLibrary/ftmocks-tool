@@ -312,7 +312,9 @@ export function useTestsPage() {
         fData = sortUrlsByMatch(mockSearchTerm, selectedTest?.mockData);
       } catch (error) {
         fData = selectedTest?.mockData?.filter((item) =>
-          item.url.toLowerCase().includes(mockSearchTerm.toLowerCase())
+          String(item?.url ?? '')
+            .toLowerCase()
+            .includes(String(mockSearchTerm ?? '').toLowerCase())
         );
       }
       selectedTest.filteredMockData = fData;

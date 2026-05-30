@@ -29,19 +29,31 @@ const getValidUrl = (url) => {
 };
 
 export const sortUrlsByMatch = (url, mockData) => {
-  if (url.split('/').length === 1 && url.split('?').length === 1) {
-    return mockData.filter(
-      (mockItem) =>
-        mockItem.url.toLowerCase().includes(url.toLowerCase()) ||
-        mockItem.response?.content?.toLowerCase().includes(url.toLowerCase())
-    );
+  const searchTerm = String(url ?? '').toLowerCase();
+  const items = mockData ?? [];
+
+  if (!searchTerm) {
+    return items;
+  }
+
+  if (searchTerm.split('/').length === 1 && searchTerm.split('?').length === 1) {
+    return items.filter((mockItem) => {
+      const mockUrl = String(mockItem?.url ?? '').toLowerCase();
+      const mockContent = String(mockItem?.response?.content ?? '').toLowerCase();
+      return (
+        mockUrl.includes(searchTerm) || mockContent.includes(searchTerm)
+      );
+    });
   }
   const baseUrl = new URL(getValidUrl(url));
   const baseParams = getQueryParams(getValidUrl(url));
   const basePathname = baseUrl.pathname;
 
   // Map each URL in urlList to an object with the URL, match count, and pathname match
-  const urlMatchCounts = mockData.map((mockItem) => {
+  const urlMatchCounts = items.map((mockItem) => {
+    if (!mockItem?.url) {
+      return { url: '', matches: 0, pathnameMatch: 0, mockItem };
+    }
     const compareUrl = new URL(getValidUrl(mockItem.url));
     const compareParams = getQueryParams(getValidUrl(mockItem.url));
     const matchCount = countMatchingParams(baseParams, compareParams);

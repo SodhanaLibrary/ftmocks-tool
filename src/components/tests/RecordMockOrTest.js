@@ -160,18 +160,36 @@ const RecordMockOrTest = ({
   };
 
   const generatePlaywrightCode = async () => {
-    const response = await fetch(`/api/v1/record/playwright`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(config),
-    });
-    if (!response.ok) {
-      throw new Error('Failed to generate playwright code');
+    try {
+      setIsPlaywrightCodegenRunning(true);
+      setError(null);
+      const response = await fetch(`/api/v1/record/playwright`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(
+          Object.assign({}, config, {
+            parents: getParentFolder(),
+            testCases,
+            selectedTest: {
+              id: selectedTest?.id,
+              parentId: selectedTest?.parentId,
+              name: selectedTest?.name,
+            },
+          })
+        ),
+      });
+      if (!response.ok) {
+        throw new Error('Playwright codegen failed');
+      }
+      setDetailTab('code');
+      await refetchDiskSpec();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsPlaywrightCodegenRunning(false);
     }
-    const data = await response.json();
-    console.log(data);
   };
 
   const fetchRecordingStatus = async () => {
@@ -494,9 +512,8 @@ const RecordMockOrTest = ({
             gap={1}
           >
             <Typography>
-              Playwright codegen with mock and event recording is running. Close
-              the browser and inspector when you are done—this panel updates
-              when the session finishes.
+              Playwright codegen is running. Close the browser and inspector when
+              you are done—this panel updates when the session finishes.
             </Typography>
           </Box>
         )}

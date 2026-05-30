@@ -60,7 +60,9 @@ export default function DefaultMockData() {
       } catch (error) {
         console.log(error);
         fData = mockData.filter((item) =>
-          item.url.toLowerCase().includes(mockSearchTerm.toLowerCase())
+          String(item?.url ?? '')
+            .toLowerCase()
+            .includes(String(mockSearchTerm ?? '').toLowerCase())
         );
       }
       setFilteredMockData(fData);
