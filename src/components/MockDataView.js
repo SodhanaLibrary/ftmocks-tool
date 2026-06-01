@@ -73,17 +73,30 @@ const MockDataView = ({
   }, [mockData]);
 
   useEffect(() => {
-    if (mockItem) {
-      try {
-        mockItem.response.content = mockItem.response.content
-          ? FtJSON.stringify(FtJSON.parse(mockItem.response.content), null, 2)
-          : '';
-        setMockData({ ...mockItem });
-      } catch (e) {
-        setMockData({ ...mockItem });
-        console.log(e);
-      }
+    if (!mockItem) {
+      return;
     }
+    const nextMockData = { ...mockItem };
+    if (!nextMockData.response) {
+      nextMockData.response = { headers: {}, content: '', status: 200 };
+    } else if (!nextMockData.response.headers) {
+      nextMockData.response = {
+        ...nextMockData.response,
+        headers: {},
+      };
+    }
+    try {
+      const rawContent = nextMockData.response.content;
+      nextMockData.response = {
+        ...nextMockData.response,
+        content: rawContent
+          ? FtJSON.stringify(FtJSON.parse(rawContent), null, 2)
+          : '',
+      };
+    } catch (e) {
+      console.log(e);
+    }
+    setMockData(nextMockData);
   }, [mockItem]);
 
   const onDelete = async () => {
@@ -618,6 +631,10 @@ const MockDataView = ({
 
   const matchHeaderNames = parseMatchHeaderNames(envDetails?.MATCH_HEADERS);
   const mockRequestHeaders = mockData?.request?.headers || {};
+  const mockResponseHeaders = mockData?.response?.headers || {};
+  const responseContentType =
+    getHeaderValueCaseInsensitive(mockResponseHeaders, 'content-type') ?? '';
+  const responseContent = mockData?.response?.content ?? '';
   const missingMatchHeaders = matchHeaderNames.filter(
     (name) => getHeaderValueCaseInsensitive(mockRequestHeaders, name) === undefined
   );
@@ -688,7 +705,7 @@ const MockDataView = ({
         label="Response Type"
         fullWidth
         margin="normal"
-        value={mockData.response.headers['content-type']}
+        value={responseContentType}
         inputProps={{
           readOnly: true,
         }}
@@ -813,13 +830,11 @@ const MockDataView = ({
         multiline
         rows={8}
         margin="normal"
-        value={mockData.response.content}
+        value={responseContent}
         onChange={onContentChange}
-        error={!isValidJSON(mockData.response.content)}
+        error={!isValidJSON(responseContent)}
         helperText={
-          !isValidJSON(mockData.response.content)
-            ? 'Invalid JSON'
-            : 'Valid JSON'
+          !isValidJSON(responseContent) ? 'Invalid JSON' : 'Valid JSON'
         }
       />
       <Box display="flex" gap={1} mb={2}>
@@ -939,7 +954,7 @@ const MockDataView = ({
       <AiEditDialog
         open={aiDialogOpen}
         onClose={() => setAiDialogOpen(false)}
-        mockData={mockData.response.content}
+        mockData={responseContent}
         onSuccess={handleAiSuccess}
       />
       <ResponseVariantsDialog

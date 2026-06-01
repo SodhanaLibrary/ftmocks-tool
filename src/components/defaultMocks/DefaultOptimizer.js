@@ -52,38 +52,26 @@ const DefaultOptimizer = ({ onClose, mockData = [] }) => {
 
     setLoading(true);
     try {
-      const updatePromises = usedMocks.map((mock) =>
-        fetch(`/api/v1/defaultmocks/${mock.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-          body: JSON.stringify(
-            Object.assign({}, mock.mockData, { served: false })
-          ),
-        })
-      );
+      const response = await fetch('/api/v1/defaultmocks/reset-served', {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
 
-      const responses = await Promise.all(updatePromises);
-      const allSuccessful = responses.every((response) => response.ok);
-
-      if (allSuccessful) {
-        setSnackbarMessage(
-          `Successfully deleted ${unusedMocks.length} unused mock(s)`
-        );
+      if (response.ok) {
+        setSnackbarMessage('Successfully reset served status for all mocks');
         setSnackbarOpen(true);
-        // Refresh mock data
         if (onClose) {
           await onClose();
         }
       } else {
-        setSnackbarMessage('Failed to delete some unused mocks');
+        setSnackbarMessage('Failed to reset mock served status');
         setSnackbarOpen(true);
       }
     } catch (error) {
-      console.error('Error deleting unused mocks:', error);
-      setSnackbarMessage('Error deleting unused mocks');
+      console.error('Error resetting mock served status:', error);
+      setSnackbarMessage('Error resetting mock served status');
       setSnackbarOpen(true);
     } finally {
       setLoading(false);
