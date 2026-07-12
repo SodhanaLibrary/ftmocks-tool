@@ -1,5 +1,5 @@
 /* eslint-disable jsx-a11y/iframe-has-title */
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Box } from '@mui/material';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
@@ -33,6 +33,13 @@ const RecordMockOrTest = ({
   const [specFetchNotice, setSpecFetchNotice] = useState(null);
   const [codeTabRunningTest, setCodeTabRunningTest] = useState(false);
   const [codeTabTestOutput, setCodeTabTestOutput] = useState('');
+  const diskSpecStreamAbortRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      diskSpecStreamAbortRef.current?.abort();
+    };
+  }, []);
   const [config, setConfig] = useState({
     url: envDetails?.MetaData?.urls?.[0] || '',
     patterns: envDetails?.MetaData?.patterns || ['^/api/.*'],
@@ -64,6 +71,20 @@ const RecordMockOrTest = ({
     }
   };
 
+  const buildPlaywrightMocksPayload = () => {
+    const { startMockServer: _startMockServer, ...playwrightMocksConfig } =
+      config;
+    return Object.assign({}, playwrightMocksConfig, {
+      parents: getParentFolder(),
+      testCases,
+      selectedTest: {
+        id: selectedTest?.id,
+        parentId: selectedTest?.parentId,
+        name: selectedTest?.name,
+      },
+    });
+  };
+
   const recordPlaywrightCodegenWithMocks = async () => {
     try {
       setIsPlaywrightCodegenRunning(true);
@@ -74,17 +95,7 @@ const RecordMockOrTest = ({
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(
-          Object.assign({}, config, {
-            parents: getParentFolder(),
-            testCases,
-            selectedTest: {
-              id: selectedTest?.id,
-              parentId: selectedTest?.parentId,
-              name: selectedTest?.name,
-            },
-          })
-        ),
+        body: JSON.stringify(buildPlaywrightMocksPayload()),
       });
       if (!response.ok) {
         throw new Error('Playwright codegen with mock recording failed');
@@ -336,6 +347,11 @@ const RecordMockOrTest = ({
   const playDiskSpecTest = async (withUI = false) => {
     setCodeTabRunningTest(true);
     setCodeTabTestOutput('');
+
+    diskSpecStreamAbortRef.current?.abort();
+    const controller = new AbortController();
+    diskSpecStreamAbortRef.current = controller;
+
     await streamRunTestOutput(
       {
         withUI,
@@ -344,7 +360,8 @@ const RecordMockOrTest = ({
         fileName: `${nameToFolder(selectedTest?.name).toLowerCase()}.spec.js`,
         parents: getParentFolder(),
       },
-      setCodeTabTestOutput
+      setCodeTabTestOutput,
+      controller.signal
     );
   };
 

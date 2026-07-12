@@ -160,7 +160,11 @@ export function useTestsPage() {
         (test) => test.id === selectedTest.id
       );
       if (newSelectedTest) {
-        handleTestClick(newSelectedTest);
+        setSelectedTest((prevTest) => ({
+          ...newSelectedTest,
+          mockData: prevTest?.mockData,
+          filteredMockData: prevTest?.filteredMockData,
+        }));
       } else {
         setSelectedTest(null);
         setSelectedMockItem(null);

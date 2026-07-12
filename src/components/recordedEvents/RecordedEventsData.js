@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Box } from '@mui/material';
 
 import {
@@ -40,6 +40,13 @@ export default function RecordedEventsData({
   const [runningTest, setRunningTest] = useState(false);
   const [draggedItem, setDraggedItem] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
+  const testStreamAbortRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      testStreamAbortRef.current?.abort();
+    };
+  }, []);
 
   const fetchRecordedEvents = async () => {
     try {
@@ -54,8 +61,10 @@ export default function RecordedEventsData({
       setRecordedEvents(data);
 
       if (data.length > 0) {
-        const url = data.find((event) => event.type === 'url').target;
-        setCurrentUrl(url);
+        const urlEvent = data.find((event) => event.type === 'url');
+        if (urlEvent) {
+          setCurrentUrl(urlEvent.target);
+        }
       }
 
       const resp = await fetch('/api/v1/testsSummary');
@@ -237,6 +246,10 @@ export default function RecordedEventsData({
     setRunningTest(true);
     setTestOutput('');
 
+    testStreamAbortRef.current?.abort();
+    const controller = new AbortController();
+    testStreamAbortRef.current = controller;
+
     await streamRunTestOutput(
       {
         withUI,
@@ -245,7 +258,8 @@ export default function RecordedEventsData({
         fileName: `${nameToFolder(selectedTest?.name).toLowerCase()}.${genCodeType === 'playwright' ? 'spec.js' : 'test.js'}`,
         parents: getParentFolder(),
       },
-      setTestOutput
+      setTestOutput,
+      controller.signal
     );
   };
 
@@ -394,6 +408,10 @@ export default function RecordedEventsData({
     setRunningTest(true);
     setTestOutput('');
 
+    testStreamAbortRef.current?.abort();
+    const controller = new AbortController();
+    testStreamAbortRef.current = controller;
+
     await streamRunTestOutput(
       {
         withUI: false,
@@ -401,7 +419,8 @@ export default function RecordedEventsData({
         generatedCode,
         fileName: `__ftmocks-mock-mode-ignore-me.spec.js`,
       },
-      setTestOutput
+      setTestOutput,
+      controller.signal
     );
   };
 

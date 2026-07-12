@@ -12,8 +12,6 @@ import {
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
 import ListItemText from '@mui/material/ListItemText';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import Snackbar from '@mui/material/Snackbar';
 
 const Snaps = ({ selectedTest }) => {
   const [snaps, setSnaps] = useState([]);
@@ -67,7 +65,7 @@ const Snaps = ({ selectedTest }) => {
     <Box display="flex" sx={{ width: '100%', margin: '0 auto', textAlign: 'left', mt: 4 }}>
       <Box style={{width: '200px'}}>
         <MenuList>
-            {snaps.map(snap => (<MenuItem id={`snaps-menu-item-${snap.fileName}`} selected={selected === snap.fileName} onClick={() => setSelected(snap)}>
+            {snaps.map(snap => (<MenuItem id={`snaps-menu-item-${snap.fileName}`} selected={selected?.fileName === snap.fileName} onClick={() => setSelected(snap)}>
             <ListItemText>{snap.fileName}</ListItemText>
             </MenuItem>))}
         </MenuList>

@@ -120,10 +120,10 @@ export function generatePlaywrightCode(
       )
       .map((action) => {
         let locator = getLocator(action);
-        if (locator.startsWith('/') || locator.startsWith('(/')) {
+        if (locator && (locator.startsWith('/') || locator.startsWith('(/'))) {
           locator = `xpath=${locator}`;
         }
-        const nth = getNth(action, locator) - 1;
+        const nth = locator ? getNth(action, locator) - 1 : 0;
         switch (action.type) {
           case 'click':
             if (nth > 0) {

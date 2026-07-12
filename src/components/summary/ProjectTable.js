@@ -14,7 +14,6 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import TextField from '@mui/material/TextField';
 import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Typography from '@mui/material/Typography';
 
@@ -28,15 +27,23 @@ const ProjectTable = ({
   const [envLocation, setEnvLocation] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleDeleteProject = (project) => {
-    fetch('/api/v1/projects', {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(project),
-    });
-    refetchProjects();
+  const handleDeleteProject = async (project) => {
+    try {
+      const response = await fetch('/api/v1/projects', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(project),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete project');
+      }
+      refetchProjects();
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      alert('Failed to delete project. Please try again.');
+    }
   };
 
   const handleAddProject = async () => {

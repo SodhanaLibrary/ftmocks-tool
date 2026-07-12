@@ -53,8 +53,8 @@ export default function DefaultMockData() {
   }, []);
 
   useEffect(() => {
+    let fData = mockData;
     if (mockData?.length && mockSearchTerm?.length) {
-      let fData = [];
       try {
         fData = sortUrlsByMatch(mockSearchTerm, mockData);
       } catch (error) {
@@ -65,12 +65,13 @@ export default function DefaultMockData() {
             .includes(String(mockSearchTerm ?? '').toLowerCase())
         );
       }
-      setFilteredMockData(fData);
-      setSelectedMockItem(fData[0]);
-    } else {
-      setFilteredMockData(mockData);
-      setSelectedMockItem(mockData[0]);
     }
+    setFilteredMockData(fData);
+    setSelectedMockItem((prevSelected) => {
+      const stillPresent =
+        prevSelected && fData.find((item) => item.id === prevSelected.id);
+      return stillPresent || fData[0] || null;
+    });
   }, [mockData, mockSearchTerm]);
 
   const handleMockItemClick = (item) => {

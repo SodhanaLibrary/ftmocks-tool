@@ -112,7 +112,7 @@ const isSameRequest = (req1, req2) => {
         req1.method.toUpperCase() !== 'GET') ||
       (req1.postData && !req2.postData && req1.method.toUpperCase() !== 'GET')
     ) {
-      matched = areJsonEqual(req1.postData || {}, req2.postData || {});
+      matched = false;
       // console.log('not matched at post Data 0', req1.postData, req2.postData);
     } else if (
       req1.postData &&

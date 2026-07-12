@@ -500,12 +500,11 @@ const MockDataView = ({
   };
 
   const onInputChange = (e) => {
-    if (e.target.name === 'waitForPrevious') {
-      mockData[e.target.name] = e.target.checked;
-    } else {
-      mockData[e.target.name] = e.target.value;
-    }
-    setMockData({ ...mockData });
+    const { name, value, checked } = e.target;
+    setMockData((prev) => ({
+      ...prev,
+      [name]: name === 'waitForPrevious' ? checked : value,
+    }));
   };
 
   const onWaitForChange = (event, newMockIds) => {

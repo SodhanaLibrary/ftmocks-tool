@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Container, Paper, CircularProgress } from '@mui/material';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import SimpleJsonTable from './EnvTable';
+import { Box, Typography, Paper, CircularProgress } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import ServerStatus from './ServerStatus';
 import EnvTable from './EnvTable';
 import ProjectTable from './ProjectTable';
