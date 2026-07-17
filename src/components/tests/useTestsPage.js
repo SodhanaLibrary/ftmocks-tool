@@ -107,8 +107,10 @@ export function useTestsPage() {
       if (test.name.toLowerCase().includes(searchTerm)) {
         includedIds.add(test.id);
         let parentId = test.parentId;
-        while (parentId) {
+        const visited = new Set([test.id]);
+        while (parentId && !visited.has(parentId)) {
           includedIds.add(parentId);
+          visited.add(parentId);
           parentId = testCases.find((t) => t.id === parentId)?.parentId;
         }
       }
@@ -133,8 +135,10 @@ export function useTestsPage() {
         });
         let parentId = test.parentId;
         const expanded = new Set(expandedFolders);
-        while (parentId) {
+        const visited = new Set([test.id]);
+        while (parentId && !visited.has(parentId)) {
           expanded.add(parentId);
+          visited.add(parentId);
           parentId = testCases.find((t) => t.id === parentId)?.parentId;
         }
         setExpandedFolders(expanded);
