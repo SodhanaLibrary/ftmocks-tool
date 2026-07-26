@@ -19,7 +19,9 @@ import RecordedEventListItem from './RecordedEventListItem';
 export default function RecordedEventsListPanel({
   recordedEvents,
   isReactProject,
+  isAngularProject,
   onGenReactCode,
+  onGenAngularCode,
   mockModeAnchorEl,
   onMockModeClick,
   onMockModeClose,
@@ -123,6 +125,15 @@ export default function RecordedEventsListPanel({
               sx={{ ml: 2 }}
             >
               Generate React Code
+            </Button>
+          ) : isAngularProject ? (
+            <Button
+              id="recorded-events-gen-angular-btn"
+              variant="contained"
+              onClick={onGenAngularCode}
+              sx={{ ml: 2 }}
+            >
+              Generate Angular Code
             </Button>
           ) : (
             <Button

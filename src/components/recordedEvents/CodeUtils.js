@@ -108,6 +108,115 @@ export function generateRTLCode(actions, tests = [], selectedTest) {
   return `${header}\n${testBlock}`;
 }
 
+export function generateAngularCode(actions, tests = [], selectedTest) {
+  const testName = selectedTest?.name || 'Recorded test';
+
+  const body = (actions || [])
+    .map((action) => {
+      switch (action.type) {
+        case 'click':
+          return [
+            ``,
+            `    {`,
+            `      const el = getByXPath(fixture.nativeElement, "${action.target}");`,
+            `      el && el.dispatchEvent(new MouseEvent('click', { bubbles: true }));`,
+            `      fixture.detectChanges();`,
+            `      await fixture.whenStable();`,
+            `      fixture.detectChanges();`,
+            `    }`,
+          ].join('\n');
+        case 'type':
+        case 'change':
+          return [
+            ``,
+            `    {`,
+            `      const el = getByXPath(fixture.nativeElement, "${action.target}");`,
+            `      if (el) {`,
+            `        el.value = "${action.value}";`,
+            `        el.dispatchEvent(new Event('input', { bubbles: true }));`,
+            `        fixture.detectChanges();`,
+            `      }`,
+            `    }`,
+          ].join('\n');
+        case 'dblclick':
+          return [
+            ``,
+            `    {`,
+            `      const el = getByXPath(fixture.nativeElement, "${action.target}");`,
+            `      el && el.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));`,
+            `      fixture.detectChanges();`,
+            `    }`,
+          ].join('\n');
+        case 'contextmenu':
+          return [
+            ``,
+            `    {`,
+            `      const el = getByXPath(fixture.nativeElement, "${action.target}");`,
+            `      el && el.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true }));`,
+            `      fixture.detectChanges();`,
+            `    }`,
+          ].join('\n');
+        default:
+          return null;
+      }
+    })
+    .filter((cd) => !!cd)
+    .join('\n');
+
+  const header = [
+    `/* eslint-disable */`,
+    ``,
+    `import { ComponentFixture, TestBed } from '@angular/core/testing';`,
+    `import {`,
+    `  HttpErrorResponse,`,
+    `  HttpResponse,`,
+    `  provideHttpClient,`,
+    `  withInterceptors,`,
+    `} from '@angular/common/http';`,
+    `import { provideNoopAnimations } from '@angular/platform-browser/animations';`,
+    `import { of, throwError } from 'rxjs';`,
+    `import { ftmocksHttpInterceptor, getByXPath } from 'ftmocks-utils';`,
+    `import { AppComponent } from '../app.component';`,
+    `import { ftmocksConifg } from './test-config';`,
+    ``,
+    `jest.setTimeout(60000);`,
+    ``,
+  ].join('\n');
+
+  const testBlock = [
+    `describe('${testName}', () => {`,
+    `  it('${testName}', async () => {`,
+    `    await TestBed.configureTestingModule({`,
+    `      imports: [AppComponent],`,
+    `      providers: [`,
+    `        provideHttpClient(`,
+    `          withInterceptors([`,
+    `            ftmocksHttpInterceptor(ftmocksConifg, '${testName}', {`,
+    `              HttpResponse,`,
+    `              HttpErrorResponse,`,
+    `              of,`,
+    `              throwError,`,
+    `            }),`,
+    `          ])`,
+    `        ),`,
+    `        provideNoopAnimations(),`,
+    `      ],`,
+    `    }).compileComponents();`,
+    ``,
+    `    const fixture: ComponentFixture<AppComponent> =`,
+    `      TestBed.createComponent(AppComponent);`,
+    `    fixture.detectChanges();`,
+    `    await fixture.whenStable();`,
+    `    fixture.detectChanges();`,
+    body,
+    `  });`,
+    `});`,
+    ``,
+  ].join('\n');
+
+  return `${header}\n${testBlock}`;
+}
+
 export function generatePlaywrightCode(
   actions,
   tests = [],

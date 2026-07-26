@@ -3,6 +3,7 @@ import { Box } from '@mui/material';
 
 import {
   generateRTLCode,
+  generateAngularCode,
   generatePlaywrightCode,
   generatePlaywrightCodeForEventsMockMode,
   generatePlaywrightCodeForContinueEventsMockMode,
@@ -25,6 +26,7 @@ export default function RecordedEventsData({
   recordingStatus,
   envDetails,
   isReactProject,
+  isAngularProject,
   recordEvents: _recordEvents,
   playwrightCodeGen,
 }) {
@@ -157,6 +159,12 @@ export default function RecordedEventsData({
     setShowEvents(false);
   };
 
+  const genAngularCode = () => {
+    setGenCode(generateAngularCode(recordedEvents, testsSummary, selectedTest));
+    setGenCodeType('angular');
+    setShowEvents(false);
+  };
+
   useEffect(() => {
     fetchRecordedEvents();
 
@@ -222,10 +230,20 @@ export default function RecordedEventsData({
     setSelectedEvent(recordedEvent);
   };
 
+  const genCodeFileName = () => {
+    const ext =
+      genCodeType === 'react'
+        ? 'test.js'
+        : genCodeType === 'angular'
+          ? 'spec.ts'
+          : 'spec.js';
+    return `${nameToFolder(selectedTest?.name).toLowerCase()}.${ext}`;
+  };
+
   const saveFile = async () => {
     const saveData = {
       generatedCode: genCode,
-      fileName: `${nameToFolder(selectedTest?.name).toLowerCase()}.${genCodeType === 'playwright' ? 'spec.js' : 'test.js'}`,
+      fileName: genCodeFileName(),
       parents: getParentFolder(),
     };
 
@@ -263,7 +281,7 @@ export default function RecordedEventsData({
         withUI,
         testName: selectedTest.name,
         generatedCode: genCode,
-        fileName: `${nameToFolder(selectedTest?.name).toLowerCase()}.${genCodeType === 'playwright' ? 'spec.js' : 'test.js'}`,
+        fileName: genCodeFileName(),
         parents: getParentFolder(),
       },
       setTestOutput,
@@ -557,7 +575,9 @@ export default function RecordedEventsData({
         <RecordedEventsListPanel
           recordedEvents={recordedEvents}
           isReactProject={isReactProject}
+          isAngularProject={isAngularProject}
           onGenReactCode={genReactCode}
+          onGenAngularCode={genAngularCode}
           mockModeAnchorEl={mockModeAnchorEl}
           onMockModeClick={handleMockModeClick}
           onMockModeClose={handleMockModeClose}
@@ -595,6 +615,7 @@ export default function RecordedEventsData({
           genCodeType={genCodeType}
           playwrightCodeGen={playwrightCodeGen}
           isReactProject={isReactProject}
+          isAngularProject={isAngularProject}
           onBack={onBackClick}
           onPlayTest={playTest}
           onSaveFile={saveFile}

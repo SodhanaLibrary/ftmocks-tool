@@ -25,6 +25,8 @@ const RecordMockOrTest = ({
 }) => {
   const projectType = envDetails?.PROJECT_TYPE || 'playwright';
   const isReactProject = projectType === 'react';
+  const isAngularProject = projectType === 'angular';
+  const isNonPlaywright = isReactProject || isAngularProject;
   const [isRecordingMockData, setIsRecordingMockData] = useState(false);
   const [isPlaywrightCodegenRunning, setIsPlaywrightCodegenRunning] =
     useState(false);
@@ -246,7 +248,9 @@ const RecordMockOrTest = ({
       setSpecFetchNotice(
         isReactProject
           ? 'No saved React test found for this test yet. Generate React code from the Events tab and save it.'
-          : 'No saved Playwright spec found for this test yet. Save from the Events tab or record codegen output.'
+          : isAngularProject
+            ? 'No saved Angular test found for this test yet. Generate Angular code from the Events tab and save it.'
+            : 'No saved Playwright spec found for this test yet. Save from the Events tab or record codegen output.'
       );
       return;
     }
@@ -255,7 +259,7 @@ const RecordMockOrTest = ({
     setSpecFetchNotice(
       errBody.error || `Could not load spec (HTTP ${response.status}).`
     );
-  }, [isReactProject]);
+  }, [isReactProject, isAngularProject]);
 
   const refetchDiskSpec = useCallback(async () => {
     if (!selectedTest?.name) return;
@@ -330,7 +334,7 @@ const RecordMockOrTest = ({
 
   const diskSpecFileName = () =>
     `${nameToFolder(selectedTest?.name).toLowerCase()}.${
-      isReactProject ? 'test.js' : 'spec.js'
+      isReactProject ? 'test.js' : isAngularProject ? 'spec.ts' : 'spec.js'
     }`;
 
   const saveDiskSpecFile = async () => {
@@ -517,7 +521,7 @@ const RecordMockOrTest = ({
               >
                 Record Mock Data
               </Button>
-              {!isReactProject && (
+              {!isNonPlaywright && (
                 <Button
                   id="record-mock-or-test-playwright-codegen-mocks-btn"
                   color="secondary"
@@ -603,9 +607,10 @@ const RecordMockOrTest = ({
               selectedTest={selectedTest}
               envDetails={envDetails}
               isReactProject={isReactProject}
+              isAngularProject={isAngularProject}
               recordEvents={recordTest}
               playwrightCodeGen={
-                !isReactProject && envDetails?.PLAYWRIGHT_DIR
+                !isNonPlaywright && envDetails?.PLAYWRIGHT_DIR
                   ? generatePlaywrightCode
                   : null
               }
@@ -647,10 +652,17 @@ const RecordMockOrTest = ({
                   runningTest={codeTabRunningTest}
                   genCode={diskSpecCode}
                   onGenCodeChange={setDiskSpecCode}
-                  genCodeType={isReactProject ? 'react' : 'playwright'}
+                  genCodeType={
+                    isReactProject
+                      ? 'react'
+                      : isAngularProject
+                        ? 'angular'
+                        : 'playwright'
+                  }
                   isReactProject={isReactProject}
+                  isAngularProject={isAngularProject}
                   playwrightCodeGen={
-                    !isReactProject && envDetails?.PLAYWRIGHT_DIR
+                    !isNonPlaywright && envDetails?.PLAYWRIGHT_DIR
                       ? generatePlaywrightCode
                       : null
                   }

@@ -22,6 +22,7 @@ export default function GeneratedCodePanel({
   genCodeType,
   playwrightCodeGen,
   isReactProject,
+  isAngularProject,
   onBack,
   onPlayTest,
   onSaveFile,
@@ -63,7 +64,7 @@ export default function GeneratedCodePanel({
               <PlayArrowIcon />
             </IconButton>
           </Tooltip>
-          {!isReactProject && genCodeType === 'playwright' && (
+          {!isReactProject && !isAngularProject && genCodeType === 'playwright' && (
             <Tooltip title="Save and Run Test With Playwright UI">
               <IconButton
                 id="recorded-events-play-ui-btn"
