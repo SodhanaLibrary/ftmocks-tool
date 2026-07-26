@@ -18,6 +18,8 @@ import RecordedEventListItem from './RecordedEventListItem';
 
 export default function RecordedEventsListPanel({
   recordedEvents,
+  isReactProject,
+  onGenReactCode,
   mockModeAnchorEl,
   onMockModeClick,
   onMockModeClose,
@@ -113,14 +115,25 @@ export default function RecordedEventsListPanel({
               </Menu>
             </Box>
           )}
-          <Button
-            id="recorded-events-gen-playwright-btn"
-            variant="contained"
-            onClick={onGenPlaywrightCode}
-            sx={{ ml: 2 }}
-          >
-            Generate Playwright Code
-          </Button>
+          {isReactProject ? (
+            <Button
+              id="recorded-events-gen-react-btn"
+              variant="contained"
+              onClick={onGenReactCode}
+              sx={{ ml: 2 }}
+            >
+              Generate React Code
+            </Button>
+          ) : (
+            <Button
+              id="recorded-events-gen-playwright-btn"
+              variant="contained"
+              onClick={onGenPlaywrightCode}
+              sx={{ ml: 2 }}
+            >
+              Generate Playwright Code
+            </Button>
+          )}
         </Box>
         <Box>
           <Tooltip title="Download as file">

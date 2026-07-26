@@ -35,56 +35,77 @@ export function compareMockToRequest(mock, req) {
 }
 
 export function generateRTLCode(actions, tests = [], selectedTest) {
-  const testActions = {
-    [selectedTest?.name]: {
-      actions: actions,
-    },
-  };
-  const testCodes = [];
-  Object.keys(testActions).forEach((testName) => {
-    let testCode = testActions[testName].actions
-      .map((action) => {
-        switch (action.type) {
-          case 'click':
-            return [
-              ``,
-              `  await waitFor(() => {expect(getByXPath(dom.container, "${action.target}")).toBeInTheDocument();});`,
-              `  fireEvent.click(getByXPath(dom.container, "${action.target}"))`,
-            ].join('\n');
-          case 'type':
-            return `  fireEvent.type(getByXPath(dom.container, "${action.target}"), "${action.value}");`;
-          case 'change':
-            return `  fireEvent.change(getByXPath(dom.container, "${action.target}"), "${action.value}");`;
-          case 'dblclick':
-            return `  fireEvent.dblClick(getByXPath(dom.container, "${action.target}"));`;
-          case 'contextmenu':
-            return `  fireEvent.contextMenu(getByXPath(dom.container, "${action.target}"));`;
-          case 'POST':
-            return `-------------------------------------------------------------`;
-          case 'PUT':
-            return `-------------------------------------------------------------`;
-          case 'PATCH':
-            return `-------------------------------------------------------------`;
-          case 'DELETE':
-            return `-------------------------------------------------------------`;
-          default:
-            return null;
-        }
-      })
-      .filter((cd) => !!cd)
-      .join('\n');
-    testCode = [
-      `// ${selectedTest?.name || testName} test case`,
-      `it('${selectedTest?.name || testName}', async () => {`,
-      `  await initiateJestFetch(jest, ftmocksConifg, '${selectedTest?.name || testName}');`,
-      `  const dom = render(<App />);`,
-      testCode,
-      `});`,
-      ``,
-    ].join('\n');
-    testCodes.push(testCode);
-  });
-  return testCodes.join('\n');
+  const testName = selectedTest?.name || 'Recorded test';
+
+  const body = (actions || [])
+    .map((action) => {
+      switch (action.type) {
+        case 'click':
+          return [
+            ``,
+            `  await waitFor(() => {expect(getByXPath(dom.container, "${action.target}")).toBeInTheDocument();});`,
+            `  fireEvent.click(getByXPath(dom.container, "${action.target}"))`,
+          ].join('\n');
+        case 'type':
+          return `  fireEvent.type(getByXPath(dom.container, "${action.target}"), "${action.value}");`;
+        case 'change':
+          return `  fireEvent.change(getByXPath(dom.container, "${action.target}"), "${action.value}");`;
+        case 'dblclick':
+          return `  fireEvent.dblClick(getByXPath(dom.container, "${action.target}"));`;
+        case 'contextmenu':
+          return `  fireEvent.contextMenu(getByXPath(dom.container, "${action.target}"));`;
+        case 'POST':
+        case 'PUT':
+        case 'PATCH':
+        case 'DELETE':
+          return `  // ${action.type} ${action.target || ''}`;
+        default:
+          return null;
+      }
+    })
+    .filter((cd) => !!cd)
+    .join('\n');
+
+  const header = [
+    `/* eslint-disable */`,
+    ``,
+    `import React from 'react';`,
+    `import {`,
+    `  cleanup,`,
+    `  fireEvent,`,
+    `  render,`,
+    `  queryByAttribute,`,
+    `  getByText,`,
+    `  waitFor,`,
+    `} from '@testing-library/react';`,
+    `import { initiateJestFetch, getByXPath } from 'ftmocks-utils';`,
+    `import '@testing-library/jest-dom';`,
+    `import Wrapper from './testWrapper';`,
+    `import { initiateGlobal } from './testUtils';`,
+    `import { ftmocksConifg } from './testConfig';`,
+    ``,
+    `const getById = queryByAttribute.bind(null, 'id');`,
+    `jest.setTimeout(60000);`,
+    ``,
+    `beforeEach(() => {`,
+    `  initiateGlobal(jest);`,
+    `});`,
+    ``,
+    `afterEach(cleanup);`,
+    ``,
+  ].join('\n');
+
+  const testBlock = [
+    `// ${testName} test case`,
+    `it('${testName}', async () => {`,
+    `  await initiateJestFetch(jest, ftmocksConifg, '${testName}');`,
+    `  const dom = render(<Wrapper />);`,
+    body,
+    `});`,
+    ``,
+  ].join('\n');
+
+  return `${header}\n${testBlock}`;
 }
 
 export function generatePlaywrightCode(

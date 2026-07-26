@@ -8,24 +8,34 @@ import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import TextField from '@mui/material/TextField';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import Typography from '@mui/material/Typography';
+import EditEnvDialog from './EditEnvDialog';
 
-const ProjectTable = ({
-  data,
-  onClickProject,
-  refetchProjects,
-  envDetails,
-}) => {
-  const [openModal, setOpenModal] = useState(false);
-  const [envLocation, setEnvLocation] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const ProjectTable = ({ data, onClickProject, refetchProjects }) => {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState('create');
+  const [editEnvFile, setEditEnvFile] = useState('');
+
+  const openCreateDialog = () => {
+    setDialogMode('create');
+    setEditEnvFile('');
+    setDialogOpen(true);
+  };
+
+  const openEditDialog = (project) => {
+    setDialogMode('edit');
+    setEditEnvFile(project.env_file);
+    setDialogOpen(true);
+  };
+
+  const handleSaved = (envFile) => {
+    refetchProjects();
+    // Apply the saved env file so the changes take effect immediately
+    onClickProject({ env_file: envFile });
+  };
 
   const handleDeleteProject = async (project) => {
     try {
@@ -46,47 +56,6 @@ const ProjectTable = ({
     }
   };
 
-  const handleAddProject = async () => {
-    if (!envLocation.trim()) {
-      alert('Please enter an environment location');
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const response = await fetch('/api/v1/projects', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          project: envLocation.trim(),
-        }),
-      });
-
-      if (response.ok) {
-        setOpenModal(false);
-        setEnvLocation('');
-        refetchProjects();
-      } else {
-        const errorData = await response.json();
-        alert(
-          `Failed to create project: ${errorData.message || 'Unknown error'}`
-        );
-      }
-    } catch (error) {
-      console.error('Error creating project:', error);
-      alert('Failed to create project. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleCloseModal = () => {
-    setOpenModal(false);
-    setEnvLocation('');
-  };
-
   return (
     <>
       <div
@@ -103,7 +72,7 @@ const ProjectTable = ({
           variant="contained"
           color="primary"
           startIcon={<AddIcon />}
-          onClick={() => setOpenModal(true)}
+          onClick={openCreateDialog}
         >
           Add Project
         </Button>
@@ -116,7 +85,7 @@ const ProjectTable = ({
               <TableCell>
                 <strong>Project</strong>
               </TableCell>
-              <TableCell>
+              <TableCell align="right">
                 <strong>Actions</strong>
               </TableCell>
             </TableRow>
@@ -131,7 +100,14 @@ const ProjectTable = ({
                 >
                   <Typography>{String(project.env_file)}</Typography>
                 </TableCell>
-                <TableCell>
+                <TableCell align="right">
+                  <IconButton
+                    id={`project-table-edit-${project.env_file}`}
+                    onClick={() => openEditDialog(project)}
+                    title="Edit env file"
+                  >
+                    <EditIcon />
+                  </IconButton>
                   <IconButton
                     id={`project-table-delete-${project.env_file}`}
                     onClick={() => handleDeleteProject(project)}
@@ -146,44 +122,13 @@ const ProjectTable = ({
         </Table>
       </TableContainer>
 
-      {/* Add Project Modal */}
-      <Dialog
-        open={openModal}
-        onClose={handleCloseModal}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Add New Project</DialogTitle>
-        <DialogContent>
-          <TextField
-            id="project-table-env-location-input"
-            autoFocus
-            margin="dense"
-            label="Environment Location"
-            type="text"
-            fullWidth
-            variant="outlined"
-            value={envLocation}
-            onChange={(e) => setEnvLocation(e.target.value)}
-            placeholder="Enter environment location path"
-            helperText="Enter the path to your environment configuration"
-            disabled={isSubmitting}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button id="project-table-modal-cancel-btn" onClick={handleCloseModal} disabled={isSubmitting}>
-            Cancel
-          </Button>
-          <Button
-            id="project-table-modal-create-btn"
-            onClick={handleAddProject}
-            variant="contained"
-            disabled={isSubmitting || !envLocation.trim()}
-          >
-            {isSubmitting ? 'Creating...' : 'Create Project'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <EditEnvDialog
+        open={dialogOpen}
+        mode={dialogMode}
+        envFile={editEnvFile}
+        onClose={() => setDialogOpen(false)}
+        onSaved={handleSaved}
+      />
     </>
   );
 };

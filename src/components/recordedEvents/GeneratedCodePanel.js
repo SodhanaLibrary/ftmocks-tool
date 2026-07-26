@@ -21,6 +21,7 @@ export default function GeneratedCodePanel({
   onGenCodeChange,
   genCodeType,
   playwrightCodeGen,
+  isReactProject,
   onBack,
   onPlayTest,
   onSaveFile,
@@ -62,15 +63,17 @@ export default function GeneratedCodePanel({
               <PlayArrowIcon />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Save and Run Test With Playwright UI">
-            <IconButton
-              id="recorded-events-play-ui-btn"
-              onClick={() => onPlayTest(true)}
-              sx={{ mr: 1 }}
-            >
-              <GavelOutlined />
-            </IconButton>
-          </Tooltip>
+          {!isReactProject && genCodeType === 'playwright' && (
+            <Tooltip title="Save and Run Test With Playwright UI">
+              <IconButton
+                id="recorded-events-play-ui-btn"
+                onClick={() => onPlayTest(true)}
+                sx={{ mr: 1 }}
+              >
+                <GavelOutlined />
+              </IconButton>
+            </Tooltip>
+          )}
           <Tooltip title="Save File">
             <IconButton
               id="recorded-events-save-file-btn"

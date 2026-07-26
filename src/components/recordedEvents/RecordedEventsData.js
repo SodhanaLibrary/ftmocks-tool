@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Box } from '@mui/material';
 
 import {
+  generateRTLCode,
   generatePlaywrightCode,
   generatePlaywrightCodeForEventsMockMode,
   generatePlaywrightCodeForContinueEventsMockMode,
@@ -23,6 +24,7 @@ export default function RecordedEventsData({
   selectedTest,
   recordingStatus,
   envDetails,
+  isReactProject,
   recordEvents: _recordEvents,
   playwrightCodeGen,
 }) {
@@ -146,6 +148,12 @@ export default function RecordedEventsData({
       )
     );
     setGenCodeType('playwright');
+    setShowEvents(false);
+  };
+
+  const genReactCode = () => {
+    setGenCode(generateRTLCode(recordedEvents, testsSummary, selectedTest));
+    setGenCodeType('react');
     setShowEvents(false);
   };
 
@@ -548,6 +556,8 @@ export default function RecordedEventsData({
       {showEvents && (
         <RecordedEventsListPanel
           recordedEvents={recordedEvents}
+          isReactProject={isReactProject}
+          onGenReactCode={genReactCode}
           mockModeAnchorEl={mockModeAnchorEl}
           onMockModeClick={handleMockModeClick}
           onMockModeClose={handleMockModeClose}
@@ -584,6 +594,7 @@ export default function RecordedEventsData({
           onGenCodeChange={setGenCode}
           genCodeType={genCodeType}
           playwrightCodeGen={playwrightCodeGen}
+          isReactProject={isReactProject}
           onBack={onBackClick}
           onPlayTest={playTest}
           onSaveFile={saveFile}

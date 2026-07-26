@@ -23,6 +23,8 @@ const RecordMockOrTest = ({
   envDetails,
   resetMockData,
 }) => {
+  const projectType = envDetails?.PROJECT_TYPE || 'playwright';
+  const isReactProject = projectType === 'react';
   const [isRecordingMockData, setIsRecordingMockData] = useState(false);
   const [isPlaywrightCodegenRunning, setIsPlaywrightCodegenRunning] =
     useState(false);
@@ -242,7 +244,9 @@ const RecordMockOrTest = ({
     if (response.status === 404) {
       setDiskSpecCode('');
       setSpecFetchNotice(
-        'No saved Playwright spec found for this test yet. Save from the Events tab or record codegen output.'
+        isReactProject
+          ? 'No saved React test found for this test yet. Generate React code from the Events tab and save it.'
+          : 'No saved Playwright spec found for this test yet. Save from the Events tab or record codegen output.'
       );
       return;
     }
@@ -251,7 +255,7 @@ const RecordMockOrTest = ({
     setSpecFetchNotice(
       errBody.error || `Could not load spec (HTTP ${response.status}).`
     );
-  }, []);
+  }, [isReactProject]);
 
   const refetchDiskSpec = useCallback(async () => {
     if (!selectedTest?.name) return;
@@ -324,10 +328,15 @@ const RecordMockOrTest = ({
     }
   };
 
+  const diskSpecFileName = () =>
+    `${nameToFolder(selectedTest?.name).toLowerCase()}.${
+      isReactProject ? 'test.js' : 'spec.js'
+    }`;
+
   const saveDiskSpecFile = async () => {
     const saveData = {
       generatedCode: diskSpecCode,
-      fileName: `${nameToFolder(selectedTest?.name).toLowerCase()}.spec.js`,
+      fileName: diskSpecFileName(),
       parents: getParentFolder(),
     };
     try {
@@ -357,7 +366,7 @@ const RecordMockOrTest = ({
         withUI,
         testName: selectedTest.name,
         generatedCode: diskSpecCode,
-        fileName: `${nameToFolder(selectedTest?.name).toLowerCase()}.spec.js`,
+        fileName: diskSpecFileName(),
         parents: getParentFolder(),
       },
       setCodeTabTestOutput,
@@ -508,14 +517,16 @@ const RecordMockOrTest = ({
               >
                 Record Mock Data
               </Button>
-              <Button
-                id="record-mock-or-test-playwright-codegen-mocks-btn"
-                color="secondary"
-                onClick={recordPlaywrightCodegenWithMocks}
-                variant="outlined"
-              >
-                Playwright codegen + mocks
-              </Button>
+              {!isReactProject && (
+                <Button
+                  id="record-mock-or-test-playwright-codegen-mocks-btn"
+                  color="secondary"
+                  onClick={recordPlaywrightCodegenWithMocks}
+                  variant="outlined"
+                >
+                  Playwright codegen + mocks
+                </Button>
+              )}
             </Box>
           </Box>
         )}
@@ -591,9 +602,12 @@ const RecordMockOrTest = ({
               recordingStatus={isRecordingMockData}
               selectedTest={selectedTest}
               envDetails={envDetails}
+              isReactProject={isReactProject}
               recordEvents={recordTest}
               playwrightCodeGen={
-                envDetails?.PLAYWRIGHT_DIR ? generatePlaywrightCode : null
+                !isReactProject && envDetails?.PLAYWRIGHT_DIR
+                  ? generatePlaywrightCode
+                  : null
               }
             />
           )}
@@ -633,9 +647,12 @@ const RecordMockOrTest = ({
                   runningTest={codeTabRunningTest}
                   genCode={diskSpecCode}
                   onGenCodeChange={setDiskSpecCode}
-                  genCodeType="playwright"
+                  genCodeType={isReactProject ? 'react' : 'playwright'}
+                  isReactProject={isReactProject}
                   playwrightCodeGen={
-                    envDetails?.PLAYWRIGHT_DIR ? generatePlaywrightCode : null
+                    !isReactProject && envDetails?.PLAYWRIGHT_DIR
+                      ? generatePlaywrightCode
+                      : null
                   }
                   onBack={onCodePanelBack}
                   onPlayTest={playDiskSpecTest}
