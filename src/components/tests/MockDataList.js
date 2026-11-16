@@ -32,10 +32,7 @@ const DraggableMockList = ({
   return (
     <Box>
       <DragDropContext onDragEnd={handleDragEnd}>
-        <Droppable
-          type="group"
-          droppableId={`droppable-mock-list-${Math.random()}`}
-        >
+        <Droppable type="group" droppableId="droppable-mock-list">
           {(provided) => (
             <List
               {...provided.droppableProps}

@@ -6,9 +6,16 @@ const MockDataByUserInput = ({ selectedTest }) => {
   const [text, setText] = useState('');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
+  };
+
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
   };
 
   const handleSubmit = async () => {
@@ -27,17 +34,14 @@ const MockDataByUserInput = ({ selectedTest }) => {
 
       if (response.ok) {
         console.log('Mock data updated successfully');
-        setSnackbarMessage('Mock data updated successfully');
-        setSnackbarOpen(true);
+        showSnackbar('Mock data updated successfully');
       } else {
         console.error('Failed to update mock data');
-        setSnackbarMessage('Failed to update mock data');
-        setSnackbarOpen(true);
+        showSnackbar('Failed to update mock data', 'error');
       }
     } catch (error) {
       console.error('Error updating mock data:', error);
-      setSnackbarMessage('Error updating mock data');
-      setSnackbarOpen(true);
+      showSnackbar('Error updating mock data', 'error');
     }
   };
 
@@ -70,7 +74,7 @@ const MockDataByUserInput = ({ selectedTest }) => {
       >
         <Alert
           onClose={handleSnackbarClose}
-          severity="success"
+          severity={snackbarSeverity}
           sx={{ width: '100%' }}
         >
           {snackbarMessage}

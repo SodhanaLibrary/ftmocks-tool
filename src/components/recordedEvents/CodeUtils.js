@@ -1,3 +1,10 @@
+// Produces a properly quoted and escaped JS string literal so recorded
+// values/selectors (which may contain quotes, backslashes, or newlines)
+// don't break the syntax of the generated test code.
+function jsStringLiteral(value) {
+  return JSON.stringify(String(value ?? ''));
+}
+
 const isSameRequest = (req1, req2) => {
   let matched = true;
   if (req1.url !== req2.url) {
@@ -34,8 +41,16 @@ export function compareMockToRequest(mock, req) {
   );
 }
 
-export function generateRTLCode(actions, tests = [], selectedTest) {
+export function generateRTLCode(
+  actions,
+  tests = [],
+  selectedTest,
+  envDetails
+) {
   const testName = selectedTest?.name || 'Recorded test';
+  // Path to the root App component, relative to the tests directory. Taken
+  // directly from REACT_APP_FROM_TESTS_DIR in ftmocks.env (via envDetails).
+  const REACT_APP_FROM_TESTS_DIR = envDetails?.REACT_APP_FROM_TESTS_DIR;
 
   const body = (actions || [])
     .map((action) => {
@@ -43,17 +58,17 @@ export function generateRTLCode(actions, tests = [], selectedTest) {
         case 'click':
           return [
             ``,
-            `  await waitFor(() => {expect(getByXPath(dom.container, "${action.target}")).toBeInTheDocument();});`,
-            `  fireEvent.click(getByXPath(dom.container, "${action.target}"))`,
+            `  await waitFor(() => {expect(getByXPath(dom.container, ${jsStringLiteral(action.target)})).toBeInTheDocument();});`,
+            `  fireEvent.click(getByXPath(dom.container, ${jsStringLiteral(action.target)}))`,
           ].join('\n');
         case 'type':
-          return `  fireEvent.type(getByXPath(dom.container, "${action.target}"), "${action.value}");`;
         case 'change':
-          return `  fireEvent.change(getByXPath(dom.container, "${action.target}"), "${action.value}");`;
+        case 'input':
+          return `  fireEvent.change(getByXPath(dom.container, ${jsStringLiteral(action.target)}), { target: { value: ${jsStringLiteral(action.value)} } });`;
         case 'dblclick':
-          return `  fireEvent.dblClick(getByXPath(dom.container, "${action.target}"));`;
+          return `  fireEvent.dblClick(getByXPath(dom.container, ${jsStringLiteral(action.target)}));`;
         case 'contextmenu':
-          return `  fireEvent.contextMenu(getByXPath(dom.container, "${action.target}"));`;
+          return `  fireEvent.contextMenu(getByXPath(dom.container, ${jsStringLiteral(action.target)}));`;
         case 'POST':
         case 'PUT':
         case 'PATCH':
@@ -66,6 +81,12 @@ export function generateRTLCode(actions, tests = [], selectedTest) {
     .filter((cd) => !!cd)
     .join('\n');
 
+  // Self-contained header: only depends on the app root (../App), plus an
+  // inline getByXPath helper — so the generated test runs without any
+  // project-specific test scaffolding and without relying on a particular
+  // ftmocks-utils version. The ftmocks config is inlined below rather than
+  // imported from a separate './test-config' file.
+  const mockDir = envDetails?.RELATIVE_MOCK_DIR_FROM_REACT_TESTS_DIR || './';
   const header = [
     `/* eslint-disable */`,
     ``,
@@ -78,18 +99,34 @@ export function generateRTLCode(actions, tests = [], selectedTest) {
     `  getByText,`,
     `  waitFor,`,
     `} from '@testing-library/react';`,
-    `import { initiateJestFetch, getByXPath } from 'ftmocks-utils';`,
+    `import { initiateJestFetch } from 'ftmocks-utils';`,
     `import '@testing-library/jest-dom';`,
-    `import Wrapper from './testWrapper';`,
-    `import { initiateGlobal } from './testUtils';`,
-    `import { ftmocksConifg } from './testConfig';`,
+    `import App from '${REACT_APP_FROM_TESTS_DIR}';`,
+    ``,
+    `const ftmocksConifg = {`,
+    `  MOCK_DIR: '${mockDir}',`,
+    `};`,
     ``,
     `const getById = queryByAttribute.bind(null, 'id');`,
+    `// Recorded selectors are a mix of XPath and CSS; resolve both.`,
+    `const getByXPath = (container, selector) => {`,
+    `  if (typeof selector === 'string' && /^\\(?\\//.test(selector)) {`,
+    `    const iterator = document.evaluate(`,
+    `      selector,`,
+    `      container,`,
+    `      null,`,
+    `      XPathResult.FIRST_ORDERED_NODE_TYPE,`,
+    `      null`,
+    `    );`,
+    `    return iterator.singleNodeValue;`,
+    `  }`,
+    `  try {`,
+    `    return container.querySelector(selector);`,
+    `  } catch {`,
+    `    return null;`,
+    `  }`,
+    `};`,
     `jest.setTimeout(60000);`,
-    ``,
-    `beforeEach(() => {`,
-    `  initiateGlobal(jest);`,
-    `});`,
     ``,
     `afterEach(cleanup);`,
     ``,
@@ -97,9 +134,9 @@ export function generateRTLCode(actions, tests = [], selectedTest) {
 
   const testBlock = [
     `// ${testName} test case`,
-    `it('${testName}', async () => {`,
-    `  await initiateJestFetch(jest, ftmocksConifg, '${testName}');`,
-    `  const dom = render(<Wrapper />);`,
+    `it(${jsStringLiteral(testName)}, async () => {`,
+    `  await initiateJestFetch(jest, ftmocksConifg, ${jsStringLiteral(testName)});`,
+    `  const dom = render(<App />);`,
     body,
     `});`,
     ``,
@@ -108,7 +145,12 @@ export function generateRTLCode(actions, tests = [], selectedTest) {
   return `${header}\n${testBlock}`;
 }
 
-export function generateAngularCode(actions, tests = [], selectedTest) {
+export function generateAngularCode(
+  actions,
+  tests = [],
+  selectedTest,
+  envDetails
+) {
   const testName = selectedTest?.name || 'Recorded test';
 
   const body = (actions || [])
@@ -118,7 +160,7 @@ export function generateAngularCode(actions, tests = [], selectedTest) {
           return [
             ``,
             `    {`,
-            `      const el = getByXPath(fixture.nativeElement, "${action.target}");`,
+            `      const el = getByXPath(fixture.nativeElement, ${jsStringLiteral(action.target)});`,
             `      el && el.dispatchEvent(new MouseEvent('click', { bubbles: true }));`,
             `      fixture.detectChanges();`,
             `      await fixture.whenStable();`,
@@ -127,13 +169,15 @@ export function generateAngularCode(actions, tests = [], selectedTest) {
           ].join('\n');
         case 'type':
         case 'change':
+        case 'input':
           return [
             ``,
             `    {`,
-            `      const el = getByXPath(fixture.nativeElement, "${action.target}");`,
+            `      const el = getByXPath(fixture.nativeElement, ${jsStringLiteral(action.target)});`,
             `      if (el) {`,
-            `        el.value = "${action.value}";`,
+            `        el.value = ${jsStringLiteral(action.value)};`,
             `        el.dispatchEvent(new Event('input', { bubbles: true }));`,
+            `        el.dispatchEvent(new Event('change', { bubbles: true }));`,
             `        fixture.detectChanges();`,
             `      }`,
             `    }`,
@@ -142,7 +186,7 @@ export function generateAngularCode(actions, tests = [], selectedTest) {
           return [
             ``,
             `    {`,
-            `      const el = getByXPath(fixture.nativeElement, "${action.target}");`,
+            `      const el = getByXPath(fixture.nativeElement, ${jsStringLiteral(action.target)});`,
             `      el && el.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));`,
             `      fixture.detectChanges();`,
             `    }`,
@@ -151,7 +195,7 @@ export function generateAngularCode(actions, tests = [], selectedTest) {
           return [
             ``,
             `    {`,
-            `      const el = getByXPath(fixture.nativeElement, "${action.target}");`,
+            `      const el = getByXPath(fixture.nativeElement, ${jsStringLiteral(action.target)});`,
             `      el && el.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true }));`,
             `      fixture.detectChanges();`,
             `    }`,
@@ -163,6 +207,9 @@ export function generateAngularCode(actions, tests = [], selectedTest) {
     .filter((cd) => !!cd)
     .join('\n');
 
+  // ftmocks config is inlined below rather than imported from a separate
+  // './test-config' file.
+  const mockDir = envDetails?.RELATIVE_MOCK_DIR_FROM_ANGULAR_TESTS_DIR || './';
   const header = [
     `/* eslint-disable */`,
     ``,
@@ -177,21 +224,24 @@ export function generateAngularCode(actions, tests = [], selectedTest) {
     `import { of, throwError } from 'rxjs';`,
     `import { ftmocksHttpInterceptor, getByXPath } from 'ftmocks-utils';`,
     `import { AppComponent } from '../app.component';`,
-    `import { ftmocksConifg } from './test-config';`,
+    ``,
+    `const ftmocksConifg = {`,
+    `  MOCK_DIR: '${mockDir}',`,
+    `};`,
     ``,
     `jest.setTimeout(60000);`,
     ``,
   ].join('\n');
 
   const testBlock = [
-    `describe('${testName}', () => {`,
-    `  it('${testName}', async () => {`,
+    `describe(${jsStringLiteral(testName)}, () => {`,
+    `  it(${jsStringLiteral(testName)}, async () => {`,
     `    await TestBed.configureTestingModule({`,
     `      imports: [AppComponent],`,
     `      providers: [`,
     `        provideHttpClient(`,
     `          withInterceptors([`,
-    `            ftmocksHttpInterceptor(ftmocksConifg, '${testName}', {`,
+    `            ftmocksHttpInterceptor(ftmocksConifg, ${jsStringLiteral(testName)}, {`,
     `              HttpResponse,`,
     `              HttpErrorResponse,`,
     `              of,`,
@@ -254,106 +304,109 @@ export function generatePlaywrightCode(
           locator = `xpath=${locator}`;
         }
         const nth = locator ? getNth(action, locator) - 1 : 0;
+        const loc = jsStringLiteral(locator);
+        const val = jsStringLiteral(action.value);
+        const key = jsStringLiteral(action.key);
+        const elementType = action.element?.type;
         switch (action.type) {
           case 'click':
             if (nth > 0) {
-              return `  await page.locator("${locator}").nth(${nth}).click();`;
+              return `  await page.locator(${loc}).nth(${nth}).click();`;
             }
-            return `  await page.locator("${locator}").click();`;
+            return `  await page.locator(${loc}).click();`;
           case 'type':
-            if (action.element.type === 'input') {
+            if (elementType === 'input') {
               if (nth > 0) {
-                return `  await page.locator("${locator}").nth(${nth}).fill('${action.value}');`;
+                return `  await page.locator(${loc}).nth(${nth}).fill(${val});`;
               }
-              return `  await page.locator("${locator}").fill('${action.value}');`;
+              return `  await page.locator(${loc}).fill(${val});`;
             }
-            if (action.element.type === 'textarea') {
+            if (elementType === 'textarea') {
               if (nth > 0) {
-                return `  await page.locator("${locator}").nth(${nth}).fill('${action.value}');`;
+                return `  await page.locator(${loc}).nth(${nth}).fill(${val});`;
               }
-              return `  await page.locator("${locator}").fill('${action.value}');`;
+              return `  await page.locator(${loc}).fill(${val});`;
             }
-            if (action.element.type === 'select') {
+            if (elementType === 'select') {
               if (nth > 0) {
-                return `  await page.locator("${locator}").nth(${nth}).selectOption('${action.value}');`;
+                return `  await page.locator(${loc}).nth(${nth}).selectOption(${val});`;
               }
-              return `  await page.locator("${locator}").selectOption('${action.value}');`;
+              return `  await page.locator(${loc}).selectOption(${val});`;
             }
             if (nth > 0) {
-              return `  await page.locator("${locator}").nth(${nth}).fill('${action.value}');`;
+              return `  await page.locator(${loc}).nth(${nth}).fill(${val});`;
             }
-            return `  await page.locator("${locator}").fill('${action.value}');`;
+            return `  await page.locator(${loc}).fill(${val});`;
           case 'input':
-            if (action.element.type === 'input') {
+            if (elementType === 'input') {
               if (nth > 0) {
-                return `  await page.locator("${locator}").nth(${nth}).fill('${action.value}');`;
+                return `  await page.locator(${loc}).nth(${nth}).fill(${val});`;
               }
-              return `  await page.locator("${locator}").fill('${action.value}');`;
+              return `  await page.locator(${loc}).fill(${val});`;
             }
-            if (action.element.type === 'textarea') {
+            if (elementType === 'textarea') {
               if (nth > 0) {
-                return `  await page.locator("${locator}").nth(${nth}).fill('${action.value}');`;
+                return `  await page.locator(${loc}).nth(${nth}).fill(${val});`;
               }
-              return `  await page.locator("${locator}").fill('${action.value}');`;
+              return `  await page.locator(${loc}).fill(${val});`;
             }
-            if (action.element.type === 'select') {
+            if (elementType === 'select') {
               if (nth > 0) {
-                return `  await page.locator("${locator}").nth(${nth}).selectOption('${action.value}');`;
+                return `  await page.locator(${loc}).nth(${nth}).selectOption(${val});`;
               }
-              return `  await page.locator("${locator}").selectOption('${action.value}');`;
+              return `  await page.locator(${loc}).selectOption(${val});`;
             }
-            if (action.element.type === 'checkbox') {
+            if (elementType === 'checkbox') {
               return '';
             }
-            if (action.element.type === 'radio') {
+            if (elementType === 'radio') {
               return '';
             }
             if (nth > 0) {
-              return `  await page.locator("${locator}").nth(${nth}).fill('${action.value}');`;
+              return `  await page.locator(${loc}).nth(${nth}).fill(${val});`;
             }
-            return `  await page.locator("${locator}").fill('${action.value}');`;
+            return `  await page.locator(${loc}).fill(${val});`;
           case 'change':
-            if (action.element.type === 'input') {
+            if (elementType === 'input') {
               if (nth > 0) {
-                return `  await page.locator("${locator}").nth(${nth}).fill('${action.value}');`;
+                return `  await page.locator(${loc}).nth(${nth}).fill(${val});`;
               }
-              return `  await page.locator("${locator}").fill('${action.value}');`;
+              return `  await page.locator(${loc}).fill(${val});`;
             }
-            //return `  await page.locator("${locator}").evaluate(el => el.value = '${action.value}');`;
             // TODO: Handle change event for select
             return '';
           case 'dblclick':
             if (nth > 0) {
-              return `  await page.locator("${locator}").nth(${nth}).dblclick();`;
+              return `  await page.locator(${loc}).nth(${nth}).dblclick();`;
             }
-            return `  await page.locator("${locator}").dblclick();`;
+            return `  await page.locator(${loc}).dblclick();`;
           case 'contextmenu':
             if (nth > 0) {
-              return `  await page.locator("${locator}").nth(${nth}).click({ button: 'right' });`;
+              return `  await page.locator(${loc}).nth(${nth}).click({ button: 'right' });`;
             }
-            return `  await page.locator("${locator}").click({ button: 'right' });`;
+            return `  await page.locator(${loc}).click({ button: 'right' });`;
           case 'popstate-url':
             return `  await page.goBack();`;
           case 'hover':
             if (nth > 0) {
-              return `  await page.locator("${locator}").nth(${nth}).hover();`;
+              return `  await page.locator(${loc}).nth(${nth}).hover();`;
             }
-            return `  await page.locator("${locator}").hover();`;
+            return `  await page.locator(${loc}).hover();`;
           case 'keydown':
             if (nth > 0) {
-              return `  await page.locator("${locator}").nth(${nth}).keyboard.down('${action.key}');`;
+              return `  await page.locator(${loc}).nth(${nth}).keyboard.down(${key});`;
             }
-            return `  await page.keyboard.down('${action.key}');`;
+            return `  await page.keyboard.down(${key});`;
           case 'keyup':
             if (nth > 0) {
-              return `  await page.locator("${locator}").nth(${nth}).keyboard.up('${action.key}');`;
+              return `  await page.locator(${loc}).nth(${nth}).keyboard.up(${key});`;
             }
-            return `  await page.keyboard.up('${action.key}');`;
+            return `  await page.keyboard.up(${key});`;
           case 'keypress':
             if (nth > 0) {
-              return `  await page.locator("${locator}").nth(${nth}).keyboard.press('${action.key}');`;
+              return `  await page.locator(${loc}).nth(${nth}).keyboard.press(${key});`;
             }
-            return `  await page.keyboard.press('${action.key}');`;
+            return `  await page.keyboard.press(${key});`;
           case 'waitForTimeout':
             // action.value is expected to be the timeout in ms
             if (action.value && !isNaN(action.value)) {
@@ -376,16 +429,16 @@ export function generatePlaywrightCode(
       `import { test, expect } from '@playwright/test';
 import { initiatePlaywrightRoutes } from 'ftmocks-utils';
 
-test('${selectedTest?.name || testName}', async ({ page }) => {`,
+test(${jsStringLiteral(selectedTest?.name || testName)}, async ({ page }) => {`,
       ` await initiatePlaywrightRoutes(
         page,
         {
           MOCK_DIR: '${envDetails.RELATIVE_MOCK_DIR_FROM_PLAYWRIGHT_DIR || './ftmocks'}',
           FALLBACK_DIR: '${envDetails.RELATIVE_FALLBACK_DIR_FROM_PLAYWRIGHT_DIR || './public'}',
         },
-        '${selectedTest.name}'
+        ${jsStringLiteral(selectedTest.name)}
       );`,
-      `  await page.goto('${url}');`,
+      `  await page.goto(${jsStringLiteral(url)});`,
       testCode,
       `  await page.close();`,
       `});`,
@@ -422,7 +475,7 @@ export function generatePlaywrightCodeForMockMode(
       `import { test, expect } from '@playwright/test';
 import { initiatePlaywrightRoutes, injectEventRecordingScript } from 'ftmocks-utils';
 
-test('${selectedTest?.name || testName}', async ({ page }) => {`,
+test(${jsStringLiteral(selectedTest?.name || testName)}, async ({ page }) => {`,
       ` await test.setTimeout(360000);`,
       ` await initiatePlaywrightRoutes(
         page,
@@ -430,9 +483,9 @@ test('${selectedTest?.name || testName}', async ({ page }) => {`,
           MOCK_DIR: '${envDetails.RELATIVE_MOCK_DIR_FROM_PLAYWRIGHT_DIR || './ftmocks'}',
           FALLBACK_DIR: '${envDetails.RELATIVE_FALLBACK_DIR_FROM_PLAYWRIGHT_DIR || './public'}',
         },
-        '${selectedTest.name}'
+        ${jsStringLiteral(selectedTest.name)}
       );`,
-      `  await page.goto('${url}');`,
+      `  await page.goto(${jsStringLiteral(url)});`,
       `  await page.waitForTimeout(360000);`,
       `  await page.close();`,
       `});`,
@@ -469,7 +522,7 @@ export function generatePlaywrightCodeForEventsMockMode(
       `import { test, expect } from '@playwright/test';
 import { initiatePlaywrightRoutes, injectEventRecordingScript } from 'ftmocks-utils';
 
-test('${selectedTest?.name || testName}', async ({ page }) => {`,
+test(${jsStringLiteral(selectedTest?.name || testName)}, async ({ page }) => {`,
       ` await test.setTimeout(360000);`,
       ` await initiatePlaywrightRoutes(
         page,
@@ -477,7 +530,7 @@ test('${selectedTest?.name || testName}', async ({ page }) => {`,
           MOCK_DIR: '${envDetails.RELATIVE_MOCK_DIR_FROM_PLAYWRIGHT_DIR || './ftmocks'}',
           FALLBACK_DIR: '${envDetails.RELATIVE_FALLBACK_DIR_FROM_PLAYWRIGHT_DIR || './public'}',
         },
-        '${selectedTest.name}'
+        ${jsStringLiteral(selectedTest.name)}
       );`,
       ` await injectEventRecordingScript(
         page,
@@ -486,9 +539,9 @@ test('${selectedTest?.name || testName}', async ({ page }) => {`,
           MOCK_DIR: '${envDetails.RELATIVE_MOCK_DIR_FROM_PLAYWRIGHT_DIR || './ftmocks'}',
           FALLBACK_DIR: '${envDetails.RELATIVE_FALLBACK_DIR_FROM_PLAYWRIGHT_DIR || './public'}',
         },
-        '${selectedTest.name}'
+        ${jsStringLiteral(selectedTest.name)}
       );`,
-      `  await page.goto('${url}');`,
+      `  await page.goto(${jsStringLiteral(url)});`,
       `  await page.waitForTimeout(360000);`,
       `  await page.close();`,
       `});`,
@@ -525,7 +578,7 @@ export function generatePlaywrightCodeForContinueEventsMockMode(
       `import { test, expect } from '@playwright/test';
 import { initiatePlaywrightRoutes, injectEventRecordingScript } from 'ftmocks-utils';
 
-test('${selectedTest?.name || testName}', async ({ page }) => {`,
+test(${jsStringLiteral(selectedTest?.name || testName)}, async ({ page }) => {`,
       ` await test.setTimeout(360000);`,
       ` await initiatePlaywrightRoutes(
         page,
@@ -533,7 +586,7 @@ test('${selectedTest?.name || testName}', async ({ page }) => {`,
           MOCK_DIR: '${envDetails.RELATIVE_MOCK_DIR_FROM_PLAYWRIGHT_DIR || './ftmocks'}',
           FALLBACK_DIR: '${envDetails.RELATIVE_FALLBACK_DIR_FROM_PLAYWRIGHT_DIR || './public'}',
         },
-        '${selectedTest.name}'
+        ${jsStringLiteral(selectedTest.name)}
       );`,
       ` await injectEventRecordingScript(
         page,
@@ -542,10 +595,10 @@ test('${selectedTest?.name || testName}', async ({ page }) => {`,
           MOCK_DIR: '${envDetails.RELATIVE_MOCK_DIR_FROM_PLAYWRIGHT_DIR || './ftmocks'}',
           FALLBACK_DIR: '${envDetails.RELATIVE_FALLBACK_DIR_FROM_PLAYWRIGHT_DIR || './public'}',
         },
-        '${selectedTest.name}',
+        ${jsStringLiteral(selectedTest.name)},
         true
       );`,
-      `  await page.goto('${url}');`,
+      `  await page.goto(${jsStringLiteral(url)});`,
       `  await page.waitForTimeout(360000);`,
       `  await page.close();`,
       `});`,
@@ -582,7 +635,7 @@ export function generatePlaywrightCodeForRunEvents(
       `import { test, expect } from '@playwright/test';
 import { initiatePlaywrightRoutes, runEventsForTest } from 'ftmocks-utils';
 
-test('${selectedTest?.name || testName}', async ({ page }) => {`,
+test(${jsStringLiteral(selectedTest?.name || testName)}, async ({ page }) => {`,
       ` await test.setTimeout(360000);`,
       ` await initiatePlaywrightRoutes(
         page,
@@ -590,7 +643,7 @@ test('${selectedTest?.name || testName}', async ({ page }) => {`,
           MOCK_DIR: '${envDetails.RELATIVE_MOCK_DIR_FROM_PLAYWRIGHT_DIR || './ftmocks'}',
           FALLBACK_DIR: '${envDetails.RELATIVE_FALLBACK_DIR_FROM_PLAYWRIGHT_DIR || './public'}',
         },
-        '${selectedTest.name}'
+        ${jsStringLiteral(selectedTest.name)}
       );`,
       ` await runEventsForTest(
         page,
@@ -598,7 +651,7 @@ test('${selectedTest?.name || testName}', async ({ page }) => {`,
           MOCK_DIR: '${envDetails.RELATIVE_MOCK_DIR_FROM_PLAYWRIGHT_DIR || './ftmocks'}',
           FALLBACK_DIR: '${envDetails.RELATIVE_FALLBACK_DIR_FROM_PLAYWRIGHT_DIR || './public'}',
         },
-        '${selectedTest.name}'
+        ${jsStringLiteral(selectedTest.name)}
       );`,
       `  await page.waitForTimeout(2000);`,
       `  await page.close();`,
@@ -636,7 +689,7 @@ export function generatePlaywrightCodeForRunEventsInPresentationMode(
       `import { test, expect } from '@playwright/test';
 import { initiatePlaywrightRoutes, runEventsInPresentationMode } from 'ftmocks-utils';
 
-test('${selectedTest?.name || testName}', async ({ page }) => {`,
+test(${jsStringLiteral(selectedTest?.name || testName)}, async ({ page }) => {`,
       ` await test.setTimeout(360000);`,
       ` await initiatePlaywrightRoutes(
         page,
@@ -644,7 +697,7 @@ test('${selectedTest?.name || testName}', async ({ page }) => {`,
           MOCK_DIR: '${envDetails.RELATIVE_MOCK_DIR_FROM_PLAYWRIGHT_DIR || './ftmocks'}',
           FALLBACK_DIR: '${envDetails.RELATIVE_FALLBACK_DIR_FROM_PLAYWRIGHT_DIR || './public'}',
         },
-        '${selectedTest.name}'
+        ${jsStringLiteral(selectedTest.name)}
       );`,
       ` await runEventsInPresentationMode(
         page,
@@ -652,7 +705,7 @@ test('${selectedTest?.name || testName}', async ({ page }) => {`,
           MOCK_DIR: '${envDetails.RELATIVE_MOCK_DIR_FROM_PLAYWRIGHT_DIR || './ftmocks'}',
           FALLBACK_DIR: '${envDetails.RELATIVE_FALLBACK_DIR_FROM_PLAYWRIGHT_DIR || './public'}',
         },
-        '${selectedTest.name}'
+        ${jsStringLiteral(selectedTest.name)}
       );`,
       `  await page.waitForTimeout(360000);`,
       `  await page.close();`,
@@ -690,7 +743,7 @@ export function generatePlaywrightCodeForRunEventsInTrainingMode(
       `import { test, expect } from '@playwright/test';
 import { initiatePlaywrightRoutes, runEventsInTrainingMode } from 'ftmocks-utils';
 
-test('${selectedTest?.name || testName}', async ({ page }) => {`,
+test(${jsStringLiteral(selectedTest?.name || testName)}, async ({ page }) => {`,
       ` await test.setTimeout(360000);`,
       ` await initiatePlaywrightRoutes(
         page,
@@ -698,7 +751,7 @@ test('${selectedTest?.name || testName}', async ({ page }) => {`,
           MOCK_DIR: '${envDetails.RELATIVE_MOCK_DIR_FROM_PLAYWRIGHT_DIR || './ftmocks'}',
           FALLBACK_DIR: '${envDetails.RELATIVE_FALLBACK_DIR_FROM_PLAYWRIGHT_DIR || './public'}',
         },
-        '${selectedTest.name}'
+        ${jsStringLiteral(selectedTest.name)}
       );`,
       ` await runEventsInTrainingMode(
         page,
@@ -706,7 +759,7 @@ test('${selectedTest?.name || testName}', async ({ page }) => {`,
           MOCK_DIR: '${envDetails.RELATIVE_MOCK_DIR_FROM_PLAYWRIGHT_DIR || './ftmocks'}',
           FALLBACK_DIR: '${envDetails.RELATIVE_FALLBACK_DIR_FROM_PLAYWRIGHT_DIR || './public'}',
         },
-        '${selectedTest.name}'
+        ${jsStringLiteral(selectedTest.name)}
       );`,
       `  await page.waitForTimeout(360000);`,
       `  await page.close();`,
@@ -744,7 +797,7 @@ export function generatePlaywrightCodeForRunEventsForScreenshots(
       `import { test, expect } from '@playwright/test';
 import { initiatePlaywrightRoutes, runEventsForScreenshots } from 'ftmocks-utils';
 
-test('${selectedTest?.name || testName}', async ({ page }) => {`,
+test(${jsStringLiteral(selectedTest?.name || testName)}, async ({ page }) => {`,
       ` await test.setTimeout(360000);`,
       ` await initiatePlaywrightRoutes(
         page,
@@ -752,7 +805,7 @@ test('${selectedTest?.name || testName}', async ({ page }) => {`,
           MOCK_DIR: '${envDetails.RELATIVE_MOCK_DIR_FROM_PLAYWRIGHT_DIR || './ftmocks'}',
           FALLBACK_DIR: '${envDetails.RELATIVE_FALLBACK_DIR_FROM_PLAYWRIGHT_DIR || './public'}',
         },
-        '${selectedTest.name}'
+        ${jsStringLiteral(selectedTest.name)}
       );`,
       ` await runEventsForScreenshots(
         page,
@@ -760,7 +813,7 @@ test('${selectedTest?.name || testName}', async ({ page }) => {`,
           MOCK_DIR: '${envDetails.RELATIVE_MOCK_DIR_FROM_PLAYWRIGHT_DIR || './ftmocks'}',
           FALLBACK_DIR: '${envDetails.RELATIVE_FALLBACK_DIR_FROM_PLAYWRIGHT_DIR || './public'}',
         },
-        '${selectedTest.name}'
+        ${jsStringLiteral(selectedTest.name)}
       );`,
       `  await page.waitForTimeout(360000);`,
       `  await page.close();`,
@@ -798,7 +851,7 @@ export function generatePlaywrightCodeForRunEventsForHealingSelectors(
       `import { test, expect } from '@playwright/test';
 import { initiatePlaywrightRoutes, runEventsForHealingSelectors } from 'ftmocks-utils';
 
-test('${selectedTest?.name || testName}', async ({ page }) => {`,
+test(${jsStringLiteral(selectedTest?.name || testName)}, async ({ page }) => {`,
       ` await test.setTimeout(360000);`,
       ` await initiatePlaywrightRoutes(
         page,
@@ -806,7 +859,7 @@ test('${selectedTest?.name || testName}', async ({ page }) => {`,
           MOCK_DIR: '${envDetails.RELATIVE_MOCK_DIR_FROM_PLAYWRIGHT_DIR || './ftmocks'}',
           FALLBACK_DIR: '${envDetails.RELATIVE_FALLBACK_DIR_FROM_PLAYWRIGHT_DIR || './public'}',
         },
-        '${selectedTest.name}'
+        ${jsStringLiteral(selectedTest.name)}
       );`,
       ` await runEventsForHealingSelectors(
         page,
@@ -814,7 +867,7 @@ test('${selectedTest?.name || testName}', async ({ page }) => {`,
           MOCK_DIR: '${envDetails.RELATIVE_MOCK_DIR_FROM_PLAYWRIGHT_DIR || './ftmocks'}',
           FALLBACK_DIR: '${envDetails.RELATIVE_FALLBACK_DIR_FROM_PLAYWRIGHT_DIR || './public'}',
         },
-        '${selectedTest.name}'
+        ${jsStringLiteral(selectedTest.name)}
       );`,
       `  await page.waitForTimeout(360000);`,
       `  await page.close();`,

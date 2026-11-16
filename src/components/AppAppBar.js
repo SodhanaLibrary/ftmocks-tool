@@ -10,8 +10,10 @@ import MenuItem from '@mui/material/MenuItem';
 import Drawer from '@mui/material/Drawer';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
+import LightModeIcon from '@mui/icons-material/LightMode';
 import Sitemark from './SitemarkIcon';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 
 const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   display: 'flex',
@@ -26,12 +28,11 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   padding: '8px 12px',
 }));
 
-export default function AppAppBar() {
+export default function AppAppBar({ mode, onModeChange }) {
   const [open, setOpen] = React.useState(false);
   const [currentPath, setCurrentPath] = React.useState(
     window.location.pathname
   );
-  const { useLocation } = require('react-router-dom');
   const location = useLocation();
 
   const toggleDrawer = (newOpen) => () => {
@@ -52,8 +53,6 @@ export default function AppAppBar() {
       borderBottom: '2px solid',
     },
   });
-
-  console.log(currentPath);
 
   return (
     <AppBar
@@ -137,12 +136,15 @@ export default function AppAppBar() {
             alignItems: 'center',
           }}
         >
-          {/* <Button color="primary" variant="text" size="small">
-              Sign in
-            </Button>
-            <Button color="primary" variant="contained" size="small">
-              Sign up
-            </Button> */}
+          {onModeChange && (
+            <IconButton
+              id="app-bar-mode-toggle-btn"
+              aria-label="Toggle color mode"
+              onClick={onModeChange}
+            >
+              {mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
+            </IconButton>
+          )}
         </Box>
         <Box sx={{ display: { sm: 'flex', md: 'none' } }}>
           <IconButton id="app-bar-menu-btn" aria-label="Menu button" onClick={toggleDrawer(true)}>

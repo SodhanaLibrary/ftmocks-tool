@@ -314,21 +314,23 @@ export function useTestsPage() {
   };
 
   useEffect(() => {
-    if (selectedTest?.mockData?.length) {
-      let fData = [];
-      try {
-        fData = sortUrlsByMatch(mockSearchTerm, selectedTest?.mockData);
-      } catch (error) {
-        fData = selectedTest?.mockData?.filter((item) =>
-          String(item?.url ?? '')
-            .toLowerCase()
-            .includes(String(mockSearchTerm ?? '').toLowerCase())
-        );
-      }
-      selectedTest.filteredMockData = fData;
-      setSelectedTest({ ...selectedTest });
+    if (!selectedTest?.mockData?.length) {
+      return;
     }
-  }, [mockSearchTerm]);
+    let fData = [];
+    try {
+      fData = sortUrlsByMatch(mockSearchTerm, selectedTest.mockData);
+    } catch (error) {
+      fData = selectedTest.mockData.filter((item) =>
+        String(item?.url ?? '')
+          .toLowerCase()
+          .includes(String(mockSearchTerm ?? '').toLowerCase())
+      );
+    }
+    setSelectedTest((prevTest) =>
+      prevTest ? { ...prevTest, filteredMockData: fData } : prevTest
+    );
+  }, [mockSearchTerm, selectedTest?.mockData]);
 
   const setFilteredMockData = (newFiltrdMocks) => {
     const newMockData = [];
@@ -351,23 +353,23 @@ export function useTestsPage() {
         pointer2++;
       }
     }
-    selectedTest.mockData = newMockData;
-    setSelectedTest({ ...selectedTest });
+    const updatedTest = { ...selectedTest, mockData: newMockData };
+    setSelectedTest(updatedTest);
 
     fetch(
-      `/api/v1/tests/${selectedTest.id}/mockdata?name=${selectedTest.name}`,
+      `/api/v1/tests/${updatedTest.id}/mockdata?name=${updatedTest.name}`,
       {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(selectedTest.mockData),
+        body: JSON.stringify(updatedTest.mockData),
       }
     )
       .then((response) => {
         if (response.ok) {
           console.log('Mock data updated successfully');
-          fetchMockData(selectedTest);
+          fetchMockData(updatedTest);
         } else {
           console.error('Failed to update mock data');
         }
@@ -471,15 +473,19 @@ export function useTestsPage() {
     }
 
     if (dropTargetTest.type === 'folder' && draggedTest.type !== 'folder') {
-      draggedTest.parentId = dropTargetTest.id;
-      setTestCases([...testCases]);
-      setFilteredTestCases([...filteredTestCases]);
-      fetch(`/api/v1/tests/${draggedTest.id}`, {
+      const updatedDraggedTest = { ...draggedTest, parentId: dropTargetTest.id };
+      setTestCases((prev) =>
+        prev.map((t) => (t.id === updatedDraggedTest.id ? updatedDraggedTest : t))
+      );
+      setFilteredTestCases((prev) =>
+        prev.map((t) => (t.id === updatedDraggedTest.id ? updatedDraggedTest : t))
+      );
+      fetch(`/api/v1/tests/${updatedDraggedTest.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(draggedTest),
+        body: JSON.stringify(updatedDraggedTest),
       })
         .then((response) => {
           if (response.ok) {
@@ -493,6 +499,11 @@ export function useTestsPage() {
           console.error('Error moving test to folder:', error);
           fetchTestData();
         });
+
+      setDragOverTestId(null);
+      setDraggedTestId(null);
+      setIsDragging(false);
+      return;
     }
 
     console.log('🔄 Reordering test cases...');

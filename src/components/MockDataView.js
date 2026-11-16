@@ -61,6 +61,13 @@ const MockDataView = ({
   const [mockDataString, setMockDataString] = useState();
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
+  };
   const [ipInputValue, setIpInputValue] = useState('');
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
   const [variantsDialogOpen, setVariantsDialogOpen] = useState(false);
@@ -127,33 +134,36 @@ const MockDataView = ({
     const endpoint = selectedTest
       ? `/api/v1/tests/${selectedTest.id}/mockdata/${mock.id}?name=${selectedTest.name}`
       : `/api/v1/defaultmocks/${mock.id}`;
-    await fetch(endpoint, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
-    })
-      .then((response) => {
-        if (response.ok) {
-          console.log('Mock data deleted successfully');
-        } else {
-          console.error('Failed to delete mock data');
-        }
-      })
-      .catch((error) => {
-        console.error('Error deleting mock data:', error);
+    try {
+      const response = await fetch(endpoint, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
       });
-    onClose(true);
+      if (!response.ok) {
+        console.error('Failed to delete mock data');
+        return false;
+      }
+      console.log('Mock data deleted successfully');
+      return true;
+    } catch (error) {
+      console.error('Error deleting mock data:', error);
+      return false;
+    }
   };
 
   const deleteAllDuplicates = async () => {
     const duplicates = getDuplicateMocks(selectedTest.mockData, mockItem);
-    duplicates.forEach(async (mock) => {
-      await deleteDuplicate(mock);
-    });
-    setSnackbarMessage('All duplicates deleted successfully');
-    setSnackbarOpen(true);
+    const results = await Promise.all(duplicates.map((mock) => deleteDuplicate(mock)));
+    const allSucceeded = results.every(Boolean);
+    showSnackbar(
+      allSucceeded
+        ? 'All duplicates deleted successfully'
+        : 'Some duplicates failed to delete',
+      allSucceeded ? 'success' : 'error'
+    );
     onClose(true);
   };
 
@@ -173,17 +183,14 @@ const MockDataView = ({
 
       if (response.ok) {
         console.log('Mock data updated successfully');
-        setSnackbarMessage('Mock data updated successfully');
-        setSnackbarOpen(true);
+        showSnackbar('Mock data updated successfully');
       } else {
         console.error('Failed to update mock data');
-        setSnackbarMessage('Failed to update mock data');
-        setSnackbarOpen(true);
+        showSnackbar('Failed to update mock data', 'error');
       }
     } catch (error) {
       console.error('Error updating mock data:', error);
-      setSnackbarMessage('Error updating mock data');
-      setSnackbarOpen(true);
+      showSnackbar('Error updating mock data', 'error');
     }
   };
 
@@ -309,8 +316,7 @@ const MockDataView = ({
         });
 
         await fetchVariants();
-        setSnackbarMessage('Variants enabled. Current response saved as Default variant.');
-        setSnackbarOpen(true);
+        showSnackbar('Variants enabled. Current response saved as Default variant.');
       } else {
         setVariantsError('Failed to enable variants');
       }
@@ -352,8 +358,7 @@ const MockDataView = ({
       });
       if (response.ok) {
         await fetchVariants();
-        setSnackbarMessage('Variant added successfully');
-        setSnackbarOpen(true);
+        showSnackbar('Variant added successfully');
       } else {
         setVariantsError('Failed to add variant');
       }
@@ -383,8 +388,7 @@ const MockDataView = ({
       });
       if (response.ok) {
         await fetchVariants();
-        setSnackbarMessage('Variant updated successfully');
-        setSnackbarOpen(true);
+        showSnackbar('Variant updated successfully');
       } else {
         setVariantsError('Failed to update variant');
       }
@@ -427,8 +431,7 @@ const MockDataView = ({
           });
         }
         await fetchVariants();
-        setSnackbarMessage('Variant deleted successfully');
-        setSnackbarOpen(true);
+        showSnackbar('Variant deleted successfully');
       } else {
         setVariantsError('Failed to delete variant');
       }
@@ -462,15 +465,12 @@ const MockDataView = ({
         body: FtJSON.stringify(updatedMock),
       });
       if (response.ok) {
-        setSnackbarMessage('Response variant applied successfully');
-        setSnackbarOpen(true);
+        showSnackbar('Response variant applied successfully');
       } else {
-        setSnackbarMessage('Failed to update mock with variant');
-        setSnackbarOpen(true);
+        showSnackbar('Failed to update mock with variant', 'error');
       }
     } catch (error) {
-      setSnackbarMessage('Error updating mock with variant');
-      setSnackbarOpen(true);
+      showSnackbar('Error updating mock with variant', 'error');
     }
     setVariantsDialogOpen(false);
   };
@@ -531,12 +531,10 @@ const MockDataView = ({
       ),
     });
     if (response.ok) {
-      setSnackbarMessage('Mock data updated successfully');
-      setSnackbarOpen(true);
+      showSnackbar('Mock data updated successfully');
       onClose(true);
     } else {
-      setSnackbarMessage('Failed to update mock data');
-      setSnackbarOpen(true);
+      showSnackbar('Failed to update mock data', 'error');
     }
   };
 
@@ -555,18 +553,14 @@ const MockDataView = ({
       });
 
       if (response.ok) {
-        setSnackbarMessage('Mock data duplicated successfully');
-        setSnackbarOpen(true);
-        onClose();
+        showSnackbar('Mock data duplicated successfully');
+        onClose(true);
       } else {
-        setSnackbarMessage('Failed to duplicate mock data');
-        setSnackbarOpen(true);
+        showSnackbar('Failed to duplicate mock data', 'error');
       }
-      onClose(true);
     } catch (error) {
       console.error('Error updating mock data:', error);
-      setSnackbarMessage('Error updating mock data');
-      setSnackbarOpen(true);
+      showSnackbar('Error updating mock data', 'error');
     }
   };
 
@@ -586,15 +580,13 @@ const MockDataView = ({
         ),
       });
       if (response.ok) {
-        setSnackbarMessage('Mock data sent to default mock data successfully');
-        setSnackbarOpen(true);
+        showSnackbar('Mock data sent to default mock data successfully');
       } else {
-        setSnackbarMessage('Failed to send mock data to default mock data');
+        showSnackbar('Failed to send mock data to default mock data', 'error');
       }
     } catch (error) {
       console.error('Error sending mock data to default mock data:', error);
-      setSnackbarMessage('Error sending mock data to default mock data');
-      setSnackbarOpen(true);
+      showSnackbar('Error sending mock data to default mock data', 'error');
     }
   };
 
@@ -606,16 +598,13 @@ const MockDataView = ({
         body: FtJSON.stringify({ mockIds: [mockItem.id] }, null, 2),
       });
       if (response.ok) {
-        setSnackbarMessage('Default mocks moved successfully');
-        setSnackbarOpen(true);
+        showSnackbar('Default mocks moved successfully');
       } else {
-        setSnackbarMessage('Failed to move default mocks');
-        setSnackbarOpen(true);
+        showSnackbar('Failed to move default mocks', 'error');
       }
     } catch (error) {
       console.error('Error moving default mocks:', error);
-      setSnackbarMessage('Error moving default mocks');
-      setSnackbarOpen(true);
+      showSnackbar('Error moving default mocks', 'error');
     } finally {
       onClose();
     }
@@ -724,7 +713,7 @@ const MockDataView = ({
           control={
             <Checkbox
               id="mock-data-view-wait-for-previous"
-              checked={mockItem.waitForPrevious}
+              checked={!!mockData.waitForPrevious}
               name="waitForPrevious"
               onChange={onInputChange}
             />
@@ -738,7 +727,7 @@ const MockDataView = ({
           freeSolo
           options={[]}
           name="waitFor"
-          value={mockData.waitFor}
+          value={mockData.waitFor || []}
           onChange={onWaitForChange}
           onInputChange={(event, newInputValue, reason) => {
             if (reason === 'input' && newInputValue.includes(',')) {
@@ -979,7 +968,7 @@ const MockDataView = ({
       >
         <Alert
           onClose={handleSnackbarClose}
-          severity="success"
+          severity={snackbarSeverity}
           sx={{ width: '100%' }}
         >
           {snackbarMessage}

@@ -191,11 +191,11 @@ export default function DefaultMockData() {
           }}
         />
         <List sx={{ height: 'calc(100vh - 200px)', overflowY: 'scroll' }}>
-          {filteredMockData.map((mockItem, index) => (
+          {filteredMockData.map((mockItem) => (
             <ListItem
               id={`default-mock-data-item-${mockItem.id}`}
               button
-              key={index}
+              key={mockItem.id}
               onClick={() => handleMockItemClick(mockItem)}
               selected={selectedMockItem === mockItem}
               sx={{

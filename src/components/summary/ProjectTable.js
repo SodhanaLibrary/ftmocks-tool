@@ -98,7 +98,14 @@ const ProjectTable = ({ data, onClickProject, refetchProjects }) => {
                   onClick={() => onClickProject(project)}
                   sx={{ '&:hover': { color: 'primary.main' } }}
                 >
-                  <Typography>{String(project.env_file)}</Typography>
+                  <Typography>
+                    {project.name ? String(project.name) : String(project.env_file)}
+                  </Typography>
+                  {project.name && (
+                    <Typography variant="body2" color="text.secondary">
+                      {String(project.env_file)}
+                    </Typography>
+                  )}
                 </TableCell>
                 <TableCell align="right">
                   <IconButton

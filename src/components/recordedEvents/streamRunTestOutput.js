@@ -11,6 +11,13 @@ export async function streamRunTestOutput(requestBody, appendOutput, signal) {
       signal,
     });
 
+    if (!response.ok || !response.body) {
+      appendOutput(
+        (prev) => prev + `\nFailed to run test (HTTP ${response.status}).`
+      );
+      return;
+    }
+
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
 

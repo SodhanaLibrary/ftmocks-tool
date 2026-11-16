@@ -59,64 +59,71 @@ export default function RecordedEventsListPanel({
       >
         <Box display="flex" alignItems="center" gap={1}>
           <Typography variant="h5">Events Data</Typography>
-          {recordedEvents.length > 0 && (
-            <Box>
-              <Tooltip title="Run in mock mode">
-                <IconButton
-                  id="recorded-events-mock-mode-btn"
-                  color="primary"
-                  onClick={onMockModeClick}
-                >
-                  <FiberSmartRecordIcon />
-                </IconButton>
-              </Tooltip>
-              <Menu
-                anchorEl={mockModeAnchorEl}
-                open={Boolean(mockModeAnchorEl)}
-                onClose={onMockModeClose}
+          <Box>
+            <Tooltip title="Run in mock mode">
+              <IconButton
+                id="recorded-events-mock-mode-btn"
+                color="primary"
+                onClick={onMockModeClick}
               >
-                <MenuItem id="recorded-events-run-mock-mode" onClick={runInMockMode}>
-                  Run in mock mode
-                </MenuItem>
-                <MenuItem
-                  id="recorded-events-record-again"
-                  onClick={recordEventsAgainInMockMode}
-                >
-                  Record events again
-                </MenuItem>
-                <MenuItem
-                  id="recorded-events-record-from-last"
-                  onClick={recordContinueEventsFromLastEventInMockMode}
-                >
-                  Record events from last event
-                </MenuItem>
-                <MenuItem id="recorded-events-play-all" onClick={playAllEventsInMockMode}>
-                  Play all events
-                </MenuItem>
-                <MenuItem
-                  id="recorded-events-presentation-mode"
-                  onClick={runInPresentationMode}
-                >
-                  Run in presentation mode
-                </MenuItem>
-                <MenuItem id="recorded-events-training-mode" onClick={runInTrainingMode}>
-                  Run in training mode
-                </MenuItem>
-                <MenuItem
-                  id="recorded-events-screenshots"
-                  onClick={runEventsForScreenshots}
-                >
-                  Run for screenshots
-                </MenuItem>
-                <MenuItem
-                  id="recorded-events-healing-selectors"
-                  onClick={runForHealingSelectors}
-                >
-                  Run for healing selectors
-                </MenuItem>
-              </Menu>
-            </Box>
-          )}
+                <FiberSmartRecordIcon />
+              </IconButton>
+            </Tooltip>
+            <Menu
+              anchorEl={mockModeAnchorEl}
+              open={Boolean(mockModeAnchorEl)}
+              onClose={onMockModeClose}
+            >
+              <MenuItem
+                id="recorded-events-run-mock-mode"
+                onClick={runInMockMode}
+              >
+                Run in mock mode
+              </MenuItem>
+              <MenuItem
+                id="recorded-events-record-again"
+                onClick={recordEventsAgainInMockMode}
+              >
+                Record events again
+              </MenuItem>
+              <MenuItem
+                id="recorded-events-record-from-last"
+                onClick={recordContinueEventsFromLastEventInMockMode}
+              >
+                Record events from last event
+              </MenuItem>
+              <MenuItem
+                id="recorded-events-play-all"
+                onClick={playAllEventsInMockMode}
+              >
+                Play all events
+              </MenuItem>
+              <MenuItem
+                id="recorded-events-presentation-mode"
+                onClick={runInPresentationMode}
+              >
+                Run in presentation mode
+              </MenuItem>
+              <MenuItem
+                id="recorded-events-training-mode"
+                onClick={runInTrainingMode}
+              >
+                Run in training mode
+              </MenuItem>
+              <MenuItem
+                id="recorded-events-screenshots"
+                onClick={runEventsForScreenshots}
+              >
+                Run for screenshots
+              </MenuItem>
+              <MenuItem
+                id="recorded-events-healing-selectors"
+                onClick={runForHealingSelectors}
+              >
+                Run for healing selectors
+              </MenuItem>
+            </Menu>
+          </Box>
           {isReactProject ? (
             <Button
               id="recorded-events-gen-react-btn"
@@ -153,7 +160,10 @@ export default function RecordedEventsListPanel({
             </IconButton>
           </Tooltip>
           <Tooltip title="Delete all events">
-            <IconButton id="recorded-events-delete-all-btn" onClick={onDeleteAll}>
+            <IconButton
+              id="recorded-events-delete-all-btn"
+              onClick={onDeleteAll}
+            >
               <DeleteSweepIcon />
             </IconButton>
           </Tooltip>

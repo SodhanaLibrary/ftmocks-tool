@@ -38,6 +38,7 @@ export const upsertEnvValue = (content, key, value) => {
 };
 
 const CREATE_TEMPLATE = [
+  'PROJECT_NAME=',
   'MOCK_DIR=./',
   'PORT=5000',
   'PROJECT_TYPE=playwright',
@@ -63,6 +64,7 @@ const EditEnvDialog = ({ open, mode = 'edit', envFile, onClose, onSaved }) => {
     }
     setFilePath(envFile || '');
     // Load existing env file contents
+    let cancelled = false;
     (async () => {
       setLoading(true);
       try {
@@ -73,14 +75,23 @@ const EditEnvDialog = ({ open, mode = 'edit', envFile, onClose, onSaved }) => {
         if (!response.ok) {
           throw new Error(data.error || 'Failed to load env file');
         }
-        setContent(data.content || '');
+        if (!cancelled) {
+          setContent(data.content || '');
+        }
       } catch (e) {
-        setError(e.message);
-        setContent('');
+        if (!cancelled) {
+          setError(e.message);
+          setContent('');
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [open, isCreate, envFile]);
 
   const projectType = useMemo(
@@ -148,6 +159,16 @@ const EditEnvDialog = ({ open, mode = 'edit', envFile, onClose, onSaved }) => {
           </Box>
         ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              id="edit-env-project-name"
+              label="PROJECT_NAME"
+              value={getEnvValue(content, 'PROJECT_NAME')}
+              onChange={(e) => setVar('PROJECT_NAME', e.target.value)}
+              placeholder="My Project"
+              helperText="Friendly name shown for this project in the Projects table"
+              fullWidth
+              disabled={saving}
+            />
             <TextField
               id="edit-env-file-path"
               label="Environment file path"

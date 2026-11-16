@@ -62,7 +62,7 @@ export default function RecordedEventListItem({
             : '0px solid transparent',
         borderColor: 'primary.main',
         borderRadius: 1,
-        borderLeft: `4px solid ${re.executed ? '#4CAF50' : undefined}`,
+        borderLeft: re.executed ? '4px solid #4CAF50' : '4px solid transparent',
       }}
       p={1}
       id={`recorded-events-item-${re.id}`}

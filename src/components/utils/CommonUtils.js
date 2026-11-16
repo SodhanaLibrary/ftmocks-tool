@@ -29,7 +29,7 @@ const areJsonEqual = (jsonObj1, jsonObj2) => {
   ) {
     // Get the keys of both objects
     const keys1 = Object.keys(jsonObj1).filter((key) => jsonObj1[key] !== null);
-    const keys2 = Object.keys(jsonObj2).filter((key) => jsonObj1[key] !== null);
+    const keys2 = Object.keys(jsonObj2).filter((key) => jsonObj2[key] !== null);
 
     // Check if the number of keys is different
     if (keys1.length !== keys2.length) {
@@ -145,10 +145,7 @@ const isSameResponse = (req1, req2) => {
       (!req1.response.content && req2.response.content) ||
       (req1.response.content && !req2.response.content)
     ) {
-      matched = areJsonEqual(
-        JSON.parse(req1.response.content) || {},
-        JSON.parse(req2.response.content) || {}
-      );
+      matched = false;
       // console.log('not matched at post Data 0', req1.postData, req2.postData);
     } else if (
       req1.response.content &&
@@ -220,16 +217,38 @@ export const isValidJSON = (json) => {
   }
 };
 
+// Best-effort, non-executing normalizer for JS-object-literal-like text
+// (unquoted keys, single-quoted strings, trailing commas) into strict JSON.
+// Never evaluates the input as code.
+const looseObjectLiteralToJSON = (text) => {
+  let result = text;
+  // Quote unquoted object keys: { foo: 1 } -> { "foo": 1 }
+  result = result.replace(
+    /([{,]\s*)([A-Za-z_$][A-Za-z0-9_$]*)(\s*:)/g,
+    '$1"$2"$3'
+  );
+  // Convert single-quoted strings to double-quoted strings.
+  result = result.replace(/'((?:[^'\\]|\\.)*)'/g, (match, inner) => {
+    const escaped = inner
+      .replace(/\\'/g, "'")
+      .replace(/"/g, '\\"');
+    return `"${escaped}"`;
+  });
+  // Remove trailing commas before closing brackets/braces.
+  result = result.replace(/,(\s*[}\]])/g, '$1');
+  return result;
+};
+
 export const convertToValidJSON = (json) => {
   if (isValidJSON(json)) {
     return json;
-  } else {
-    try {
-      const obj = Function('"use strict"; return (' + json + ')')();
-      return JSON.stringify(obj, null, 2);
-    } catch (error) {
-      return json;
-    }
+  }
+  try {
+    const normalized = looseObjectLiteralToJSON(json);
+    const obj = JSON.parse(normalized);
+    return JSON.stringify(obj, null, 2);
+  } catch (error) {
+    return json;
   }
 };
 

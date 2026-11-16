@@ -96,9 +96,16 @@ const DefaultRecorder = ({ onClose }) => {
   };
 
   const fetchRecordingStatus = async () => {
-    const response = await fetch(`/api/v1/record/status`);
-    const data = await response.json();
-    setIsRecordingMockData(data.status === 'running');
+    try {
+      const response = await fetch(`/api/v1/record/status`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch recording status');
+      }
+      const data = await response.json();
+      setIsRecordingMockData(data.status === 'running');
+    } catch (err) {
+      console.error('Error fetching recording status:', err);
+    }
   };
 
   const onCloseDrawer = () => {
@@ -108,7 +115,8 @@ const DefaultRecorder = ({ onClose }) => {
   };
 
   useEffect(() => {
-    setTimeout(fetchRecordingStatus, 1000);
+    const timeoutId = setTimeout(fetchRecordingStatus, 1000);
+    return () => clearTimeout(timeoutId);
   }, []);
 
   return (

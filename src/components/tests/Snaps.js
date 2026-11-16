@@ -23,7 +23,7 @@ const Snaps = ({ selectedTest }) => {
   const fetchTestSnaps = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/v1/testSnaps?name=${selectedTest.name}`);
+      const response = await fetch(`/api/v1/testSnaps?name=${selectedTest?.name}`);
       if (!response.ok) {
         throw new Error('Failed to fetch default mocks');
       }
@@ -49,6 +49,7 @@ const Snaps = ({ selectedTest }) => {
   useEffect(() => {
     if(selected) {
         const iframe = document.getElementById('myIframe');
+        if (!iframe) return;
         const iframeDoc = iframe.contentWindow.document;
         iframeDoc.open();
         iframeDoc.write(selected.content);
@@ -58,6 +59,9 @@ const Snaps = ({ selectedTest }) => {
   if(isLoading) {
     return (<Box p={5} width="100%" textAlign="center">Loading....</Box>)
   }
+  if(error) {
+    return (<Box p={5} width="100%" textAlign="center"><Alert severity="error">{error}</Alert></Box>)
+  }
   if(snaps.length === 0) {
     return (<Box p={5} width="100%" textAlign="center">No Snaps Found</Box>)
   }
@@ -65,7 +69,7 @@ const Snaps = ({ selectedTest }) => {
     <Box display="flex" sx={{ width: '100%', margin: '0 auto', textAlign: 'left', mt: 4 }}>
       <Box style={{width: '200px'}}>
         <MenuList>
-            {snaps.map(snap => (<MenuItem id={`snaps-menu-item-${snap.fileName}`} selected={selected?.fileName === snap.fileName} onClick={() => setSelected(snap)}>
+            {snaps.map(snap => (<MenuItem key={snap.fileName} id={`snaps-menu-item-${snap.fileName}`} selected={selected?.fileName === snap.fileName} onClick={() => setSelected(snap)}>
             <ListItemText>{snap.fileName}</ListItemText>
             </MenuItem>))}
         </MenuList>

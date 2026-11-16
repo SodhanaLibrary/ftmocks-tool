@@ -40,17 +40,18 @@ const LogViewer = ({ selectedTest }) => {
   const fetchLogs = async () => {
     try {
       setIsLoading(true);
+      setError(null);
       const response = await fetch(
-        `/api/v1/recordedLogs?name=${selectedTest.name}`
+        `/api/v1/recordedLogs?name=${selectedTest?.name}`
       );
       if (!response.ok) {
         throw new Error('Failed to fetch logs');
       }
       const data = await response.json();
       setAllLogs(data);
-      setIsLoading(false);
     } catch (err) {
       setLogs([]);
+      setAllLogs([]);
       setError(err.message);
     } finally {
       setIsLoading(false);
@@ -58,14 +59,16 @@ const LogViewer = ({ selectedTest }) => {
   };
 
   useEffect(() => {
-    fetchLogs();
+    if (selectedTest) {
+      fetchLogs();
+    }
   }, [selectedTest]);
 
   const handleChange = (event) => {
     setType(event.target.value);
   };
 
-  const convert = new AnsiToHtml();
+  const convert = new AnsiToHtml({ escapeXML: true });
 
   return (
     <TableContainer component={Paper}>
@@ -94,7 +97,12 @@ const LogViewer = ({ selectedTest }) => {
           <MenuItem value="error">Error</MenuItem>
         </Select>
       </Box>
-      {!isLoading && logs.length === 0 && (
+      {error && (
+        <Box p={2} textAlign="center" color="error.main">
+          {error}
+        </Box>
+      )}
+      {!isLoading && !error && logs.length === 0 && (
         <Box p={4} textAlign="center">
           Logs not found
         </Box>
@@ -145,7 +153,7 @@ const LogViewer = ({ selectedTest }) => {
 };
 
 LogViewer.propTypes = {
-  testName: PropTypes.object.isRequired,
+  selectedTest: PropTypes.object,
 };
 
 export default LogViewer;

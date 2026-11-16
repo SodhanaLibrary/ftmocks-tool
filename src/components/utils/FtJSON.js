@@ -13,7 +13,7 @@ class FtJSON {
       return JSON.stringify(value, replacer, space);
     } catch (error) {
       console.error('FtJSON stringify error:', error, reference);
-      return value;
+      return typeof value === 'string' ? value : '';
     }
   }
 

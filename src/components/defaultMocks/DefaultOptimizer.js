@@ -19,9 +19,16 @@ const DefaultOptimizer = ({ onClose, mockData = [] }) => {
   const [loading, setLoading] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('info');
   const [duplicateIdMocks, setDuplicateIdMocks] = useState([]);
   const unusedMocks = mockData.filter((mock) => !mock?.mockData?.served);
   const usedMocks = mockData.filter((mock) => mock?.mockData?.served);
+
+  const showSnackbar = (message, severity = 'info') => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
+  };
 
   const moveDefaultMocks = async () => {
     setLoading(true);
@@ -31,19 +38,16 @@ const DefaultOptimizer = ({ onClose, mockData = [] }) => {
         method: 'POST',
       });
       if (response.ok) {
-        setSnackbarMessage('Default mocks moved successfully');
-        setSnackbarOpen(true);
+        showSnackbar('Default mocks moved successfully', 'success');
       } else {
-        setSnackbarMessage('Failed to move default mocks');
-        setSnackbarOpen(true);
+        showSnackbar('Failed to move default mocks', 'error');
       }
+      closeAfterDelay();
     } catch (error) {
       console.error('Error moving default mocks:', error);
-      setSnackbarMessage('Error moving default mocks');
-      setSnackbarOpen(true);
+      showSnackbar('Error moving default mocks', 'error');
     } finally {
       setLoading(false);
-      onClose();
     }
   };
 
@@ -60,19 +64,14 @@ const DefaultOptimizer = ({ onClose, mockData = [] }) => {
       });
 
       if (response.ok) {
-        setSnackbarMessage('Successfully reset served status for all mocks');
-        setSnackbarOpen(true);
-        if (onClose) {
-          await onClose();
-        }
+        showSnackbar('Successfully reset served status for all mocks', 'success');
+        closeAfterDelay();
       } else {
-        setSnackbarMessage('Failed to reset mock served status');
-        setSnackbarOpen(true);
+        showSnackbar('Failed to reset mock served status', 'error');
       }
     } catch (error) {
       console.error('Error resetting mock served status:', error);
-      setSnackbarMessage('Error resetting mock served status');
-      setSnackbarOpen(true);
+      showSnackbar('Error resetting mock served status', 'error');
     } finally {
       setLoading(false);
     }
@@ -101,19 +100,14 @@ const DefaultOptimizer = ({ onClose, mockData = [] }) => {
       const results = await Promise.all(updatePromises);
 
       if (results.every(Boolean)) {
-        setSnackbarMessage('Duplicate mock IDs updated successfully');
-        setSnackbarOpen(true);
-        if (onClose) {
-          await onClose();
-        }
+        showSnackbar('Duplicate mock IDs updated successfully', 'success');
+        closeAfterDelay();
       } else {
-        setSnackbarMessage('Failed to update some duplicate mock IDs');
-        setSnackbarOpen(true);
+        showSnackbar('Failed to update some duplicate mock IDs', 'error');
       }
     } catch (error) {
       console.error('Error updating duplicate mock IDs:', error);
-      setSnackbarMessage('Error updating duplicate mock IDs');
-      setSnackbarOpen(true);
+      showSnackbar('Error updating duplicate mock IDs', 'error');
     } finally {
       setLoading(false);
     }
@@ -138,23 +132,18 @@ const DefaultOptimizer = ({ onClose, mockData = [] }) => {
       const allSuccessful = responses.every((response) => response.ok);
 
       if (allSuccessful) {
-        setSnackbarMessage(
-          `Successfully deleted ${unusedMocks.length} unused mock(s)`
+        showSnackbar(
+          `Successfully deleted ${unusedMocks.length} unused mock(s)`,
+          'success'
         );
-        setSnackbarOpen(true);
+        // resetAllMocks schedules the drawer close itself on success.
         await resetAllMocks();
-        // Refresh mock data
-        if (onClose) {
-          await onClose();
-        }
       } else {
-        setSnackbarMessage('Failed to delete some unused mocks');
-        setSnackbarOpen(true);
+        showSnackbar('Failed to delete some unused mocks', 'error');
       }
     } catch (error) {
       console.error('Error deleting unused mocks:', error);
-      setSnackbarMessage('Error deleting unused mocks');
-      setSnackbarOpen(true);
+      showSnackbar('Error deleting unused mocks', 'error');
     } finally {
       setLoading(false);
     }
@@ -162,6 +151,14 @@ const DefaultOptimizer = ({ onClose, mockData = [] }) => {
 
   const handleCloseSnackbar = () => {
     setSnackbarOpen(false);
+  };
+
+  // Give the Snackbar time to be seen before the drawer (and its Snackbar)
+  // unmount via onClose.
+  const closeAfterDelay = () => {
+    if (onClose) {
+      setTimeout(() => onClose(), 4000);
+    }
   };
 
   useEffect(() => {
@@ -233,7 +230,7 @@ const DefaultOptimizer = ({ onClose, mockData = [] }) => {
           </Box>
           <List sx={{ maxHeight: 300, overflow: 'auto' }}>
             {duplicateIdMocks.map((mock, index) => (
-              <ListItem key={index}>
+              <ListItem key={`${mock.id}-${index}`}>
                 <ListItemText primary={mock.id} />
               </ListItem>
             ))}
@@ -282,7 +279,7 @@ const DefaultOptimizer = ({ onClose, mockData = [] }) => {
       >
         <Alert
           onClose={handleCloseSnackbar}
-          severity="info"
+          severity={snackbarSeverity}
           sx={{ width: '100%' }}
         >
           {snackbarMessage}

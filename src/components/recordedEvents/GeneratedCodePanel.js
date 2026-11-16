@@ -30,7 +30,7 @@ export default function GeneratedCodePanel({
   testOutput,
 }) {
   const htmlOutput = useMemo(() => {
-    const convert = new AnsiToHtml();
+    const convert = new AnsiToHtml({ escapeXML: true });
     return convert.toHtml(testOutput).replace(/\n/g, '<br/>');
   }, [testOutput]);
 

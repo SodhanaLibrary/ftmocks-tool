@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Box } from '@mui/material';
+import { Box, Alert } from '@mui/material';
 
 import {
   generateRTLCode,
@@ -31,7 +31,7 @@ export default function RecordedEventsData({
   playwrightCodeGen,
 }) {
   const [isLoading, setIsLoading] = useState(true);
-  const [erroe, setError] = useState(null);
+  const [error, setError] = useState(null);
   const [recordedEvents, setRecordedEvents] = useState([]);
   const [testsSummary, setTestsSummary] = useState([]);
   const [genCode, setGenCode] = useState('');
@@ -154,16 +154,24 @@ export default function RecordedEventsData({
   };
 
   const genReactCode = () => {
-    setGenCode(generateRTLCode(recordedEvents, testsSummary, selectedTest));
+    setGenCode(
+      generateRTLCode(recordedEvents, testsSummary, selectedTest, envDetails)
+    );
     setGenCodeType('react');
     setShowEvents(false);
   };
 
   const genAngularCode = () => {
-    setGenCode(generateAngularCode(recordedEvents, testsSummary, selectedTest));
+    setGenCode(
+      generateAngularCode(recordedEvents, testsSummary, selectedTest, envDetails)
+    );
     setGenCodeType('angular');
     setShowEvents(false);
   };
+
+  useEffect(() => {
+    setShowEvents(true);
+  }, [selectedTest]);
 
   useEffect(() => {
     fetchRecordedEvents();
@@ -179,11 +187,6 @@ export default function RecordedEventsData({
     }
   }, [recordingStatus, selectedTest]);
 
-  useEffect(() => {
-    fetchRecordedEvents();
-    setShowEvents(true);
-  }, [selectedTest]);
-
   const handleMockModeClick = (event) => {
     setMockModeAnchorEl(event.currentTarget);
   };
@@ -191,7 +194,7 @@ export default function RecordedEventsData({
   const getParentFolder = () => {
     const parents = [];
     let parentFolder = null;
-    let currentParentId = selectedTest.parentId;
+    let currentParentId = selectedTest?.parentId;
     while (currentParentId) {
       parentFolder = testCases.find(
         (testCase) => testCase.id === currentParentId
@@ -211,7 +214,7 @@ export default function RecordedEventsData({
     try {
       setIsLoading(true);
       const response = await fetch(
-        `/api/v1/recordedEvents/${recordedEvent.id}?name=${selectedTest.name}`,
+        `/api/v1/recordedEvents/${recordedEvent.id}?name=${selectedTest?.name}`,
         { method: 'DELETE' }
       );
       if (!response.ok) {
@@ -279,7 +282,7 @@ export default function RecordedEventsData({
     await streamRunTestOutput(
       {
         withUI,
-        testName: selectedTest.name,
+        testName: selectedTest?.name,
         generatedCode: genCode,
         fileName: genCodeFileName(),
         parents: getParentFolder(),
@@ -450,10 +453,32 @@ export default function RecordedEventsData({
     );
   };
 
+  // Mock-mode specs navigate to the first `url` event. A test can have generated
+  // code but no _events.json, so fall back to the first page.goto in its spec
+  // instead of the placeholder URL.
+  const getEventsWithStartUrl = async () => {
+    if (recordedEvents[0]?.type === 'url' || !selectedTest?.name) {
+      return recordedEvents;
+    }
+    try {
+      const response = await fetch(
+        `/api/v1/code/spec?name=${encodeURIComponent(selectedTest.name)}`
+      );
+      if (!response.ok) return recordedEvents;
+      const { content = '' } = await response.json();
+      const match = content.match(/page\.goto\(\s*(['"`])(.+?)\1/);
+      if (!match) return recordedEvents;
+      return [{ type: 'url', value: match[2] }, ...recordedEvents];
+    } catch (e) {
+      console.error('Error resolving start URL from spec:', e);
+      return recordedEvents;
+    }
+  };
+
   const recordEventsAgainInMockMode = async () => {
     await runMockGeneratedCode(
       generatePlaywrightCodeForEventsMockMode(
-        recordedEvents,
+        await getEventsWithStartUrl(),
         testsSummary,
         selectedTest,
         envDetails
@@ -464,7 +489,7 @@ export default function RecordedEventsData({
   const recordContinueEventsFromLastEventInMockMode = async () => {
     await runMockGeneratedCode(
       generatePlaywrightCodeForContinueEventsMockMode(
-        recordedEvents,
+        await getEventsWithStartUrl(),
         testsSummary,
         selectedTest,
         envDetails
@@ -475,7 +500,7 @@ export default function RecordedEventsData({
   const runInMockMode = async () => {
     await runMockGeneratedCode(
       generatePlaywrightCodeForMockMode(
-        recordedEvents,
+        await getEventsWithStartUrl(),
         testsSummary,
         selectedTest,
         envDetails
@@ -486,7 +511,7 @@ export default function RecordedEventsData({
   const playAllEventsInMockMode = async () => {
     await runMockGeneratedCode(
       generatePlaywrightCodeForRunEvents(
-        recordedEvents,
+        await getEventsWithStartUrl(),
         testsSummary,
         selectedTest,
         envDetails
@@ -497,7 +522,7 @@ export default function RecordedEventsData({
   const runInPresentationMode = async () => {
     await runMockGeneratedCode(
       generatePlaywrightCodeForRunEventsInPresentationMode(
-        recordedEvents,
+        await getEventsWithStartUrl(),
         testsSummary,
         selectedTest,
         envDetails
@@ -508,7 +533,7 @@ export default function RecordedEventsData({
   const runInTrainingMode = async () => {
     await runMockGeneratedCode(
       generatePlaywrightCodeForRunEventsInTrainingMode(
-        recordedEvents,
+        await getEventsWithStartUrl(),
         testsSummary,
         selectedTest,
         envDetails
@@ -519,7 +544,7 @@ export default function RecordedEventsData({
   const runEventsForScreenshots = async () => {
     await runMockGeneratedCode(
       generatePlaywrightCodeForRunEventsForScreenshots(
-        recordedEvents,
+        await getEventsWithStartUrl(),
         testsSummary,
         selectedTest,
         envDetails
@@ -530,7 +555,7 @@ export default function RecordedEventsData({
   const runForHealingSelectors = async () => {
     await runMockGeneratedCode(
       generatePlaywrightCodeForRunEventsForHealingSelectors(
-        recordedEvents,
+        await getEventsWithStartUrl(),
         testsSummary,
         selectedTest,
         envDetails
@@ -542,7 +567,7 @@ export default function RecordedEventsData({
     try {
       setIsLoading(true);
       const response = await fetch(
-        `/api/v1/recordedEvents/${selectedEvent.id}?name=${selectedTest.name}`,
+        `/api/v1/recordedEvents/${selectedEvent.id}?name=${selectedTest?.name}`,
         {
           method: 'PUT',
           headers: {
@@ -571,6 +596,11 @@ export default function RecordedEventsData({
 
   return (
     <Box width="100%">
+      {error && (
+        <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 1 }}>
+          {error}
+        </Alert>
+      )}
       {showEvents && (
         <RecordedEventsListPanel
           recordedEvents={recordedEvents}

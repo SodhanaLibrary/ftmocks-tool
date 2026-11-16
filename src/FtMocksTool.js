@@ -10,15 +10,14 @@ import MockServer from './components/MockServer';
 import ApiSpecs from './components/ApiSpecs';
 import { Box } from '@mui/material';
 
-const darkTheme = createTheme({
-  palette: {
-    mode: 'dark',
-  },
-});
-
 export default function FtMocksTool() {
   const [mode, setMode] = React.useState('dark');
   const [envDetails, setEnvDetails] = React.useState(null);
+
+  const theme = React.useMemo(
+    () => createTheme({ palette: { mode } }),
+    [mode]
+  );
 
   // This code only runs on the client side, to determine the system color preference
   React.useEffect(() => {
@@ -59,10 +58,10 @@ export default function FtMocksTool() {
   }, []);
 
   return (
-    <ThemeProvider theme={darkTheme}>
+    <ThemeProvider theme={theme}>
       <CssBaseline enableColorScheme />
       <BrowserRouter>
-        <AppAppBar onModeChange={handleModeChange} />
+        <AppAppBar mode={mode} onModeChange={handleModeChange} />
         <Box sx={{ mt: 10 }}>
           <Routes>
             <Route

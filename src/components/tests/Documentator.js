@@ -14,16 +14,27 @@ const Documentator = ({ selectedTest }) => {
 
   useEffect(() => {
     const fetchEvents = async () => {
-      const response = await fetch(
-        `/api/v1/recordedEvents?name=${selectedTest.name}`
-      );
-      const data = await response.json();
-      const screenshotData = data.filter((event) => event.screenshotInfo);
-      setEvents(screenshotData);
+      try {
+        const response = await fetch(
+          `/api/v1/recordedEvents?name=${selectedTest.name}`
+        );
+        if (!response.ok) {
+          throw new Error('Failed to fetch recorded events');
+        }
+        const data = await response.json();
+        const screenshotData = data.filter((event) => event.screenshotInfo);
+        setEvents(screenshotData);
+      } catch (error) {
+        console.error(error);
+        setEvents([]);
+      }
     };
 
+    setCurrentEventIndex(0);
     if (selectedTest) {
       fetchEvents();
+    } else {
+      setEvents([]);
     }
     setDisplayWidth(window.innerWidth - 600);
   }, [selectedTest]);
@@ -156,7 +167,7 @@ const Documentator = ({ selectedTest }) => {
         <Box id="ftmocks-training-mode">
           <Box>
             <Typography variant="subtitle2">
-              {events[currentEventIndex].description ||
+              {events[currentEventIndex]?.description ||
                 `Step ${currentEventIndex + 1}`}
             </Typography>
             {events[currentEventIndex]?.screenshotInfo && (
